@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import { generateToken } from '../utils/jwt.util';
 import { AuthService } from '../services/auth.service';
-
+import bcrypt from 'bcryptjs';
 export class AuthController {
   static async register(req: Request, res: Response) {
     try {
