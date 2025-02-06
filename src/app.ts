@@ -11,7 +11,12 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*',  // Allow all origins (not recommended for production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE','patch'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(bodyParser.json());
 app.use('/api', routes);
 
