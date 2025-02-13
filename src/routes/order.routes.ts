@@ -11,49 +11,8 @@ const router = express.Router();
  *   description: Order management endpoints
  */
 
-/**
- * @swagger
- * /orders:
- *   get:
- *     summary: Retrieve all orders (Admin) or user orders (Client)
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of orders
- */
-router.get('/', authMiddleware(['admin', 'client']), OrderController.getOrders);
 
-/**
- * @swagger
- * /orders:
- *   post:
- *     summary: Create a new order (Client Only)
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               items:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     productId:
- *                       type: integer
- *                     quantity:
- *                       type: integer
- *     responses:
- *       201:
- *         description: Order created successfully
- */
-router.post('/', authMiddleware(['client']), OrderController.createOrder);
+
 
 /**
  * @swagger
@@ -85,4 +44,128 @@ router.post('/', authMiddleware(['client']), OrderController.createOrder);
  */
 router.put('/:id', authMiddleware(['admin']), OrderController.updateOrderStatus);
 
+
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: Retrieve all orders (Admin) or user orders (Client)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of orders
+ */
+
+router.get('/', authMiddleware(['admin', 'user']), OrderController.getAllOrders);
+
+/**
+ * @swagger
+ * /orders:
+ *   get by id:
+ *     summary: Retrieve all orders (Admin) or user orders (Client)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of orders
+ */
+
+router.get('/:id', OrderController.getById);
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Create an order (User)
+ *     tags: [Orders]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 example: 1
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     productId:
+ *                       type: integer
+ *                       example: 2
+ *                     quantity:
+ *                       type: integer
+ *                       example: 3
+ *     responses:
+ *       201:
+ *         description: Order created successfully
+ */
+router.post('/', authMiddleware(['user']), OrderController.createOrder);
+
+/**
+ * @swagger
+ * /orders/{id}/approve:
+ *   put:
+ *     summary: Approve an order and modify item prices (Admin)
+ *     tags: [Orders]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               updatedItems:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     itemId:
+ *                       type: integer
+ *                       example: 5
+ *                     newPrice:
+ *                       type: number
+ *                       example: 15.00
+ *     responses:
+ *       200:
+ *         description: Order approved
+ */
+router.put('/:id/approve', authMiddleware(['admin']), OrderController.approveOrder);
+
+/**
+ * @swagger
+ * /orders/{id}/complete:
+ *   put:
+ *     summary: Finalize an order (Admin)
+ *     tags: [Orders]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Order completed
+ */
+router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeOrder);
 export default router;

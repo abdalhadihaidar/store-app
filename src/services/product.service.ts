@@ -4,10 +4,15 @@ export class ProductService {
   static async getAllProducts() {
     return await Product.findAll();
   }
-
-  static async createProduct(productData: { name: string; price: number }) {
+  static async getProductById(id: number) {
+    const product = await Product.findByPk(id);
+    if (!product) throw new Error('Product not found');
+    return product;
+  }
+  static async createProduct(productData: { name: string; price: number; categoryId: number; images?: string[] }) {
     return await Product.create(productData);
   }
+  
 
   static async updateProduct(productId: string, updateData: { name?: string; price?: number }) {
     const product = await Product.findByPk(productId);

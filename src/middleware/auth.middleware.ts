@@ -16,24 +16,28 @@ declare global {
 
 export const authMiddleware = (roles: string[] = []) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const token = req.headers['authorization'];
-    if (!token) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return; // Stop here, don't continue the request
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ message: 'Unauthorized: No token provided' });
+      return;
     }
 
+    const token = authHeader.split(' ')[1]; // ✅ Extract token correctly
+
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedUser;
+      if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is missing");
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET) as DecodedUser;
       req.user = decoded;
 
       if (roles.length && !roles.includes(req.user.role)) {
         res.status(403).json({ message: 'Forbidden: Access denied' });
-        return; // Stop here, don't continue the request
+        return;
       }
 
-      next(); // Proceed to the next middleware/route handler
+      next(); // Proceed to next middleware/route handler
     } catch (error) {
-      res.status(401).json({ message: 'Invalid token' });
+      res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
   };
 };

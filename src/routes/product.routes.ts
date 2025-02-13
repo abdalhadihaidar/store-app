@@ -1,6 +1,7 @@
 import express from 'express';
 import { ProductController } from '../controllers/product.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { upload } from '../services/fileUpload.service';
 
 const router = express.Router();
 
@@ -22,7 +23,17 @@ const router = express.Router();
  *         description: List of products
  */
 router.get('/', ProductController.getProducts);
-
+/**
+ * @swagger
+ * /products:
+ *   get by id:
+ *     summary: Retrieve all products
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: List of products
+ */
+router.get('/:id', ProductController.getById);
 /**
  * @swagger
  * /products:
@@ -34,7 +45,7 @@ router.get('/', ProductController.getProducts);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -42,12 +53,22 @@ router.get('/', ProductController.getProducts);
  *                 type: string
  *               price:
  *                 type: number
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Product created successfully
  */
-router.post('/', authMiddleware(['admin']), ProductController.createProduct);
-
+router.post(
+    '/',
+    authMiddleware(['admin']),
+    upload.array('images', 4), // Accept up to 4 images
+    ProductController.createProduct
+  );
+  
 /**
  * @swagger
  * /products/{id}:

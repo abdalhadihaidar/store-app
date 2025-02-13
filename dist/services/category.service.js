@@ -9,6 +9,12 @@ class CategoryService {
     static async getAllCategories() {
         return await category_model_1.default.findAll();
     }
+    static async getCategoryById(id) {
+        const category = await category_model_1.default.findByPk(id);
+        if (!category)
+            throw new Error('Category not found');
+        return category;
+    }
     static async createCategory(categoryData) {
         return await category_model_1.default.create(categoryData);
     }

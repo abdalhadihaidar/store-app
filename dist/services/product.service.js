@@ -9,6 +9,12 @@ class ProductService {
     static async getAllProducts() {
         return await product_model_1.default.findAll();
     }
+    static async getProductById(id) {
+        const product = await product_model_1.default.findByPk(id);
+        if (!product)
+            throw new Error('Product not found');
+        return product;
+    }
     static async createProduct(productData) {
         return await product_model_1.default.create(productData);
     }

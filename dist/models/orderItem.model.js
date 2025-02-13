@@ -6,16 +6,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderItem = void 0;
 const sequelize_1 = require("sequelize");
 const database_1 = __importDefault(require("../config/database"));
-const product_model_1 = __importDefault(require("./product.model"));
-const order_model_1 = __importDefault(require("./order.model"));
 class OrderItem extends sequelize_1.Model {
 }
 exports.OrderItem = OrderItem;
 OrderItem.init({
     id: { type: sequelize_1.DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    orderId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
+    productId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
     quantity: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
-    price: { type: sequelize_1.DataTypes.FLOAT, allowNull: false },
+    originalPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: false }, // ✅ Stores original price
+    adjustedPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: true }, // ✅ Admin-adjusted price
 }, { sequelize: database_1.default, tableName: 'order_items' });
-OrderItem.belongsTo(product_model_1.default);
-OrderItem.belongsTo(order_model_1.default);
 exports.default = OrderItem;
+// ✅ Move imports after defining OrderItem
+const order_model_1 = __importDefault(require("./order.model"));
+const product_model_1 = __importDefault(require("./product.model"));
+// ✅ Define relationships after both models are defined
+OrderItem.belongsTo(order_model_1.default, { foreignKey: 'orderId', as: 'order' });
+OrderItem.belongsTo(product_model_1.default, { foreignKey: 'productId', as: 'product' });

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const product_controller_1 = require("../controllers/product.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
+const fileUpload_service_1 = require("../services/fileUpload.service");
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -27,6 +28,17 @@ router.get('/', product_controller_1.ProductController.getProducts);
 /**
  * @swagger
  * /products:
+ *   get by id:
+ *     summary: Retrieve all products
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: List of products
+ */
+router.get('/:id', product_controller_1.ProductController.getById);
+/**
+ * @swagger
+ * /products:
  *   post:
  *     summary: Create a new product (Admin Only)
  *     tags: [Products]
@@ -35,7 +47,7 @@ router.get('/', product_controller_1.ProductController.getProducts);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -43,11 +55,17 @@ router.get('/', product_controller_1.ProductController.getProducts);
  *                 type: string
  *               price:
  *                 type: number
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Product created successfully
  */
-router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), product_controller_1.ProductController.createProduct);
+router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), fileUpload_service_1.upload.array('images', 4), // Accept up to 4 images
+product_controller_1.ProductController.createProduct);
 /**
  * @swagger
  * /products/{id}:

@@ -4,6 +4,11 @@ export class CategoryService {
   static async getAllCategories() {
     return await Category.findAll();
   }
+  static async getCategoryById(id: number) {
+    const category = await Category.findByPk(id);
+    if (!category) throw new Error('Category not found');
+    return category;
+  }
 
   static async createCategory(categoryData: { name: string }) {
     return await Category.create(categoryData);

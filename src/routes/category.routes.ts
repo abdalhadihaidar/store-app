@@ -26,6 +26,17 @@ router.get('/', CategoryController.getCategories);
 /**
  * @swagger
  * /categories:
+ *   get by id:
+ *     summary: Retrieve all categories
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: List of categories
+ */
+router.get('/:id', CategoryController.getById);
+/**
+ * @swagger
+ * /categories:
  *   post:
  *     summary: Create a new category (Admin Only)
  *     tags: [Categories]
