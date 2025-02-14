@@ -30,6 +30,6 @@ export default app;
 
 // Sync database
 
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync().then(() => {
   console.log('✅ Database schema updated!');
 });
