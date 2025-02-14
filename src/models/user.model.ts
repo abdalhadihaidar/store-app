@@ -8,6 +8,8 @@ export interface UserAttributes {
   email: string;
   password: string;
   role: 'admin' | 'client';
+  resetPasswordToken?: string; // Add this
+  resetPasswordExpires?: Date; // Add this
 }
 
 // Define the UserCreationAttributes interface (for creation, `id` is optional)
@@ -19,6 +21,8 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   email!: string;
   password!: string;
   role!: 'admin' | 'client';
+  resetPasswordToken!: string; // Add this
+  resetPasswordExpires!: Date; // Add this
 }
 
 User.init(
@@ -28,6 +32,14 @@ User.init(
     email: { type: DataTypes.STRING, unique: true, allowNull: false },
     password: { type: DataTypes.STRING, allowNull: false },
     role: { type: DataTypes.ENUM('admin', 'client'), allowNull: false },
+    resetPasswordToken: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    resetPasswordExpires: {
+      type: DataTypes.DATE,
+      allowNull: true
+    }
   },
   { sequelize, tableName: 'users' }
 );

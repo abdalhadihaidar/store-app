@@ -22,5 +22,23 @@ class AuthController {
             res.status(401).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
         }
     }
+    static async forgotPassword(req, res) {
+        try {
+            await auth_service_1.AuthService.forgotPassword(req.body.email);
+            res.status(200).json({ message: 'Password reset email sent' });
+        }
+        catch (error) {
+            res.status(500).json({ message: 'Error processing request' });
+        }
+    }
+    static async resetPassword(req, res) {
+        try {
+            await auth_service_1.AuthService.resetPassword(req.body.token, req.body.newPassword);
+            res.status(200).json({ message: 'Password reset successful' });
+        }
+        catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 }
 exports.AuthController = AuthController;

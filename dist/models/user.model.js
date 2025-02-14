@@ -15,5 +15,13 @@ User.init({
     email: { type: sequelize_1.DataTypes.STRING, unique: true, allowNull: false },
     password: { type: sequelize_1.DataTypes.STRING, allowNull: false },
     role: { type: sequelize_1.DataTypes.ENUM('admin', 'client'), allowNull: false },
+    resetPasswordToken: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true
+    },
+    resetPasswordExpires: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true
+    }
 }, { sequelize: database_1.default, tableName: 'users' });
 exports.default = User;
