@@ -15,6 +15,9 @@ class ProductService {
             throw new Error('Product not found');
         return product;
     }
+    static async getProductsByCategoryId(categoryId) {
+        return await product_model_1.default.findAll({ where: { categoryId } });
+    }
     static async createProduct(productData) {
         return await product_model_1.default.create(productData);
     }

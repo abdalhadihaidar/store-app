@@ -4,7 +4,6 @@ import { authMiddleware } from '../middleware/auth.middleware';
 import { upload } from '../services/fileUpload.service';
 
 const router = express.Router();
-
 /**
  * @swagger
  * tags:
@@ -23,17 +22,43 @@ const router = express.Router();
  *         description: List of products
  */
 router.get('/', ProductController.getProducts);
+
 /**
  * @swagger
- * /products:
- *   get by id:
- *     summary: Retrieve all products
+ * /products/{id}:
+ *   get:
+ *     summary: Get product by ID
  *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of products
+ *         description: Product details
  */
 router.get('/:id', ProductController.getById);
+
+/**
+ * @swagger
+ * /products/category/{categoryId}:
+ *   get:
+ *     summary: Get products by category ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of products in the category
+ */
+router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
+
 /**
  * @swagger
  * /products:
@@ -53,6 +78,8 @@ router.get('/:id', ProductController.getById);
  *                 type: string
  *               price:
  *                 type: number
+ *               categoryId:
+ *                 type: integer
  *               images:
  *                 type: array
  *                 items:
@@ -63,11 +90,11 @@ router.get('/:id', ProductController.getById);
  *         description: Product created successfully
  */
 router.post(
-    '/',
-    authMiddleware(['admin']),
-    upload.array('images', 4), // Accept up to 4 images
-    ProductController.createProduct
-  );
+  '/',
+  authMiddleware(['admin']),
+  upload.array('images', 4),
+  ProductController.createProduct
+);
   
 /**
  * @swagger

@@ -16,5 +16,5 @@ ProductImage.init({
 }, { sequelize: database_1.default, tableName: 'product_images' });
 // ✅ One-to-Many: A Product has multiple images
 ProductImage.belongsTo(product_model_1.default, { foreignKey: 'productId', as: 'product' });
-product_model_1.default.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
+//Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
 exports.default = ProductImage;

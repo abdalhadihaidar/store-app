@@ -9,6 +9,12 @@ export class ProductService {
     if (!product) throw new Error('Product not found');
     return product;
   }
+
+
+  static async getProductsByCategoryId(categoryId: number) {
+    return await Product.findAll({ where: { categoryId } });
+  }
+
   static async createProduct(productData: { name: string; price: number; categoryId: number; images?: string[] }) {
     return await Product.create(productData);
   }

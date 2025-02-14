@@ -21,4 +21,5 @@ export class AuthService {
     const token = generateToken(user.id, user.role); // Correctly typed now
     return { token, user };
   }
+  
 }

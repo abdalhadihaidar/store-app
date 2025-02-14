@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-"scripts": {
-  "db:migrate": "npx sequelize-cli db:migrate --config config/config.js",
-  "db:migrate:undo": "npx sequelize-cli db:migrate:undo --config config/config.js",
-  "db:seed": "npx sequelize-cli db:seed:all --config config/config.js",
-  "build": "tsc",          
-  "start": "node dist/server.js",
-  "dev": "ts-node-dev src/server.ts" 
-},
+  "scripts": {
+    "db:migrate": "npx sequelize-cli db:migrate --config config/config.js",
+    "db:migrate:undo": "npx sequelize-cli db:migrate:undo --config config/config.js",
+    "db:seed": "npx sequelize-cli db:seed:all --config config/config.js",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev src/server.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -37,6 +37,7 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.12.0",
     "sequelize": "^6.37.5",
+    "sequelize-auto-migrations": "^1.0.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2"

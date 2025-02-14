@@ -20,6 +20,15 @@ export class OrderController {
         res.status(404).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
       }
     }
+    static async getOrdersByUserId(req: Request, res: Response) {
+      try {
+        const userId = Number(req.params.userId);
+        const orders = await OrderService.getOrdersByUserId(userId);
+        res.json(orders);
+      } catch (error) {
+        res.status(400).json({message: error instanceof Error ? error.message : 'An unknown error occurred'});
+      }
+    }
     // ✅ Admin approves & modifies order prices
     static async approveOrder(req: Request, res: Response, next: NextFunction) {
       try {

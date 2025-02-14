@@ -10,7 +10,7 @@ import { errorHandler } from './middleware/error.middleware'; // Import error ha
 dotenv.config();
 
 const app = express();
-
+app.use('/uploads', express.static('uploads')); // ✅ Serve images from the uploads folder
 app.use(cors({
   origin: '*',  // Allow all origins (not recommended for production)
   methods: ['GET', 'POST', 'PUT', 'DELETE','patch'],
@@ -29,6 +29,7 @@ app.use(errorHandler);
 export default app;
 
 // Sync database
-sequelize.sync().then(() => {
-  console.log('Database connected and synced.');
+
+sequelize.sync({ alter: true }).then(() => {
+  console.log('✅ Database schema updated!');
 });

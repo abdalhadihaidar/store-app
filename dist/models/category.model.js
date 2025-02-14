@@ -15,8 +15,11 @@ Category.init({
     image: { type: sequelize_1.DataTypes.STRING, allowNull: true, defaultValue: '/uploads/default-category.jpg' },
 }, { sequelize: database_1.default, tableName: 'categories' });
 exports.default = Category;
-// ✅ Import Product after defining Category
+// ✅ Import models after defining Category
 const product_model_1 = __importDefault(require("./product.model"));
-// ✅ Define association after both models are defined
+const categoryImage_model_1 = __importDefault(require("./categoryImage.model"));
+// ✅ Define associations after both models are defined
 Category.hasMany(product_model_1.default, { foreignKey: 'categoryId', as: 'products' });
-product_model_1.default.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+//Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+Category.hasOne(categoryImage_model_1.default, { foreignKey: 'categoryId', as: 'images' });
+//CategoryImage.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });

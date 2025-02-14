@@ -14,11 +14,11 @@ Order.init({
     userId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
     status: { type: sequelize_1.DataTypes.ENUM('pending', 'approved', 'completed'), allowNull: false, defaultValue: 'pending' },
     totalPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
-    isPriceChangeRequested: { type: sequelize_1.DataTypes.BOOLEAN, defaultValue: false }, // ✅ New field for price change requests
+    isPriceChangeRequested: { type: sequelize_1.DataTypes.BOOLEAN, defaultValue: false },
 }, { sequelize: database_1.default, tableName: 'orders' });
 exports.default = Order;
-// ✅ Import OrderItem AFTER defining Order
+// ✅ Import OrderItem after defining Order
 const orderItem_model_1 = __importDefault(require("./orderItem.model"));
-// ✅ Define association AFTER importing OrderItem
+// ✅ Define association after both models are defined
 Order.hasMany(orderItem_model_1.default, { foreignKey: 'orderId', as: 'items' });
 //OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });

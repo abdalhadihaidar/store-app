@@ -57,23 +57,43 @@ router.put('/:id', authMiddleware(['admin']), OrderController.updateOrderStatus)
  *       200:
  *         description: List of orders
  */
-
 router.get('/', authMiddleware(['admin', 'user']), OrderController.getAllOrders);
-
 /**
  * @swagger
- * /orders:
- *   get by id:
- *     summary: Retrieve all orders (Admin) or user orders (Client)
+ * /orders/{id}:
+ *   get:
+ *     summary: Get order by ID
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of orders
+ *         description: Order details
  */
-
-router.get('/:id', OrderController.getById);
+router.get('/:id', authMiddleware(['admin', 'user']), OrderController.getById);
+/**
+ * @swagger
+ * /orders/user/{userId}:
+ *   get:
+ *     summary: Get orders by user ID
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of orders for the user
+ */
+router.get('/user/:userId', authMiddleware(['admin']), OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:

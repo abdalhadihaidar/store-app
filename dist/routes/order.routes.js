@@ -57,17 +57,40 @@ router.put('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), order_contr
 router.get('/', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getAllOrders);
 /**
  * @swagger
- * /orders:
- *   get by id:
- *     summary: Retrieve all orders (Admin) or user orders (Client)
+ * /orders/{id}:
+ *   get:
+ *     summary: Get order by ID
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of orders
+ *         description: Order details
  */
-router.get('/:id', order_controller_1.OrderController.getById);
+router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getById);
+/**
+ * @swagger
+ * /orders/user/{userId}:
+ *   get:
+ *     summary: Get orders by user ID
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of orders for the user
+ */
+router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:

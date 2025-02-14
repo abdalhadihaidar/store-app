@@ -14,6 +14,6 @@ ProductImage.init(
 
 // ✅ One-to-Many: A Product has multiple images
 ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
+//Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
 
 export default ProductImage;

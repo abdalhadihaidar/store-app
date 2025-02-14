@@ -22,6 +22,16 @@ class ProductController {
             res.status(404).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
         }
     }
+    static async getProductsByCategoryId(req, res) {
+        try {
+            const categoryId = Number(req.params.categoryId);
+            const products = await product_service_1.ProductService.getProductsByCategoryId(categoryId);
+            res.json(products);
+        }
+        catch (error) {
+            res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+        }
+    }
     static async createProduct(req, res, next) {
         fileUpload_service_1.upload.array('images', 4)(req, res, async (err) => {
             if (err)

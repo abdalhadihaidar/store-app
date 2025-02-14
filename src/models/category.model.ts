@@ -14,9 +14,13 @@ Category.init(
 
 export default Category;
 
-// ✅ Import Product after defining Category
+// ✅ Import models after defining Category
 import Product from './product.model';
+import CategoryImage from './categoryImage.model';
 
-// ✅ Define association after both models are defined
+// ✅ Define associations after both models are defined
 Category.hasMany(Product, { foreignKey: 'categoryId', as: 'products' });
-Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+//Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+
+Category.hasOne(CategoryImage, { foreignKey: 'categoryId', as: 'images' });
+//CategoryImage.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });

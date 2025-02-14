@@ -14,8 +14,8 @@ OrderItem.init({
     orderId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
     productId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
     quantity: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
-    originalPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: false }, // ✅ Stores original price
-    adjustedPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: true }, // ✅ Admin-adjusted price
+    originalPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: false },
+    adjustedPrice: { type: sequelize_1.DataTypes.FLOAT, allowNull: true },
 }, { sequelize: database_1.default, tableName: 'order_items' });
 exports.default = OrderItem;
 // ✅ Move imports after defining OrderItem

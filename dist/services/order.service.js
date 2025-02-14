@@ -32,6 +32,9 @@ class OrderService {
             throw new Error('Order not found');
         return order;
     }
+    static async getOrdersByUserId(userId) {
+        return await order_model_1.default.findAll({ where: { userId } });
+    }
     // ✅ User creates an order with a price change request
     static async createOrder(userId, orderData) {
         const transaction = await order_model_1.default.sequelize?.transaction();

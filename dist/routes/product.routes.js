@@ -27,15 +27,38 @@ const router = express_1.default.Router();
 router.get('/', product_controller_1.ProductController.getProducts);
 /**
  * @swagger
- * /products:
- *   get by id:
- *     summary: Retrieve all products
+ * /products/{id}:
+ *   get:
+ *     summary: Get product by ID
  *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of products
+ *         description: Product details
  */
 router.get('/:id', product_controller_1.ProductController.getById);
+/**
+ * @swagger
+ * /products/category/{categoryId}:
+ *   get:
+ *     summary: Get products by category ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of products in the category
+ */
+router.get('/category/:categoryId', product_controller_1.ProductController.getProductsByCategoryId);
 /**
  * @swagger
  * /products:
@@ -55,6 +78,8 @@ router.get('/:id', product_controller_1.ProductController.getById);
  *                 type: string
  *               price:
  *                 type: number
+ *               categoryId:
+ *                 type: integer
  *               images:
  *                 type: array
  *                 items:
@@ -64,8 +89,7 @@ router.get('/:id', product_controller_1.ProductController.getById);
  *       201:
  *         description: Product created successfully
  */
-router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), fileUpload_service_1.upload.array('images', 4), // Accept up to 4 images
-product_controller_1.ProductController.createProduct);
+router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), fileUpload_service_1.upload.array('images', 4), product_controller_1.ProductController.createProduct);
 /**
  * @swagger
  * /products/{id}:

@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
 export class OrderItem extends Model {
@@ -16,8 +16,8 @@ OrderItem.init(
     orderId: { type: DataTypes.INTEGER, allowNull: false },
     productId: { type: DataTypes.INTEGER, allowNull: false },
     quantity: { type: DataTypes.INTEGER, allowNull: false },
-    originalPrice: { type: DataTypes.FLOAT, allowNull: false }, // ✅ Stores original price
-    adjustedPrice: { type: DataTypes.FLOAT, allowNull: true },  // ✅ Admin-adjusted price
+    originalPrice: { type: DataTypes.FLOAT, allowNull: false },
+    adjustedPrice: { type: DataTypes.FLOAT, allowNull: true },
   },
   { sequelize, tableName: 'order_items' }
 );

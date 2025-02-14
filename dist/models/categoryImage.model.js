@@ -14,3 +14,5 @@ CategoryImage.init({
     imageUrl: { type: sequelize_1.DataTypes.STRING, allowNull: false },
 }, { sequelize: database_1.default, tableName: 'category_images' });
 exports.default = CategoryImage;
+const category_model_1 = __importDefault(require("./category.model"));
+CategoryImage.belongsTo(category_model_1.default, { foreignKey: 'categoryId', as: 'category' });

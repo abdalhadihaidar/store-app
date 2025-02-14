@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
-import Category from './category.model';
+
 
 export class CategoryImage extends Model {}
 
@@ -13,3 +13,5 @@ CategoryImage.init(
 );
 
 export default CategoryImage;
+import Category from './category.model';
+CategoryImage.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
