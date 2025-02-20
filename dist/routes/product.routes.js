@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const product_controller_1 = require("../controllers/product.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
-const fileUpload_service_1 = require("../services/fileUpload.service");
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -70,9 +69,15 @@ router.get('/category/:categoryId', product_controller_1.ProductController.getPr
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *               - categoryId
+ *               - quantity
+ *               - images
  *             properties:
  *               name:
  *                 type: string
@@ -80,16 +85,18 @@ router.get('/category/:categoryId', product_controller_1.ProductController.getPr
  *                 type: number
  *               categoryId:
  *                 type: integer
+ *               quantity:
+ *                 type: integer
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
- *                   format: binary
  *     responses:
  *       201:
  *         description: Product created successfully
  */
-router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), fileUpload_service_1.upload.array('images', 4), product_controller_1.ProductController.createProduct);
+router.post('/', (0, auth_middleware_1.authMiddleware)(['admin']), product_controller_1.ProductController.createProduct // ✅ Now type-safe
+);
 /**
  * @swagger
  * /products/{id}:

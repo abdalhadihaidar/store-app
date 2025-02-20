@@ -3,38 +3,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upload = void 0;
+exports.generalImageUpload = exports.categoryImageUpload = exports.productImageUpload = void 0;
+// fileUpload.service.ts
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const UPLOADS_DIR = path_1.default.join(__dirname, '../../uploads');
-// Ensure the upload directory exists
-if (!fs_1.default.existsSync(UPLOADS_DIR)) {
+if (!fs_1.default.existsSync(UPLOADS_DIR))
     fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
-// Multer storage configuration
 const storage = multer_1.default.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, UPLOADS_DIR);
-    },
+    destination: UPLOADS_DIR,
     filename: (req, file, cb) => {
         const ext = path_1.default.extname(file.originalname);
-        const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`;
-        cb(null, filename);
-    },
+        cb(null, `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`);
+    }
 });
-// Multer file filter (only images)
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
+    if (!file.mimetype.startsWith('image/')) {
+        return cb(new multer_1.default.MulterError('LIMIT_UNEXPECTED_FILE'));
     }
-    else {
-        cb(new Error('Only image files are allowed!'));
-    }
+    cb(null, true);
 };
-// Create Multer instance
-exports.upload = (0, multer_1.default)({
+const upload = (0, multer_1.default)({
     storage,
     fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+    limits: { fileSize: 5 * 1024 * 1024, files: 4 }
 });
+// Export specific middleware instances
+exports.productImageUpload = upload.array('images', 4);
+exports.categoryImageUpload = upload.single('image');
+exports.generalImageUpload = upload.array('images'); // For image upload controller

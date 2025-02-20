@@ -6,6 +6,7 @@ interface ProductAttributes {
   name: string;
   price: number;
   categoryId: number;
+  quantity: number;
 }
 
 interface ProductCreationAttributes extends Optional<ProductAttributes, 'id'> {}
@@ -15,6 +16,7 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public name!: string;
   public price!: number;
   public categoryId!: number;
+  public quantity!: number;
 }
 
 Product.init(
@@ -23,6 +25,7 @@ Product.init(
     name: { type: DataTypes.STRING, allowNull: false },
     price: { type: DataTypes.FLOAT, allowNull: false },
     categoryId: { type: DataTypes.INTEGER, allowNull: false },
+    quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // ✅ Add quantity field
   },
   { sequelize, tableName: 'products' }
 );

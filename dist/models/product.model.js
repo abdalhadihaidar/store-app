@@ -14,6 +14,7 @@ Product.init({
     name: { type: sequelize_1.DataTypes.STRING, allowNull: false },
     price: { type: sequelize_1.DataTypes.FLOAT, allowNull: false },
     categoryId: { type: sequelize_1.DataTypes.INTEGER, allowNull: false },
+    quantity: { type: sequelize_1.DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // ✅ Add quantity field
 }, { sequelize: database_1.default, tableName: 'products' });
 exports.default = Product;
 // ✅ Import models after defining Product

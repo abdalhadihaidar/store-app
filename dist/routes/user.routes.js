@@ -76,7 +76,7 @@ router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), user_contro
  *       200:
  *         description: User updated successfully
  */
-router.put('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.updateUser);
+router.put('/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.updateUser);
 /**
  * @swagger
  * /users/{id}:

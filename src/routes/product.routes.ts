@@ -1,7 +1,6 @@
 import express from 'express';
 import { ProductController } from '../controllers/product.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { upload } from '../services/fileUpload.service';
 
 const router = express.Router();
 /**
@@ -58,7 +57,6 @@ router.get('/:id', ProductController.getById);
  *         description: List of products in the category
  */
 router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
-
 /**
  * @swagger
  * /products:
@@ -70,9 +68,15 @@ router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *               - categoryId
+ *               - quantity
+ *               - images
  *             properties:
  *               name:
  *                 type: string
@@ -80,11 +84,12 @@ router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
  *                 type: number
  *               categoryId:
  *                 type: integer
+ *               quantity:
+ *                 type: integer
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
- *                   format: binary
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -92,10 +97,9 @@ router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
 router.post(
   '/',
   authMiddleware(['admin']),
-  upload.array('images', 4),
-  ProductController.createProduct
+  ProductController.createProduct // ✅ Now type-safe
 );
-  
+
 /**
  * @swagger
  * /products/{id}:

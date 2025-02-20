@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Order = void 0;
 const sequelize_1 = require("sequelize");
 const database_1 = __importDefault(require("../config/database"));
+const user_model_1 = __importDefault(require("./user.model"));
 class Order extends sequelize_1.Model {
 }
 exports.Order = Order;
@@ -22,3 +23,8 @@ const orderItem_model_1 = __importDefault(require("./orderItem.model"));
 // ✅ Define association after both models are defined
 Order.hasMany(orderItem_model_1.default, { foreignKey: 'orderId', as: 'items' });
 //OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+// After Order model definition
+Order.belongsTo(user_model_1.default, {
+    foreignKey: 'userId',
+    as: 'user' // This matches the alias used in the query
+});

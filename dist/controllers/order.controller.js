@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderController = void 0;
 const order_service_1 = require("../services/order.service");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class OrderController {
     // ✅ User creates an order with a price change request
     static async createOrder(req, res, next) {
@@ -59,9 +63,21 @@ class OrderController {
     // ✅ Get all orders (admin can see all, users see only theirs)
     static async getAllOrders(req, res, next) {
         try {
-            const userId = req.body.userId; // Extracted from token in real scenarios
-            const userRole = req.body.userRole; // Extracted from auth middleware
-            const orders = await order_service_1.OrderService.getAllOrders(userRole, userId);
+            // 1. Get token from headers
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.status(401).json({ message: 'Unauthorized' });
+                return;
+            }
+            // 2. Extract token
+            const token = authHeader.split(' ')[1];
+            // 3. Verify and decode token
+            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+            // 4. Now use the decoded values
+            const userId = decoded.userId;
+            const userRole = decoded.role;
+            // Rest of your controller logic...
+            const orders = await order_service_1.OrderService.getAllOrders(userId, userRole);
             res.json(orders);
         }
         catch (error) {

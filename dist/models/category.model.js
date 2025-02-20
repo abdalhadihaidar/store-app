@@ -10,10 +10,25 @@ class Category extends sequelize_1.Model {
 }
 exports.Category = Category;
 Category.init({
-    id: { type: sequelize_1.DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    name: { type: sequelize_1.DataTypes.STRING, allowNull: false },
-    image: { type: sequelize_1.DataTypes.STRING, allowNull: true, defaultValue: '/uploads/default-category.jpg' },
-}, { sequelize: database_1.default, tableName: 'categories' });
+    id: {
+        type: sequelize_1.DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    name: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
+    image: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+        defaultValue: '/uploads/default-category.jpg'
+    },
+}, {
+    sequelize: database_1.default,
+    tableName: 'categories',
+    modelName: 'Category' // Add modelName for better typing
+});
 exports.default = Category;
 // ✅ Import models after defining Category
 const product_model_1 = __importDefault(require("./product.model"));

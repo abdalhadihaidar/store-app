@@ -93,7 +93,7 @@ router.get('/:id', authMiddleware(['admin', 'user']), OrderController.getById);
  *       200:
  *         description: List of orders for the user
  */
-router.get('/user/:userId', authMiddleware(['admin']), OrderController.getOrdersByUserId);
+router.get('/user/:userId', authMiddleware(['admin', 'user']), OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:
@@ -166,7 +166,13 @@ router.post('/', authMiddleware(['user']), OrderController.createOrder);
  *       200:
  *         description: Order approved
  */
-router.put('/:id/approve', authMiddleware(['admin']), OrderController.approveOrder);
+router.put(
+    '/:id/approve',
+    authMiddleware(['admin']),
+    (req: express.Request, res: express.Response, next: express.NextFunction) => 
+      OrderController.approveOrder(req, res, next)
+  );
+  
 
 /**
  * @swagger
@@ -187,5 +193,11 @@ router.put('/:id/approve', authMiddleware(['admin']), OrderController.approveOrd
  *       200:
  *         description: Order completed
  */
-router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeOrder);
+router.put(
+    '/:id/complete',
+    authMiddleware(['admin']),
+    (req: express.Request, res: express.Response, next: express.NextFunction) => 
+      OrderController.completeOrder(req, res, next)
+  );
+  
 export default router;

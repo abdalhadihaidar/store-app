@@ -4,9 +4,8 @@ import Product from '../models/product.model';
 import { User } from '../models/user.model';
 
 export class OrderService {
-   // ✅ Get orders with user & items
-   static async getAllOrders(userRole: string, userId: number) {
-    const query = {
+  static async getAllOrders(requestingUserId: number, requestingUserRole: string) {
+    const query: any = {
       include: [
         {
           model: OrderItem,
@@ -17,8 +16,9 @@ export class OrderService {
       ],
     };
 
-    if (userRole !== 'admin') {
-      Object.assign(query, { where: { userId } });
+    // For non-admin users, only return their own orders
+    if (requestingUserRole !== 'admin') {
+      query.where = { userId: requestingUserId };
     }
 
     return await Order.findAll(query);

@@ -9,18 +9,26 @@ export class CategoryService {
     if (!category) throw new Error('Category not found');
     return category;
   }
-
-  static async createCategory(categoryData: { name: string }) {
+ 
+  static async createCategory(categoryData: { 
+    name: string;
+    image?: string;
+  }) {
     return await Category.create(categoryData);
   }
 
-  static async updateCategory(categoryId: string, updateData: { name?: string }) {
+  static async updateCategory(
+    categoryId: string, 
+    updateData: { 
+      name?: string;
+      image?: string;
+    }
+  ) {
     const category = await Category.findByPk(categoryId);
     if (!category) throw new Error('Category not found');
-
     return await category.update(updateData);
   }
-
+  
   static async deleteCategory(categoryId: string) {
     const category = await Category.findByPk(categoryId);
     if (!category) throw new Error('Category not found');

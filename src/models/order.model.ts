@@ -29,3 +29,8 @@ import OrderItem from './orderItem.model';
 // ✅ Define association after both models are defined
 Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items' });
 //OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+// After Order model definition
+Order.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user' // This matches the alias used in the query
+});

@@ -9,8 +9,7 @@ const orderItem_model_1 = __importDefault(require("../models/orderItem.model"));
 const product_model_1 = __importDefault(require("../models/product.model"));
 const user_model_1 = require("../models/user.model");
 class OrderService {
-    // ✅ Get orders with user & items
-    static async getAllOrders(userRole, userId) {
+    static async getAllOrders(requestingUserId, requestingUserRole) {
         const query = {
             include: [
                 {
@@ -21,8 +20,9 @@ class OrderService {
                 { model: user_model_1.User, as: 'user' },
             ],
         };
-        if (userRole !== 'admin') {
-            Object.assign(query, { where: { userId } });
+        // For non-admin users, only return their own orders
+        if (requestingUserRole !== 'admin') {
+            query.where = { userId: requestingUserId };
         }
         return await order_model_1.default.findAll(query);
     }

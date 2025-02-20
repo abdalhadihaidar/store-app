@@ -2,14 +2,28 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
 export class Category extends Model {}
-
 Category.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    name: { type: DataTypes.STRING, allowNull: false },
-    image: { type: DataTypes.STRING, allowNull: true, defaultValue: '/uploads/default-category.jpg' },
+    id: { 
+      type: DataTypes.INTEGER, 
+      autoIncrement: true, 
+      primaryKey: true 
+    },
+    name: { 
+      type: DataTypes.STRING, 
+      allowNull: false 
+    },
+    image: { 
+      type: DataTypes.STRING, 
+      allowNull: true, 
+      defaultValue: '/uploads/default-category.jpg' 
+    },
   },
-  { sequelize, tableName: 'categories' }
+  { 
+    sequelize, 
+    tableName: 'categories',
+    modelName: 'Category'  // Add modelName for better typing
+  }
 );
 
 export default Category;

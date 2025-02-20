@@ -25,3 +25,9 @@ User.init({
     }
 }, { sequelize: database_1.default, tableName: 'users' });
 exports.default = User;
+const order_model_1 = __importDefault(require("./order.model"));
+// Add this to your User model file
+User.hasMany(order_model_1.default, {
+    foreignKey: 'userId',
+    as: 'orders'
+});

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
-
+import jwt from 'jsonwebtoken';
 export class OrderController {
     // ✅ User creates an order with a price change request
     static async createOrder(req: Request, res: Response, next: NextFunction) {
@@ -53,12 +53,32 @@ export class OrderController {
     }
   
     // ✅ Get all orders (admin can see all, users see only theirs)
-    static async getAllOrders(req: Request, res: Response, next: NextFunction) {
+    static async getAllOrders(req: Request, res: Response, next: NextFunction): Promise<void>  {
       try {
-        const userId = req.body.userId; // Extracted from token in real scenarios
-        const userRole = req.body.userRole; // Extracted from auth middleware
-        const orders = await OrderService.getAllOrders(userRole, userId);
+        // 1. Get token from headers
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          res.status(401).json({ message: 'Unauthorized' });
+          return ;
+        }
+  
+        // 2. Extract token
+        const token = authHeader.split(' ')[1];
+  
+        // 3. Verify and decode token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+          userId: number; 
+          role: string 
+        };
+  
+        // 4. Now use the decoded values
+        const userId = decoded.userId;
+        const userRole = decoded.role;
+  
+        // Rest of your controller logic...
+        const orders = await OrderService.getAllOrders(userId,userRole );
         res.json(orders);
+  
       } catch (error) {
         next(error);
       }

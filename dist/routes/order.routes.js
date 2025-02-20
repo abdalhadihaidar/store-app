@@ -90,7 +90,7 @@ router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), ord
  *       200:
  *         description: List of orders for the user
  */
-router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.getOrdersByUserId);
+router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:
@@ -162,7 +162,7 @@ router.post('/', (0, auth_middleware_1.authMiddleware)(['user']), order_controll
  *       200:
  *         description: Order approved
  */
-router.put('/:id/approve', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.approveOrder);
+router.put('/:id/approve', (0, auth_middleware_1.authMiddleware)(['admin']), (req, res, next) => order_controller_1.OrderController.approveOrder(req, res, next));
 /**
  * @swagger
  * /orders/{id}/complete:
@@ -182,5 +182,5 @@ router.put('/:id/approve', (0, auth_middleware_1.authMiddleware)(['admin']), ord
  *       200:
  *         description: Order completed
  */
-router.put('/:id/complete', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.completeOrder);
+router.put('/:id/complete', (0, auth_middleware_1.authMiddleware)(['admin']), (req, res, next) => order_controller_1.OrderController.completeOrder(req, res, next));
 exports.default = router;

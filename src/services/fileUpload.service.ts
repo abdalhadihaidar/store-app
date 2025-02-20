@@ -1,38 +1,33 @@
+// fileUpload.service.ts
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-// Ensure the upload directory exists
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
-
-// Multer storage configuration
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOADS_DIR);
-  },
+  destination: UPLOADS_DIR,
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`;
-    cb(null, filename);
-  },
+    cb(null, `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`);
+  }
 });
 
-// Multer file filter (only images)
-const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'));
+const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image/')) {
+    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'));
   }
+  cb(null, true);
 };
 
-// Create Multer instance
-export const upload = multer({
+const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+  limits: { fileSize: 5 * 1024 * 1024, files: 4 }
 });
+
+// Export specific middleware instances
+export const productImageUpload = upload.array('images', 4);
+export const categoryImageUpload = upload.single('image');
+export const generalImageUpload = upload.array('images'); // For image upload controller

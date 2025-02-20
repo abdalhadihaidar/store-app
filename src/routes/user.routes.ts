@@ -43,7 +43,7 @@ router.get('/', authMiddleware(['admin']), UserController.getAllUsers);
  *       200:
  *         description: User details
  */
-router.get('/:id', authMiddleware(['admin']), UserController.getUserById);
+router.get('/:userId', authMiddleware(['admin']), UserController.getUserById);
 
 /**
  * @swagger
@@ -76,7 +76,7 @@ router.get('/:id', authMiddleware(['admin']), UserController.getUserById);
  *       200:
  *         description: User updated successfully
  */
-router.put('/:id', authMiddleware(['admin']), UserController.updateUser);
+router.put('/:userId', authMiddleware(['admin']), UserController.updateUser);
 
 /**
  * @swagger
@@ -96,6 +96,6 @@ router.put('/:id', authMiddleware(['admin']), UserController.updateUser);
  *       204:
  *         description: User deleted successfully
  */
-router.delete('/:id', authMiddleware(['admin']), UserController.deleteUser);
+router.delete('/:userId', authMiddleware(['admin']), UserController.deleteUser);
 
 export default router;
