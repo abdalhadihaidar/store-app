@@ -54,7 +54,7 @@ router.put('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), order_contr
  *       200:
  *         description: List of orders
  */
-router.get('/', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getAllOrders);
+router.get('/', (0, auth_middleware_1.authMiddleware)(['admin', 'client']), order_controller_1.OrderController.getAllOrders);
 /**
  * @swagger
  * /orders/{id}:
@@ -73,7 +73,7 @@ router.get('/', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_
  *       200:
  *         description: Order details
  */
-router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getById);
+router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'client']), order_controller_1.OrderController.getById);
 /**
  * @swagger
  * /orders/user/{userId}:
@@ -90,7 +90,7 @@ router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), ord
  *       200:
  *         description: List of orders for the user
  */
-router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin', 'user']), order_controller_1.OrderController.getOrdersByUserId);
+router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin', 'client']), order_controller_1.OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:
@@ -124,7 +124,7 @@ router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin', 'use
  *       201:
  *         description: Order created successfully
  */
-router.post('/', (0, auth_middleware_1.authMiddleware)(['user']), order_controller_1.OrderController.createOrder);
+router.post('/', (0, auth_middleware_1.authMiddleware)(['client']), order_controller_1.OrderController.createOrder);
 /**
  * @swagger
  * /orders/{id}/approve:

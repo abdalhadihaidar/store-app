@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: store-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: RUN@@404error
+      MYSQL_DATABASE: u143357588_store_db
+      MYSQL_USER: u143357588_root
+      MYSQL_PASSWORD: RUN@@404error
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: store-app
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=store-db
+      - DB_NAME=u143357588_store_db
+      - DB_USER=u143357588_root
+      - DB_PASS=RUN@@404error
+      - DB_PORT=3306
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:

@@ -6,6 +6,9 @@ export class OrderController {
     static async createOrder(req: Request, res: Response, next: NextFunction) {
       try {
         const { userId, items } = req.body;
+        console.log(req.body)
+        console.log(userId)
+        console.log(items)
         const order = await OrderService.createOrder(userId, { items });
         res.status(201).json(order);
       } catch (error) {

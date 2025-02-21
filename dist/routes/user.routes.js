@@ -44,7 +44,7 @@ router.get('/', (0, auth_middleware_1.authMiddleware)(['admin']), user_controlle
  *       200:
  *         description: User details
  */
-router.get('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.getUserById);
+router.get('/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.getUserById);
 /**
  * @swagger
  * /users/{id}:
@@ -95,5 +95,5 @@ router.put('/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), user_co
  *       204:
  *         description: User deleted successfully
  */
-router.delete('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.deleteUser);
+router.delete('/:userId', (0, auth_middleware_1.authMiddleware)(['admin']), user_controller_1.UserController.deleteUser);
 exports.default = router;

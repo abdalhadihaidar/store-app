@@ -7,7 +7,6 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const routes_1 = __importDefault(require("./routes"));
-const database_1 = __importDefault(require("./config/database"));
 const swagger_1 = require("./config/swagger");
 const error_middleware_1 = require("./middleware/error.middleware");
 dotenv_1.default.config();
@@ -27,6 +26,6 @@ app.use('/api', routes_1.default);
 app.use(error_middleware_1.errorHandler); // ✅ Add error handler last
 exports.default = app;
 // Sync database
-database_1.default.sync({ alter: true }).then(() => {
-    console.log('✅ Database schema updated!');
-});
+//sequelize.sync({ alter: true }).then(() => {
+//  console.log('✅ Database schema updated!');
+//});

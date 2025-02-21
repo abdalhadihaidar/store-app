@@ -11,6 +11,9 @@ class OrderController {
     static async createOrder(req, res, next) {
         try {
             const { userId, items } = req.body;
+            console.log(req.body);
+            console.log(userId);
+            console.log(items);
             const order = await order_service_1.OrderService.createOrder(userId, { items });
             res.status(201).json(order);
         }

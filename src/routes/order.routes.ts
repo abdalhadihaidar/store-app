@@ -57,7 +57,7 @@ router.put('/:id', authMiddleware(['admin']), OrderController.updateOrderStatus)
  *       200:
  *         description: List of orders
  */
-router.get('/', authMiddleware(['admin', 'user']), OrderController.getAllOrders);
+router.get('/', authMiddleware(['admin', 'client']), OrderController.getAllOrders);
 /**
  * @swagger
  * /orders/{id}:
@@ -76,7 +76,7 @@ router.get('/', authMiddleware(['admin', 'user']), OrderController.getAllOrders)
  *       200:
  *         description: Order details
  */
-router.get('/:id', authMiddleware(['admin', 'user']), OrderController.getById);
+router.get('/:id', authMiddleware(['admin', 'client']), OrderController.getById);
 /**
  * @swagger
  * /orders/user/{userId}:
@@ -93,7 +93,7 @@ router.get('/:id', authMiddleware(['admin', 'user']), OrderController.getById);
  *       200:
  *         description: List of orders for the user
  */
-router.get('/user/:userId', authMiddleware(['admin', 'user']), OrderController.getOrdersByUserId);
+router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController.getOrdersByUserId);
 /**
  * @swagger
  * /orders:
@@ -127,7 +127,7 @@ router.get('/user/:userId', authMiddleware(['admin', 'user']), OrderController.g
  *       201:
  *         description: Order created successfully
  */
-router.post('/', authMiddleware(['user']), OrderController.createOrder);
+router.post('/', authMiddleware(['client']), OrderController.createOrder);
 
 /**
  * @swagger

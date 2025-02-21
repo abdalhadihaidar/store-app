@@ -33,6 +33,8 @@ export class OrderService {
   }
   // ✅ User creates an order with a price change request
   static async createOrder(userId: number, orderData: { items: { productId: number; quantity: number }[] }) {
+    console.log(userId )
+    console.log(orderData)
     const transaction = await Order.sequelize?.transaction();
     try {
       let totalPrice = 0;
