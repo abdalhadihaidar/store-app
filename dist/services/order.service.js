@@ -36,13 +36,13 @@ class OrderService {
         return await order_model_1.default.findAll({ where: { userId } });
     }
     // ✅ User creates an order with a price change request
-    static async createOrder(userId, orderData) {
+    static async createOrder(userId, orderData, isPriceChangeRequested) {
         console.log(userId);
         console.log(orderData);
         const transaction = await order_model_1.default.sequelize?.transaction();
         try {
             let totalPrice = 0;
-            const order = await order_model_1.default.create({ userId, status: 'pending', totalPrice, isPriceChangeRequested: true }, { transaction });
+            const order = await order_model_1.default.create({ userId, status: 'pending', totalPrice, isPriceChangeRequested: isPriceChangeRequested }, { transaction });
             for (const item of orderData.items) {
                 const product = await product_model_1.default.findByPk(item.productId);
                 if (!product)

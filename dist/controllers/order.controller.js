@@ -10,11 +10,11 @@ class OrderController {
     // ✅ User creates an order with a price change request
     static async createOrder(req, res, next) {
         try {
-            const { userId, items } = req.body;
+            const { userId, items, isPriceChangeRequested } = req.body;
             console.log(req.body);
             console.log(userId);
             console.log(items);
-            const order = await order_service_1.OrderService.createOrder(userId, { items });
+            const order = await order_service_1.OrderService.createOrder(userId, { items }, isPriceChangeRequested);
             res.status(201).json(order);
         }
         catch (error) {
