@@ -24,7 +24,7 @@ const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024, files: 4 }
+  limits: { fileSize: 1024 * 1024 * 1024, files: 4 }
 });
 
 // Export specific middleware instances

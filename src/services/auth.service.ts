@@ -37,7 +37,7 @@ export class AuthService {
       resetPasswordExpires,
     });
 
-    const resetUrl = `http://yourfrontend.com/reset-password?token=${resetToken}`;
+    const resetUrl = `https://brother-investment-group.com/reset-password?token=${resetToken}`;
     await sendPasswordResetEmail(user.email, resetUrl);
   }
 

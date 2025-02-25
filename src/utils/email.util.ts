@@ -29,7 +29,7 @@ export const sendPasswordResetEmail = async (email: string, resetUrl: string) =>
 
   try {
     await transporter.sendMail({
-      from: `"Your App Name" <${process.env.EMAIL_FROM}>`,
+      from: `"Brother Investment Group" <${process.env.EMAIL_FROM}>`,
       ...mailOptions,
     });
   } catch (error) {

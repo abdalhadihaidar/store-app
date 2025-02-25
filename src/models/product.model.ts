@@ -6,6 +6,8 @@ interface ProductAttributes {
   name: string;
   price: number;
   categoryId: number;
+  package:number;
+  numberperpackage:number;
   quantity: number;
 }
 
@@ -16,6 +18,8 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public name!: string;
   public price!: number;
   public categoryId!: number;
+  public package!: number;
+  public numberperpackage!:number;
   public quantity!: number;
 }
 
@@ -25,6 +29,8 @@ Product.init(
     name: { type: DataTypes.STRING, allowNull: false },
     price: { type: DataTypes.FLOAT, allowNull: false },
     categoryId: { type: DataTypes.INTEGER, allowNull: false },
+    package: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    numberperpackage: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // ✅ Add quantity field
   },
   { sequelize, tableName: 'products' }

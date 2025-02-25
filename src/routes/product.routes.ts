@@ -151,4 +151,106 @@ router.put('/:id', authMiddleware(['admin']), ProductController.updateProduct);
  */
 router.delete('/:id', authMiddleware(["admin"]), ProductController.deleteProduct);
 
+/**
+ * @swagger
+ * /products/{id}/calculate-packages:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Calculate required packages for a desired quantity
+ *     description: Calculate how many packages are needed to fulfill a specific quantity requirement
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Product ID
+ *         example: 1
+ *       - in: query
+ *         name: quantity
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Desired quantity
+ *         example: 50
+ *     responses:
+ *       200:
+ *         description: Calculation result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 packagesNeeded:
+ *                   type: integer
+ *                   description: Number of packages required
+ *                   example: 2
+ *                 totalUnits:
+ *                   type: integer
+ *                   description: Total units provided by the packages
+ *                   example: 100
+ *                 excessUnits:
+ *                   type: integer
+ *                   description: Extra units beyond requested quantity
+ *                   example: 50
+ *                 isSufficient:
+ *                   type: boolean
+ *                   description: If available packages meet the requirement
+ *                   example: true
+ *                 availablePackages:
+ *                   type: integer
+ *                   description: Current packages in stock
+ *                   example: 5
+ *       400:
+ *         description: Invalid input parameters
+ *       404:
+ *         description: Product not found
+ */
+router.get('/:id/calculate-packages', ProductController.calculatePackages);
+
+/**
+ * @swagger
+ * /products/quantity:
+ *   post:
+ *     tags: [Products]
+ *     summary: Create product with direct quantity
+ *     description: Create product specifying quantity directly (packages and items per package will be set to 0)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *               - categoryId
+ *               - quantity
+ *               - images
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               categoryId:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Validation error
+ */
+router.post('/quantity', ProductController.createProductWithQuantity);
+
 export default router;

@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { ProductService } from '../services/product.service';
 import { productImageUpload } from '../services/fileUpload.service';
-// Add type extension for Multer files
+
 interface MulterRequest extends Request {
   files?: Express.Multer.File[];
 }
+
 export class ProductController {
   static async getProducts(req: Request, res: Response, next: NextFunction) {
     try {
@@ -36,18 +37,31 @@ export class ProductController {
 
   static async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { name, price, categoryId, quantity, images } = req.body;
+      const { name, price, categoryId, package: pkg, numberperpackage, images } = req.body;
       
-      if (!name || !price || !categoryId || !quantity || !images) {
+      // Validate required fields
+      if (!name || !price || !categoryId || !pkg || !numberperpackage || !images) {
         res.status(400).json({ message: 'All fields are required!' });
-        return; // ✅ Explicit return
+        return;
       }
-      
+
+      // Convert numeric fields and validate
+      const numericPrice = Number(price);
+      const numericCategoryId = Number(categoryId);
+      const numericPackage = Number(pkg);
+      const numericNumberPerPackage = Number(numberperpackage);
+
+      if (isNaN(numericPrice) || isNaN(numericCategoryId) || isNaN(numericPackage) || isNaN(numericNumberPerPackage)) {
+        res.status(400).json({ message: 'Invalid numeric fields!' });
+        return;
+      }
+
       const product = await ProductService.createProduct({
         name,
-        price: Number(price),
-        categoryId: Number(categoryId),
-        quantity: Number(quantity),
+        price: numericPrice,
+        categoryId: numericCategoryId,
+        package: numericPackage,
+        numberperpackage: numericNumberPerPackage,
         images
       });
       
@@ -56,7 +70,38 @@ export class ProductController {
       next(error);
     }
   }
+// src/controllers/product.controller.ts
+static async createProductWithQuantity(req: Request, res: Response, next: NextFunction): Promise<void>  {
+  try {
+    const { name, price, categoryId, quantity, images } = req.body;
+    
+    if (!name || !price || !categoryId || !quantity || !images) {
+      res.status(400).json({ message: 'All fields are required!' });
+      return ;
+    }
 
+    const numericPrice = Number(price);
+    const numericCategoryId = Number(categoryId);
+    const numericQuantity = Number(quantity);
+
+    if (isNaN(numericPrice) || isNaN(numericCategoryId) || isNaN(numericQuantity)) {
+      res.status(400).json({ message: 'Invalid numeric fields!' });
+      return ;
+    }
+
+    const product = await ProductService.createProductwithquantity({
+      name,
+      price: numericPrice,
+      categoryId: numericCategoryId,
+      quantity: numericQuantity,
+      images
+    });
+    
+    res.status(201).json(product);
+  } catch (error) {
+    next(error);
+  }
+}
   static async updateProduct(req: Request, res: Response, next: NextFunction) {
     const multerReq = req as MulterRequest;
     
@@ -64,10 +109,13 @@ export class ProductController {
       productImageUpload(multerReq, res, async (err: unknown) => {
         if (err) return next(err);
 
+        // Remove 'quantity' from body to prevent manual override
+        const { quantity, ...restBody } = multerReq.body;
+        
         const productData = {
-          ...multerReq.body,
+          ...restBody,
           images: [
-            ...(JSON.parse(multerReq.body.existingImages || '[]')),
+            ...(JSON.parse(restBody.existingImages || '[]')),
             ...(multerReq.files?.map(file => `/uploads/${file.filename}`) || [])
           ]
         };
@@ -87,6 +135,21 @@ export class ProductController {
     try {
       await ProductService.deleteProduct(req.params.id);
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async calculatePackages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const productId = Number(req.params.id);
+      const desiredQuantity = Number(req.query.quantity);
+
+      if (isNaN(productId)) throw new Error('Invalid product ID');
+      if (isNaN(desiredQuantity)) throw new Error('Invalid desired quantity');
+
+      const result = await ProductService.calculatePackages(productId, desiredQuantity);
+      res.json(result);
     } catch (error) {
       next(error);
     }
