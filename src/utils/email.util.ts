@@ -1,39 +1,66 @@
-import nodemailer from 'nodemailer';
+import axios from "axios";
+import dotenv from "dotenv";
 
+dotenv.config();
 
-// Configure transporter
-const transporter = nodemailer.createTransport({
-  service: 'Gmail', // Use your email service (e.g., SendGrid, Mailgun)
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const SENDPULSE_API_URL = "https://api.sendpulse.com";
+const API_USER_ID = process.env.SENDPULSE_USER_ID;
+const API_SECRET = process.env.SENDPULSE_SECRET;
 
-interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
+/**
+ * Get access token from SendPulse
+ */
+async function getSendPulseToken(): Promise<string> {
+  try {
+    const response = await axios.post(`${SENDPULSE_API_URL}/oauth/access_token`, {
+      grant_type: "client_credentials",
+      client_id: API_USER_ID,
+      client_secret: API_SECRET,
+    });
+
+    return response.data.access_token;
+  } catch (error: any) {
+    console.error("❌ Error fetching SendPulse token:", error.message);
+    throw new Error("Failed to get SendPulse token");
+  }
 }
 
-export const sendPasswordResetEmail = async (email: string, resetUrl: string) => {
-  const mailOptions: EmailOptions = {
-    to: email,
-    subject: 'Password Reset Request',
-    html: `
-      <p>You requested a password reset. Click the link below to continue:</p>
-      <a href="${resetUrl}">Reset Password</a>
-      <p>This link will expire in 1 hour.</p>
-    `,
-  };
-
+/**
+ * Send email using SendPulse SMTP API
+ */
+export async function sendEmail(
+  toEmail: string,
+  toName: string,
+  subject: string,
+  htmlContent: string
+) {
   try {
-    await transporter.sendMail({
-      from: `"Brother Investment Group" <${process.env.EMAIL_FROM}>`,
-      ...mailOptions,
+    const token = await getSendPulseToken();
+
+    const emailData = {
+      email: {
+        html: Buffer.from(htmlContent).toString("base64"), // Encode HTML in Base64
+        text: "Please enable HTML to view this email content.",
+        subject,
+        from: {
+          name: "Brother Investment Group",
+          email: process.env.EMAIL_FROM,
+        },
+        to: [{ email: toEmail, name: toName }],
+      },
+    };
+
+    const response = await axios.post(`${SENDPULSE_API_URL}/smtp/emails`, emailData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw new Error('Failed to send password reset email');
+
+    console.log("✅ Email sent successfully:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Email sending error:", error.message);
+    throw new Error("Failed to send email: " + error.message);
   }
-};
+}

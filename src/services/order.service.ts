@@ -1,6 +1,8 @@
 import Order from '../models/order.model';
 import OrderItem from '../models/orderItem.model';
 import Product from '../models/product.model';
+import Return from '../models/return.model';
+import Store from '../models/store.model';
 import { User } from '../models/user.model';
 
 export class OrderService {
@@ -10,9 +12,12 @@ export class OrderService {
         {
           model: OrderItem,
           as: 'items',
-          include: [{ model: Product, as: 'product' }],
+          include: [{ model: Product, as: 'product' }], // ✅ Correct alias
         },
-        { model: User, as: 'user' },
+        { 
+          model: User, 
+          as: 'user' // ✅ Matches Order's association alias
+        },
       ],
     };
 
@@ -32,31 +37,148 @@ export class OrderService {
     return await Order.findAll({ where: { userId } });
   }
   // ✅ User creates an order with a price change request
-  static async createOrder(userId: number, orderData: { items: { productId: number; quantity: number }[] },isPriceChangeRequested: boolean ) {
-    console.log(userId )
-    console.log(orderData)
+  static async createOrder(creatorId: number, isAdmin: boolean, orderData: {
+    userId: number;
+    storeId: number;
+    items: Array<{
+      productId: number;
+      quantity: number;
+      isPackage?: boolean;
+    }>;
+    isPriceChangeRequested?: boolean;
+    isPOS?: boolean;
+  }) {
     const transaction = await Order.sequelize?.transaction();
     try {
       let totalPrice = 0;
-      const order = await Order.create({ userId, status: 'pending', totalPrice, isPriceChangeRequested: isPriceChangeRequested }, { transaction });
+      let totalTax = 0;
+
+      // Validate user permissions
+      if (!isAdmin && creatorId !== orderData.userId) {
+        throw new Error('Unauthorized order creation');
+      }
+
+      const order = await Order.create({
+        userId: orderData.userId,
+        storeId: orderData.storeId,
+        status: orderData.isPOS ? 'approved' : 'new',
+        isPOS: orderData.isPOS || false,
+        isPriceChangeRequested: orderData.isPriceChangeRequested || false,
+        totalPrice: 0,
+        totalTax: 0
+      }, { transaction });
 
       for (const item of orderData.items) {
-        const product = await Product.findByPk(item.productId);
-        if (!product) throw new Error(`Product with ID ${item.productId} not found`);
+        const product = await Product.findByPk(item.productId, { transaction });
+        if (!product) throw new Error(`Product ${item.productId} not found`);
 
-        const itemPrice = product.price * item.quantity;
-        totalPrice += itemPrice;
+      // Calculate packages and units from total quantity (units)
+const packages = Math.floor(item.quantity / product.numberperpackage);
+const units = item.quantity % product.numberperpackage;
+
+        const price = product.price * product.quantity;
+        const tax = price * product.taxRate;
+
+        totalPrice += price;
+        totalTax += tax;
 
         await OrderItem.create({
           orderId: order.id,
-          productId: item.productId,
-          quantity: item.quantity,
-          originalPrice: product.price, // ✅ Save original price
-          adjustedPrice: null, // ✅ Admin will adjust this later
+          productId: product.id,
+          quantity: product.quantity,
+          packages,
+          originalPrice: product.price,
+          adjustedPrice: orderData.isPOS ? product.price : null,
+          taxRate: product.taxRate,
+          taxAmount: tax
         }, { transaction });
       }
 
-      await order.update({ totalPrice }, { transaction });
+      await order.update({ totalPrice, totalTax }, { transaction });
+      await transaction?.commit();
+      return order;
+
+    } catch (error) {
+      await transaction?.rollback();
+      throw error;
+    }
+  }
+
+  static async getOrderDetails(orderId: number) {
+    const order = await Order.findByPk(orderId, {
+      include: [
+        {
+          model: Store,
+          as: 'store',
+        },
+        {
+          model: OrderItem,
+          as: 'items',
+          include: [{ model: Product, as: 'product' }],
+        },
+        {
+          model: User,
+          as: 'user',
+        },
+        {
+          model: Return, // ✅ Include return requests
+          as: 'returns',
+        },
+      ],
+    });
+  
+    if (!order) {
+      throw new Error('Order not found');
+    }
+  
+    if (!order.storeId) {
+      console.error(`Order ${orderId} does not have an associated store.`);
+      throw new Error('Store is not associated to Order!');
+    }
+  
+    return order;
+  }
+  static async approveOrder(orderId: number, userRole: string, updatedItems?: Array<{ itemId: number; newPrice: number }>) {
+    const transaction = await Order.sequelize?.transaction();
+    try {
+      const order = await Order.findByPk(orderId, { transaction });
+      if (!order) throw new Error('Order not found');
+  
+      // ✅ If client is approving, they should not pass updatedItems
+      if (userRole === 'client' && updatedItems && updatedItems.length > 0) {
+        throw new Error('Clients cannot modify order prices');
+      }
+  
+      let totalPrice = order.totalPrice;
+      let totalTax = order.totalTax;
+  
+      // ✅ If admin is approving, update prices
+      if (userRole === 'admin' && updatedItems) {
+        totalPrice = 0;
+        totalTax = 0;
+  
+        const items = await OrderItem.findAll({ where: { orderId }, transaction });
+  
+        for (const item of items) {
+          const update = updatedItems.find(u => u.itemId === item.id);
+          if (update) {
+            const price = update.newPrice * item.quantity;
+            const tax = price * item.taxRate;
+  
+            await item.update({
+              adjustedPrice: update.newPrice,
+              taxAmount: tax
+            }, { transaction });
+  
+            totalPrice += price;
+            totalTax += tax;
+          }
+        }
+      }
+  
+      // ✅ Order is approved (same logic for admin & client)
+      await order.update({ totalPrice, totalTax, status: 'approved' }, { transaction });
+  
       await transaction?.commit();
       return order;
     } catch (error) {
@@ -64,25 +186,7 @@ export class OrderService {
       throw error;
     }
   }
-
-  // ✅ Admin modifies prices & approves order
-  static async approveOrder(orderId: number, updatedItems: { itemId: number; newPrice: number }[]) {
-    const order = await Order.findByPk(orderId);
-    if (!order) throw new Error('Order not found');
-
-    let newTotal = 0;
-
-    for (const item of updatedItems) {
-      const orderItem = await OrderItem.findByPk(item.itemId);
-      if (!orderItem) throw new Error(`Order Item with ID ${item.itemId} not found`);
-
-      await orderItem.update({ adjustedPrice: item.newPrice });
-      newTotal += item.newPrice * orderItem.quantity;
-    }
-
-    await order.update({ totalPrice: newTotal, status: 'approved', isPriceChangeRequested: false });
-    return order;
-  }
+  
 
   // ✅ Finalize order after admin approval
   static async completeOrder(orderId: number) {

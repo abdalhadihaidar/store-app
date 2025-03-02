@@ -4,7 +4,7 @@ import { Category } from '../models/category.model';
 import { Order } from '../models/order.model';
 
 export class StatsController {
-  static async getProductCount(req: Request, res: Response, next: NextFunction) {
+  static async getProductCount(_req: Request, res: Response, next: NextFunction) {
     try {
       const count = await Product.count();
       res.json({ count });
@@ -13,7 +13,7 @@ export class StatsController {
     }
   }
 
-  static async getCategoryCount(req: Request, res: Response, next: NextFunction) {
+  static async getCategoryCount(_req: Request, res: Response, next: NextFunction) {
     try {
       const count = await Category.count();
       res.json({ count });
@@ -22,7 +22,7 @@ export class StatsController {
     }
   }
 
-  static async getPendingOrders(req: Request, res: Response, next: NextFunction) {
+  static async getPendingOrders(_req: Request, res: Response, next: NextFunction) {
     try {
       const count = await Order.count({
         where: { status: 'pending' }
@@ -33,7 +33,7 @@ export class StatsController {
     }
   }
 
-  static async getDeliveredOrders(req: Request, res: Response, next: NextFunction) {
+  static async getDeliveredOrders(_req: Request, res: Response, next: NextFunction) {
     try {
       const count = await Order.count({
         where: { status: 'completed' }

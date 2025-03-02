@@ -6,8 +6,11 @@ export class OrderItem extends Model {
   public orderId!: number;
   public productId!: number;
   public quantity!: number;
+  public packages!: number; // Add package count
   public originalPrice!: number;
   public adjustedPrice!: number | null;
+  public taxRate!: number; // Tax percentage
+  public taxAmount!: number; // Calculated tax
 }
 
 OrderItem.init(
@@ -18,6 +21,19 @@ OrderItem.init(
     quantity: { type: DataTypes.INTEGER, allowNull: false },
     originalPrice: { type: DataTypes.FLOAT, allowNull: false },
     adjustedPrice: { type: DataTypes.FLOAT, allowNull: true },
+    packages: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    taxRate: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.15 // Example 15% tax
+    },
+    taxAmount: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0
+    }
   },
   { sequelize, tableName: 'order_items' }
 );
@@ -30,4 +46,7 @@ import Product from './product.model';
 
 // ✅ Define relationships after both models are defined
 OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-OrderItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+OrderItem.belongsTo(Product, {
+  foreignKey: 'productId',
+  as: 'product'
+});

@@ -27,11 +27,15 @@ export class ProductService {
     categoryId: number;
     package: number;
     numberperpackage: number;
+
     images?: string[];
   }) {
     // Calculate quantity based on package and numberperpackage
     const quantity = productData.package * productData.numberperpackage;
-    const product = await Product.create({ ...productData, quantity });
+    const product = await Product.create({
+      ...productData, quantity,
+      taxRate: 0
+    });
 
     if (productData.images && productData.images.length > 0) {
       await Promise.all(
@@ -52,8 +56,10 @@ export class ProductService {
   }) {
     const product = await Product.create({
       ...productData,
-      package: 0,       // Always set to 0
+      package: 0, // Always set to 0
       numberperpackage: 0 // Always set to 0
+      ,
+      taxRate: 0
     });
   
     if (productData.images?.length) {

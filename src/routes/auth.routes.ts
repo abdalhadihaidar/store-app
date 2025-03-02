@@ -105,7 +105,9 @@ router.post('/register', AuthController.register);
  *       404:
  *         description: User not found (silent failure for security)
  */
-router.post('/forgot-password', AuthController.forgotPassword);
+router.post("/forgot-password", AuthController.forgotPassword);
+
+
 
 /**
  * @swagger

@@ -9,6 +9,7 @@ interface ProductAttributes {
   package:number;
   numberperpackage:number;
   quantity: number;
+  taxRate: number; // Add this line
 }
 
 interface ProductCreationAttributes extends Optional<ProductAttributes, 'id'> {}
@@ -21,6 +22,7 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public package!: number;
   public numberperpackage!:number;
   public quantity!: number;
+  public taxRate!: number; // Add this line
 }
 
 Product.init(
@@ -32,6 +34,11 @@ Product.init(
     package: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     numberperpackage: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // ✅ Add quantity field
+    taxRate: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0.15 // Set default tax rate
+    }
   },
   { sequelize, tableName: 'products' }
 );

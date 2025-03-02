@@ -6,6 +6,8 @@ import orderRoutes from './order.routes';
 import usersRoutes from './user.routes';
 import imageupladRoutes from './imageUpload.routes';
 import statsRoutes from './stats.routes';
+import storeRoutes from './store.routes';
+
 const router = express.Router();
 
 router.use('/auth', authRoutes);
@@ -15,4 +17,6 @@ router.use('/orders', orderRoutes);
 router.use('/users', usersRoutes);
 router.use('/upload',imageupladRoutes);
 router.use('/stats', statsRoutes);
+router.use('/stores', storeRoutes);
+router.use('/returns',orderRoutes);
 export default router;

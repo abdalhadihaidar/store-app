@@ -1,7 +1,10 @@
+// src/config/swagger.ts
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';  // Default to localhost if not set
+import path from 'path';
+
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -12,14 +15,37 @@ const options: swaggerJsdoc.Options = {
       description: 'API documentation for the store system',
     },
     servers: [{ url: `${SERVER_URL}/api` }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    }
   },
-  apis: ['./src/routes/*.ts'], // Path to API docs
+  apis: [
+    path.join(process.cwd(), 'src/routes/*.ts'),
+    path.join(process.cwd(), 'dist/routes/*.js')
+  ]
 };
-
-export const setupSwagger = (app: Express) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-};
-
 
 const swaggerSpec = swaggerJsdoc(options);
 
+export const setupSwagger = (app: Express) => {
+  app.get('/api-docs.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+
+  app.use('/api-docs', 
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      explorer: true,
+      swaggerOptions: {
+        url: '/api-docs.json'
+      }
+    })
+  );
+};

@@ -2,9 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import routes from './routes';
-import sequelize from './config/database';
 import { setupSwagger } from './config/swagger';
 import { errorHandler } from './middleware/error.middleware';
+import sequelize from './config/database';
 
 dotenv.config();
 
@@ -26,6 +26,7 @@ app.use('/uploads', express.static('uploads')); // ✅ Serve images from the upl
 // app.use(bodyParser.json()); // ❌ REMOVE THIS
 
 app.use('/api', routes);
+
 setupSwagger(app);
 app.use(errorHandler); // ✅ Add error handler last
 
@@ -34,7 +35,7 @@ export default app;
 
 // Sync database
 
-sequelize.sync({ alter: true }).then(() => {
-  console.log('✅ Database schema updated!');
-});
+//sequelize.sync().then(() => {
+  //console.log('✅ Database schema updated!');
+//});
 

@@ -1,20 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
 import jwt from 'jsonwebtoken';
+import { ReturnService } from '../services/return.service';
 export class OrderController {
-    // ✅ User creates an order with a price change request
-    static async createOrder(req: Request, res: Response, next: NextFunction) {
-      try {
-        const { userId, items ,isPriceChangeRequested} = req.body;
-        console.log(req.body)
-        console.log(userId)
-        console.log(items)
-        const order = await OrderService.createOrder(userId, { items },isPriceChangeRequested);
-        res.status(201).json(order);
-      } catch (error) {
-        next(error);
-      }
-    }
+   
     static async getById(req: Request, res: Response) {
       try {
         const order = await OrderService.getOrderById(Number(req.params.id));
@@ -33,11 +22,23 @@ export class OrderController {
       }
     }
     // ✅ Admin approves & modifies order prices
-    static async approveOrder(req: Request, res: Response, next: NextFunction) {
+    static async approveOrder(req: Request, res: Response, next: NextFunction):Promise<void> {
       try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+           res.status(401).json({ message: 'Unauthorized' });return
+        }
+    
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+          id: number; 
+          role: string 
+        };
+    
         const { id } = req.params;
         const { updatedItems } = req.body;
-        const order = await OrderService.approveOrder(Number(id), updatedItems);
+        
+        const order = await OrderService.approveOrder(Number(id), decoded.role, updatedItems);
         res.json(order);
       } catch (error) {
         next(error);
@@ -70,12 +71,12 @@ export class OrderController {
   
         // 3. Verify and decode token
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
-          userId: number; 
+          id: number; 
           role: string 
         };
-  
+  console.log(decoded)
         // 4. Now use the decoded values
-        const userId = decoded.userId;
+        const userId = decoded.id;
         const userRole = decoded.role;
   
         // Rest of your controller logic...
@@ -86,7 +87,61 @@ export class OrderController {
         next(error);
       }
     }
-
+    static async createOrder(req: Request, res: Response) {
+      try {
+        const isAdmin = (req as any).user.role === 'admin';
+        const order = await OrderService.createOrder(
+          (req as any).user.id,
+          isAdmin,
+          req.body
+        );
+        res.status(201).json(order);
+      } catch (error:any) {
+        res.status(400).json({ message: error.message });
+      }
+    }
+  
+    static async getOrderDetails(req: Request, res: Response) {
+      try {
+        const order = await OrderService.getOrderDetails(Number(req.params.id));
+        if (!order) throw new Error('Order not found');
+        
+        // Add detailed price breakdown
+        const response = {
+          ...order.toJSON(),
+          priceBreakdown: {
+            subtotal: order.totalPrice,
+            tax: order.totalTax,
+            total: order.totalPrice + order.totalTax
+          }
+        };
+        
+        res.json(response);
+      } catch (error:any) {
+        res.status(404).json({ message: error.message });
+      }
+    }
+  
+    static async createReturn(req: Request, res: Response) {
+      try {
+        const returns = await ReturnService.createReturnRequest(
+          Number(req.params.id),
+          (req as any).user.id,
+          req.body.items
+        );
+        res.status(201).json(returns);
+      } catch (error: any) {
+        res.status(400).json({ message: error.message });
+      }
+    }
+    static async getAllReturns(req: Request, res: Response) {
+      try {
+        const returns = await ReturnService.getAllReturns();
+        res.json(returns);
+      } catch (error: any) {
+        res.status(400).json({ message: error.message });
+      }
+    }
   static async updateOrderStatus(req: Request, res: Response) {
     try {
       const order = await OrderService.updateOrderStatus(req.params.id, req.body.status);

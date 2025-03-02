@@ -4,9 +4,9 @@
     "module": "CommonJS",
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,   // ✅ Add this to support .json imports
-    "skipLibCheck": true         // ✅ Helps avoid type mismatches in node_modules
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   }
 }

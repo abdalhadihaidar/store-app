@@ -9,7 +9,7 @@ interface MulterCategoryRequest extends Request {
 }
 
 export class CategoryController {
-  static async getCategories(req: Request, res: Response) {
+  static async getCategories(_req: Request, res: Response) {
     const categories = await CategoryService.getAllCategories();
     res.json(categories);
   }
@@ -22,12 +22,11 @@ export class CategoryController {
     }
   }
   static async createCategory(req: Request, res: Response, next: NextFunction) {
-    // Cast to proper type
     const multerReq = req as MulterCategoryRequest;
     
     categoryImageUpload(multerReq, res, async (err: unknown) => {
       if (err) {
-        return res.status(400).json({
+        return res.status(400).json({ // Add return here
           message: err instanceof multer.MulterError
             ? err.code === 'LIMIT_FILE_SIZE'
               ? 'Image too large (max 5MB)'
@@ -35,36 +34,35 @@ export class CategoryController {
             : 'File upload error'
         });
       }
-
+  
       try {
         const imagePath = multerReq.file 
           ? `/uploads/${multerReq.file.filename}`
           : DEFAULT_CATEGORY_IMAGE;
-
-          const category = await CategoryService.createCategory({ 
-            name: req.body.name,
-            image: imagePath 
-          });
-        res.status(201).json(category);
+  
+        const category = await CategoryService.createCategory({ 
+          name: req.body.name,
+          image: imagePath 
+        });
+        return res.status(201).json(category); // Add return
       } catch (error) {
-        next(error);
+        return next(error); // Add return
       }
     });
   }
-
+  
   static async updateCategory(req: Request, res: Response) {
     const multerReq = req as MulterCategoryRequest;
     
-    // Use the category image upload middleware
     categoryImageUpload(multerReq, res, async (err: unknown) => {
       if (err) {
-        return res.status(400).json({
+        return res.status(400).json({ // Add return
           message: err instanceof multer.MulterError
             ? err.message
             : 'File upload error'
         });
       }
-
+  
       try {
         const updateData = {
           name: multerReq.body.name,
@@ -72,15 +70,15 @@ export class CategoryController {
             ? `/uploads/${multerReq.file.filename}`
             : multerReq.body.existingImage
         };
-
+  
         const category = await CategoryService.updateCategory(
           multerReq.params.id, 
           updateData
         );
         
-        res.json(category);
+        return res.json(category); // Add return
       } catch (error) {
-        res.status(400).json({
+        return res.status(400).json({ // Add return
           message: error instanceof Error 
             ? error.message 
             : 'Unknown error occurred'

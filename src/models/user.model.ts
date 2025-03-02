@@ -8,8 +8,8 @@ export interface UserAttributes {
   email: string;
   password: string;
   role: 'admin' | 'client';
-  resetPasswordToken?: string; // Add this
-  resetPasswordExpires?: Date; // Add this
+  resetPasswordToken?: string|null; // Add this
+  resetPasswordExpires?: Date|null; // Add this
 }
 
 // Define the UserCreationAttributes interface (for creation, `id` is optional)
@@ -21,8 +21,8 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   email!: string;
   password!: string;
   role!: 'admin' | 'client';
-  resetPasswordToken!: string; // Add this
-  resetPasswordExpires!: Date; // Add this
+  resetPasswordToken!: string|null; // Add this
+  resetPasswordExpires!: Date|null; // Add this
 }
 
 User.init(

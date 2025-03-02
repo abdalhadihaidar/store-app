@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import bcrypt from 'bcryptjs';
 export class AuthController {
   static async register(req: Request, res: Response) {
     try {
@@ -20,14 +19,33 @@ export class AuthController {
       res.status(401).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
     }
   }
-  static async forgotPassword(req: Request, res: Response) {
+  static async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
-      await AuthService.forgotPassword(req.body.email);
-      res.status(200).json({ message: 'Password reset email sent' });
-    } catch (error) {
-      res.status(500).json({ message: 'Error processing request' });
+      console.log("📩 Forgot Password Request Body:", req.body);
+  
+      const email = req.body?.email;
+      if (!email) {
+         res.status(400).json({ message: "Email is required" });return
+      }
+  
+      const result = await AuthService.forgotPassword(email);
+  
+       res.status(200).json({ message: result });return
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("❌ Forgot password controller error:", err.message, err);
+  
+      if (!res.headersSent) {
+         res.status(500).json({
+          message: "Error processing request",
+          ...(process.env.NODE_ENV === "development" && { error: err.message }),
+        });return
+      }
     }
+   
   }
+  
+  
 
   static async resetPassword(req: Request, res: Response) {
     try {
