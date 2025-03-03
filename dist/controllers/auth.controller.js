@@ -24,7 +24,7 @@ class AuthController {
     }
     static async forgotPassword(req, res) {
         try {
-            console.log("📩 Forgot Password Request Body:", req.body);
+            // console.log("📩 Forgot Password Request Body:", req.body);
             const email = req.body?.email;
             if (!email) {
                 res.status(400).json({ message: "Email is required" });
@@ -36,7 +36,7 @@ class AuthController {
         }
         catch (error) {
             const err = error;
-            console.error("❌ Forgot password controller error:", err.message, err);
+            // console.error("❌ Forgot password controller error:", err.message, err);
             if (!res.headersSent) {
                 res.status(500).json({
                     message: "Error processing request",

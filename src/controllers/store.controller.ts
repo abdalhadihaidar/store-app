@@ -14,7 +14,7 @@ export class StoreController {
           }
     
         
-          console.log(req.body.userId)
+          // console.log(req.body.userId)
           const store = await StoreService.createStore({
             ...req.body
           });

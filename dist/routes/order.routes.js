@@ -195,7 +195,7 @@ router.get('/user/:userId', (0, auth_middleware_1.authMiddleware)(['admin', 'cli
  *       201:
  *         description: Order created successfully
  */
-router.post('/', (0, auth_middleware_1.authMiddleware)(['client']), order_controller_1.OrderController.createOrder);
+router.post('/', (0, auth_middleware_1.authMiddleware)(['client', 'admin']), order_controller_1.OrderController.createOrder);
 /**
  * @swagger
  * /orders/{id}/approve:
@@ -236,7 +236,7 @@ router.post('/', (0, auth_middleware_1.authMiddleware)(['client']), order_contro
  *       200:
  *         description: Order approved successfully (status updated to approved)
  */
-router.put('/:id/approve', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.approveOrder);
+router.put('/:id/approve', (0, auth_middleware_1.authMiddleware)(['admin', 'client']), order_controller_1.OrderController.approveOrder);
 /**
  * @swagger
  * /orders/{id}/complete:
@@ -291,5 +291,5 @@ router.put('/:id/complete', (0, auth_middleware_1.authMiddleware)(['admin']), or
  *       200:
  *         description: Order status updated successfully
  */
-router.put('/:id', (0, auth_middleware_1.authMiddleware)(['admin']), order_controller_1.OrderController.updateOrderStatus);
+router.put('/:id', (0, auth_middleware_1.authMiddleware)(['admin', 'client']), order_controller_1.OrderController.updateOrderStatus);
 exports.default = router;

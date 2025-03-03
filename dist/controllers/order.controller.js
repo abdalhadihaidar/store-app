@@ -70,7 +70,7 @@ class OrderController {
             const token = authHeader.split(' ')[1];
             // 3. Verify and decode token
             const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-            console.log(decoded);
+            // console.log(decoded)
             // 4. Now use the decoded values
             const userId = decoded.id;
             const userRole = decoded.role;

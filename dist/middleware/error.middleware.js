@@ -10,7 +10,7 @@ const errorHandler = (err, _req, res, next) => {
     const statusCode = err.name === 'ValidationError' ? 400 : 500;
     // Ensure response object exists
     if (!res || typeof res.status !== 'function') {
-        console.error('Fatal error: Invalid response object');
+        // console.error('Fatal error: Invalid response object');
         return process.exit(1);
     }
     res.status(statusCode).json({

@@ -23,7 +23,7 @@ async function getSendPulseToken() {
         return response.data.access_token;
     }
     catch (error) {
-        console.error("❌ Error fetching SendPulse token:", error.message);
+        // console.error("❌ Error fetching SendPulse token:", error.message);
         throw new Error("Failed to get SendPulse token");
     }
 }
@@ -51,11 +51,11 @@ async function sendEmail(toEmail, toName, subject, htmlContent) {
                 "Content-Type": "application/json",
             },
         });
-        console.log("✅ Email sent successfully:", response.data);
+        // console.log("✅ Email sent successfully:", response.data);
         return response.data;
     }
     catch (error) {
-        console.error("❌ Email sending error:", error.message);
+        // console.error("❌ Email sending error:", error.message);
         throw new Error("Failed to send email: " + error.message);
     }
 }

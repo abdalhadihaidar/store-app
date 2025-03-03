@@ -13,7 +13,7 @@ class StoreController {
                 });
                 return;
             }
-            console.log(req.body.userId);
+            // console.log(req.body.userId)
             const store = await store_service_1.StoreService.createStore({
                 ...req.body
             });

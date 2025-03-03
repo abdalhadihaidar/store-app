@@ -16,7 +16,7 @@ export const errorHandler = (
   
   // Ensure response object exists
   if (!res || typeof res.status !== 'function') {
-    console.error('Fatal error: Invalid response object');
+    // console.error('Fatal error: Invalid response object');
     return process.exit(1);
   }
 

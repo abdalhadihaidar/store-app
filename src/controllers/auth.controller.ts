@@ -21,7 +21,7 @@ export class AuthController {
   }
   static async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
-      console.log("📩 Forgot Password Request Body:", req.body);
+      // console.log("📩 Forgot Password Request Body:", req.body);
   
       const email = req.body?.email;
       if (!email) {
@@ -33,7 +33,7 @@ export class AuthController {
        res.status(200).json({ message: result });return
     } catch (error: unknown) {
       const err = error as Error;
-      console.error("❌ Forgot password controller error:", err.message, err);
+      // console.error("❌ Forgot password controller error:", err.message, err);
   
       if (!res.headersSent) {
          res.status(500).json({

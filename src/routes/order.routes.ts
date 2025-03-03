@@ -200,7 +200,7 @@ router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController
  *       201:
  *         description: Order created successfully
  */
-router.post('/', authMiddleware(['client']), OrderController.createOrder);
+router.post('/', authMiddleware(['client','admin']), OrderController.createOrder);
 
 /**
  * @swagger
@@ -242,7 +242,7 @@ router.post('/', authMiddleware(['client']), OrderController.createOrder);
  *       200:
  *         description: Order approved successfully (status updated to approved)
  */
-router.put('/:id/approve', authMiddleware(['admin']), OrderController.approveOrder);
+router.put('/:id/approve', authMiddleware(['admin','client']), OrderController.approveOrder);
 
 /**
  * @swagger
@@ -299,6 +299,6 @@ router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeO
  *       200:
  *         description: Order status updated successfully
  */
-router.put('/:id', authMiddleware(['admin']), OrderController.updateOrderStatus);
+router.put('/:id', authMiddleware(['admin','client']), OrderController.updateOrderStatus);
 
 export default router;

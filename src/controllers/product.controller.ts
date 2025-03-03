@@ -110,8 +110,8 @@ static async createProductWithQuantity(req: Request, res: Response, next: NextFu
         if (err) return next(err);
 
         // Remove 'quantity' from body to prevent manual override
-        const { quantity, ...restBody } = multerReq.body;
-        
+        const restBody = multerReq.body; // Keep all fields including 'quantity'
+
         const productData = {
           ...restBody,
           images: [

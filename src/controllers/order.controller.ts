@@ -74,7 +74,7 @@ export class OrderController {
           id: number; 
           role: string 
         };
-  console.log(decoded)
+  // console.log(decoded)
         // 4. Now use the decoded values
         const userId = decoded.id;
         const userRole = decoded.role;

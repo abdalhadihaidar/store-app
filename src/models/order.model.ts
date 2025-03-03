@@ -12,6 +12,12 @@ export class Order extends Model {
   public totalTax!: number; // Add tax tracking
   public isPriceChangeRequested!: boolean;
   public isPOS!: boolean; // Flag for POS orders
+
+   // Add association properties
+   public items?: OrderItem[];
+   public user?: User;
+   public store?: Store;
+   public returns?: Return[];
 }
 
 Order.init(

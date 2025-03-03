@@ -57,13 +57,20 @@ class ProductService {
         });
         if (!product)
             throw new Error('Product not found');
-        // Calculate new quantity based on package and numberperpackage
-        const newPackage = updateData.package !== undefined ? updateData.package : product.package;
-        const newNumberPerPackage = updateData.numberperpackage !== undefined ? updateData.numberperpackage : product.numberperpackage;
-        const newQuantity = newPackage * newNumberPerPackage;
-        // Update the quantity in the updateData
+        let newQuantity = product.quantity;
+        // Check if package or numberperpackage is provided
+        if (updateData.package !== undefined || updateData.numberperpackage !== undefined) {
+            const newPackage = updateData.package !== undefined ? Number(updateData.package) : product.package;
+            const newNumberPerPackage = updateData.numberperpackage !== undefined ? Number(updateData.numberperpackage) : product.numberperpackage;
+            newQuantity = newPackage * newNumberPerPackage;
+        }
+        else if (updateData.quantity !== undefined) {
+            // Use provided quantity if no package/numberperpackage
+            newQuantity = Number(updateData.quantity);
+        }
         const updatedDataWithQuantity = { ...updateData, quantity: newQuantity };
         await product.update(updatedDataWithQuantity);
+        // Handle images update
         if (updateData.images) {
             await productImage_model_1.default.destroy({ where: { productId } });
             await Promise.all(updateData.images.map(imageUrl => productImage_model_1.default.create({ productId: product.id, imageUrl })));

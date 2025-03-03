@@ -11,6 +11,9 @@ export class OrderItem extends Model {
   public adjustedPrice!: number | null;
   public taxRate!: number; // Tax percentage
   public taxAmount!: number; // Calculated tax
+  // Add association properties
+  public order?: Order;
+  public product?: Product;
 }
 
 OrderItem.init(

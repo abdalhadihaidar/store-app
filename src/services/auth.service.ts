@@ -25,42 +25,47 @@ export class AuthService {
   }
   static async forgotPassword(email: string): Promise<string> {
     try {
-      console.log("📨 Forgot password request received for:", email);
-
-      // Simulate checking if user exists (Replace with database query)
-      if (!email.includes("@")) {
-        throw new Error("Invalid email format");
-      }
-
-      // Generate reset token (Replace with actual logic)
+      // Find user by email
+      const user = await User.findOne({ where: { email } });
+      if (!user) throw new Error("User not found");
+  
+      // Generate and store hashed token
       const resetToken = Math.random().toString(36).substring(2, 12);
-
+      const hashedToken = bcrypt.hashSync(resetToken, 12);
+      
+      // Set expiration (30 minutes from now)
+      const expirationDate = new Date(Date.now() + 30 * 60 * 1000);
+  
+      await user.update({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: expirationDate
+      });
       // Send email
       const emailResponse = await sendEmail(
         email,
         "User",
         "Reset Your Password - Action Required",
         `
-          <p>Hi there,</p>
-          <p>We received a request to reset your password. If you made this request, please click the button below to reset your password:</p>
+        <p>Hallo,</p>
+          <p>Wir haben eine Anfrage zum Zurücksetzen Ihres Passworts erhalten. Wenn Sie diese Anfrage gestellt haben, klicken Sie bitte auf die Schaltfläche unten, um Ihr Passwort zurückzusetzen:</p>
           <p style="text-align: center;">
           <a href="https://dashboard.brother-investment-group.com/reset-password/${resetToken}"
-               style="display: inline-block; padding: 12px 20px; background-color: #007bff; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 5px;">
-               Reset Password
+               style="display: inline-block; padding: 12px 20px; hintergrundfarbe: #007bff; farbe: #ffffff; textdekoration: keine; schriftstärke: fett; randradius: 5px;">
+               Passwort zurücksetzen
             </a>
           </p>
-          <p>If you did not request a password reset, you can safely ignore this email.</p>
-          <p>For security reasons, this link will expire in 30 minutes.</p>
-          <p>Best regards,</p>
+          <p>Wenn Sie keine Passwort-Zurücksetzung angefordert haben, können Sie diese E-Mail getrost ignorieren.</p>
+          <p>Aus Sicherheitsgründen läuft dieser Link in 30 Minuten ab.</p>
+          <p>Mit freundlichen Grüßen</p>
           <p><strong>Brother Investment Group</strong></p>
         `
       );
       
 
-      console.log("✅ Reset email sent:", emailResponse);
+     
       return "Password reset email sent successfully.";
     } catch (error: unknown) {
-      console.error("❌ Forgot password service error:", (error as Error).message);
+     
       throw new Error("Failed to process password reset request.");
     }
   }
@@ -70,36 +75,37 @@ export class AuthService {
     if (!token || !newPassword) {
       throw new Error('Missing required parameters');
     }
-    
+  
+    // Find user with valid token and expiration date
+    const user = await User.findOne({
+      where: {
+        resetPasswordExpires: { [Op.gt]: new Date() }, // Ensure token is not expired
+        resetPasswordToken: { [Op.eq]: token } // Match the plain token (no hashing)
+      }
+    });
+  
+    if (!user) throw new Error('Invalid or expired token');
+  
+    // Validate new password length
     if (newPassword.length < 8) {
       throw new Error('Password must be at least 8 characters');
     }
   
-    const users = await User.findAll({
-      where: {
-        resetPasswordExpires: { [Op.gt]: new Date() },
-      },
-    });
-  
-    const userFound = users.find(user => 
-      user.resetPasswordToken && 
-      bcrypt.compareSync(token, user.resetPasswordToken)
-    );
-  
-    if (!userFound) throw new Error('Invalid or expired token');
-  
-    // Additional security: Check if password is different from previous
-    if (bcrypt.compareSync(newPassword, userFound.password)) {
-      throw new Error('New password must be different from current password');
+    // Ensure new password is different from the current password
+    if (bcrypt.compareSync(newPassword, user.password)) {
+      throw new Error('New password must be different');
     }
   
+    // Hash the new password
     const hashedPassword = bcrypt.hashSync(newPassword, 12);
-    await userFound.update({
+  
+    // Update user password and reset token data
+    await user.update({
       password: hashedPassword,
       resetPasswordToken: null,
-      resetPasswordExpires: null,
+      resetPasswordExpires: null
     });
   
     return { message: 'Password reset successful' };
   }
-}
+}  
