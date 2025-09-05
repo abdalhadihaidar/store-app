@@ -8,7 +8,7 @@ export class ReturnService {
     const order = await Order.findByPk(orderId);
     if (!order) throw new Error('Order not found');
 
-    const returnRequests = [];
+    const returnRequests: Return[] = [];
     for (const item of items) {
       const orderItem = await OrderItem.findByPk(item.itemId);
       if (!orderItem) throw new Error(`OrderItem ${item.itemId} not found`);

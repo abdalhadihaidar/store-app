@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import path from 'path';
 
 // ✅ Load the correct `.env` file based on NODE_ENV

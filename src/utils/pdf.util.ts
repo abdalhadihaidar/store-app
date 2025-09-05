@@ -44,7 +44,7 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
     const items = templateData.items || templateData.returns || [];
     const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
     
-    const pdfPages = [];
+    const pdfPages: Buffer[] = [];
     
     for (let pageNum = 0; pageNum < totalPages; pageNum++) {
       const startIndex = pageNum * itemsPerPage;

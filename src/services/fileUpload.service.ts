@@ -8,15 +8,17 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: UPLOADS_DIR,
-  filename: (_req, file, cb) => {
+  filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`);
   }
 });
 
-const fileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
+const fileFilter: multer.Options['fileFilter'] = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (!file.mimetype.startsWith('image/')) {
-    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'));
+    const error = new Error('Only image files are allowed') as any;
+    error.code = 'LIMIT_UNEXPECTED_FILE';
+    return cb(error, false);
   }
   cb(null, true);
 };
