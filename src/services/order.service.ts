@@ -4,26 +4,24 @@ import Product from '../models/product.model';
 import Return from '../models/return.model';
 import Store from '../models/store.model';
 import { User } from '../models/user.model';
+import { round2 } from '../utils/number.util';
 
 export class OrderService {
-  static async getAllOrders(requestingUserId: number, requestingUserRole: string) {
+  static async getAllOrders(requestingUserRole: string, storeId?: number) {
     const query: any = {
       include: [
         {
           model: OrderItem,
           as: 'items',
-          include: [{ model: Product, as: 'product' }], // ✅ Correct alias
+          include: [{ model: Product, as: 'product' }],
         },
-        { 
-          model: User, 
-          as: 'user' // ✅ Matches Order's association alias
-        },
+        { model: User, as: 'user' },
+        { model: Store, as: 'store' },
       ],
     };
 
-    // For non-admin users, only return their own orders
-    if (requestingUserRole !== 'admin') {
-      query.where = { userId: requestingUserId };
+    if (storeId) {
+      query.where = { storeId };
     }
 
     return await Order.findAll(query);
@@ -63,10 +61,18 @@ export class OrderService {
         throw new Error('Unauthorized order creation');
       }
   
+      // ✅ Determine which userId to store
+      const resolvedUserId =
+        orderData.userId ?? (orderData.isPOS ? creatorId : null);
+
+      if (!resolvedUserId) {
+        throw new Error('userId is required for non-POS orders');
+      }
+
       // ✅ Create the order
       const order = await Order.create(
         {
-          userId: orderData.userId,
+          userId: resolvedUserId,
           storeId: orderData.storeId,
           status: orderData.isPOS ? 'completed' : 'new',
           isPOS: orderData.isPOS || false,
@@ -89,16 +95,19 @@ export class OrderService {
        
         // ✅ Compute price & tax
               // ✅ Adjust price & quantity based on whether it's a package or unit
-      if (item.isPackage) {
-        // If isPackage is true, quantity is in packages
-        quantity = item.quantity * product.numberperpackage; // Convert packages to units
-        price = product.price * item.quantity * product.numberperpackage;
-      } else {
-        // If isPackage is false, quantity is in units
-        price = product.price * item.quantity;
-      }
-
-        const tax = price * (taxRate / 100);
+        if (item.isPackage) {
+          if (item.quantity <= 0 || !Number.isInteger(item.quantity)) {
+            throw new Error('Package quantity must be a positive integer');
+          }
+          // snapshot of units for later but pricing based on packages
+          quantity = item.quantity * product.numberperpackage;
+          price = product.price * item.quantity; // price per package * packages
+        } else {
+          if (item.quantity <= 0) throw new Error('Quantity must be positive');
+          price = product.price * item.quantity;
+        }
+        price = round2(price);
+        const tax = round2(price * (taxRate / 100));
   
         totalPrice += price;
         totalTax += tax;
@@ -128,14 +137,15 @@ export class OrderService {
             originalPrice: product.price,
             adjustedPrice: orderData.isPOS ? product.price : null,
             taxRate,
-            taxAmount: tax
+            taxAmount: tax,
+            unitPerPackageSnapshot: product.numberperpackage,
           },
           { transaction }
         );
       }
   
       // ✅ Update order with correct price & tax
-      await order.update({ totalPrice, totalTax }, { transaction });
+      await order.update({ totalPrice: round2(totalPrice), totalTax: round2(totalTax) }, { transaction });
   
       // ✅ Commit transaction
       await transaction?.commit();
@@ -277,5 +287,105 @@ export class OrderService {
     if (!order) throw new Error('Order not found');
 
     await order.destroy();
+  }
+
+  static async addItemToOrder(orderId: number, itemData: {
+    productId: number;
+    quantity: number;
+    isPackage?: boolean;
+    taxRate?: number;
+  }) {
+    const transaction = await Order.sequelize?.transaction();
+    try {
+      const order = await Order.findByPk(orderId, { transaction });
+      if (!order) throw new Error('Order not found');
+
+      const product = await Product.findByPk(itemData.productId, { transaction });
+      if (!product) throw new Error(`Product ${itemData.productId} not found`);
+
+      const taxRate = itemData.taxRate ?? product.taxRate;
+      let quantity = itemData.quantity;
+      let price = 0;
+
+      // Calculate price & quantity based on whether it's a package or unit
+      if (itemData.isPackage) {
+        if (itemData.quantity <= 0 || !Number.isInteger(itemData.quantity)) {
+          throw new Error('Package quantity must be a positive integer');
+        }
+        quantity = itemData.quantity * product.numberperpackage;
+        price = product.price * itemData.quantity;
+      } else {
+        if (itemData.quantity <= 0) throw new Error('Quantity must be positive');
+        price = product.price * itemData.quantity;
+      }
+
+      price = round2(price);
+      const tax = round2(price * (taxRate / 100));
+      const packages = itemData.isPackage ? itemData.quantity : 0;
+
+      // Create new OrderItem
+      const orderItem = await OrderItem.create({
+        orderId: order.id,
+        productId: product.id,
+        quantity: quantity,
+        packages,
+        originalPrice: product.price,
+        adjustedPrice: null,
+        taxRate,
+        taxAmount: tax,
+        unitPerPackageSnapshot: product.numberperpackage,
+      }, { transaction });
+
+      // Update order totals
+      const newTotalPrice = round2(order.totalPrice + price);
+      const newTotalTax = round2(order.totalTax + tax);
+      
+      await order.update({ 
+        totalPrice: newTotalPrice, 
+        totalTax: newTotalTax 
+      }, { transaction });
+
+      await transaction?.commit();
+      return orderItem;
+    } catch (error) {
+      await transaction?.rollback();
+      throw error;
+    }
+  }
+
+  static async removeItemFromOrder(orderId: number, itemId: number) {
+    const transaction = await Order.sequelize?.transaction();
+    try {
+      const order = await Order.findByPk(orderId, { transaction });
+      if (!order) throw new Error('Order not found');
+
+      const orderItem = await OrderItem.findByPk(itemId, { transaction });
+      if (!orderItem || orderItem.orderId !== orderId) {
+        throw new Error('Order item not found');
+      }
+
+      // Calculate the price and tax to subtract
+      const priceToSubtract = orderItem.adjustedPrice ?? orderItem.originalPrice;
+      const totalPriceToSubtract = priceToSubtract * orderItem.quantity;
+      const taxToSubtract = orderItem.taxAmount;
+
+      // Remove the order item
+      await orderItem.destroy({ transaction });
+
+      // Update order totals
+      const newTotalPrice = round2(order.totalPrice - totalPriceToSubtract);
+      const newTotalTax = round2(order.totalTax - taxToSubtract);
+      
+      await order.update({ 
+        totalPrice: newTotalPrice, 
+        totalTax: newTotalTax 
+      }, { transaction });
+
+      await transaction?.commit();
+      return true;
+    } catch (error) {
+      await transaction?.rollback();
+      throw error;
+    }
   }
 }

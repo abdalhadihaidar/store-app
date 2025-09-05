@@ -1,0 +1,290 @@
+.gutschrift {
+    padding-top: 8px;
+    margin-top: 8px;
+    max-width: 210mm; /* A4 width */
+    margin-left: auto;
+    margin-right: auto;
+    font-family: Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.gutschrift .mt-4 {
+    margin-top: 1rem;
+}
+
+.gutschrift #print-order {
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    flex: 1;
+}
+
+.gutschrift .text-left {
+    text-align: left;
+    color: black;
+    font-weight: 600;
+}
+
+.gutschrift .text-right {
+    text-align: left;
+    color: #ff8800;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.gutschrift .text-right img {
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+.gutschrift .kk .text-left .address {
+    color: #ff8800;
+    font-weight: 400;
+    font-size: 15px;
+    white-space: pre;
+    text-decoration: underline;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.gutschrift .kk .text-left span {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-weight: 400;
+}
+
+/* --------------------------Gutschrift Header------------ */
+.gutschrift-header {
+    position: relative;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.gutschrift .Gutschrift {
+    color: white;
+    border: 5px solid #ff8800;
+    background-color: #ff8800;
+    letter-spacing: 4px;
+    font-weight: bold;
+    border-radius: 15px;
+    width: 50%;
+    padding: 4px 35px;
+    text-align: center;
+    z-index: 1000;
+    position: absolute;
+    top: -35px;
+}
+
+.gutschrift .gutschrift-border {
+    border: 3px solid #ff8800;
+    background-color: white;
+    border-radius: 15px;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.gutschrift .gutschrift-row {
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.gutschrift .gutschrift-row p {
+    margin-bottom: 3px;
+}
+
+.gutschrift .gutschrift-row strong {
+    color: #ff8800;
+}
+
+.gutschrift .mb-3 {
+    margin-bottom: 1rem;
+}
+
+/* -------------------------------User------------------------------------------------  */
+.gutschrift h4 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+}
+
+/* ----------------------------------------Table----------------------------------- */
+.gutschrift table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    table-layout: fixed;
+}
+
+.gutschrift table thead .firsttr th {
+    background-color: #f2f2f2;
+    border-top: 2px solid black;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.gutschrift table thead .sectr th {
+    border-bottom: 2px solid black;
+    background-color: #f2f2f2;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 3px;
+    line-height: 0.5;
+    text-align: center;
+}
+
+.gutschrift table th,
+.gutschrift table td {
+    padding: 2px 3px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    vertical-align: middle;
+}
+
+.gutschrift table td {
+    font-size: 14px;
+    font-weight: bold;
+    color: black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    font-family: Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.gutschrift table tbody tr:last-child td {
+    border-bottom: 2px solid #ddd;
+}
+
+/* ------------------------------Footer--------------------------------- */
+.gutschrift footer {
+    width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+    color: #000000;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    font-size: 16px;
+}
+
+.gutschrift footer p {
+    margin: 3px 0;
+    line-height: 1.3;
+    color: #000000;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.gutschrift footer .mt-5 {
+    margin-top: 2rem;
+}
+
+.gutschrift footer .flex {
+    display: flex;
+    justify-content: space-around;
+}
+
+.gutschrift footer .justify-content-around {
+    justify-content: space-around;
+}
+
+.gutschrift footer .my-5 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.gutschrift footer .mb-3 {
+    margin-bottom: 0.8rem;
+}
+
+.gutschrift footer .mt-4 {
+    margin-top: 1.5rem;
+}
+
+.gutschrift footer .mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+/* Ensure table prints well */
+@media print {
+    .gutschrift {
+        width: 210mm;
+        padding: 2mm;
+        font-size: 9pt;
+        font-family: Arial, Helvetica, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+    
+    .gutschrift table {
+        page-break-inside: auto;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    .gutschrift tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    .gutschrift th, .gutschrift td {
+        border: 1px solid #ddd;
+        font-size: 8pt;
+        padding: 2px 3px;
+        line-height: 1.2;
+        text-align: center;
+    }
+    
+    .gutschrift img {
+        max-width: 100%;
+    }
+    
+    .gutschrift footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-size: 12pt;
+        font-weight: bold;
+        text-rendering: geometricPrecision;
+        color: #000000;
+        letter-spacing: 0.5px;
+    }
+    
+    .gutschrift p, .gutschrift span, .gutschrift h3 {
+        margin: 5px 0;
+        line-height: 1.4;
+        text-rendering: geometricPrecision;
+        color: #000000;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+    
+    .gutschrift footer p {
+        font-size: 12pt;
+        font-weight: 700;
+    }
+    
+    .gutschrift * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

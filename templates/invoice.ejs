@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rechnung</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: Arial, sans-serif; 
+      font-size: 14px; 
+      line-height: 1.4; 
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .invoice { 
+      padding-top: 10px; 
+      margin-top: 10px; 
+    }
+    
+    .container { 
+      max-width: 100%; 
+      margin: 0 auto; 
+      padding: 0 15px; 
+    }
+    
+    .row { 
+      display: flex; 
+      flex-wrap: wrap; 
+      margin: 0 -15px; 
+    }
+    
+    .col-9 { 
+      flex: 0 0 75%; 
+      max-width: 75%; 
+      padding: 0 15px; 
+    }
+    
+    .col-3 { 
+      flex: 0 0 25%; 
+      max-width: 25%; 
+      padding: 0 15px; 
+    }
+    
+    .col-4 { 
+      flex: 0 0 33.333333%; 
+      max-width: 33.333333%; 
+      padding: 0 15px; 
+    }
+    
+    .col-6 { 
+      flex: 0 0 50%; 
+      max-width: 50%; 
+      padding: 0 15px; 
+    }
+    
+    .col-1 { 
+      flex: 0 0 8.333333%; 
+      max-width: 8.333333%; 
+      padding: 0 15px; 
+    }
+    
+    .col-2 { 
+      flex: 0 0 16.666667%; 
+      max-width: 16.666667%; 
+      padding: 0 15px; 
+    }
+    
+    .col-5 { 
+      flex: 0 0 41.666667%; 
+      max-width: 41.666667%; 
+      padding: 0 15px; 
+    }
+    
+    .mt-4 { margin-top: 1.5rem; }
+    .mt-5 { margin-top: 3rem; }
+    .mb-3 { margin-bottom: 1rem; }
+    .my-5 { margin-top: 3rem; margin-bottom: 3rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .p-2 { padding: 0.5rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+    
+    .text-left { text-align: left; color: black; font-weight: 600; }
+    .text-right { text-align: right; color: #019b98; font-weight: 600; font-size: 15px; }
+    .text-right-left { text-align: left; color: #019b98; font-weight: 600; font-size: 15px; line-height: 1.6; }
+    .text-center { text-align: center; }
+    
+    .address { 
+      color: #019b98; 
+      font-weight: bold; 
+      font-size: 15px; 
+      white-space: pre; 
+      text-decoration: underline; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      line-height: 1.6;
+    }
+    
+    .kk .text-left span { 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      line-height: 1.0;
+    }
+    
+    .text-right img { 
+      width: 110px; 
+      height: 100px; 
+      object-fit: contain; 
+      image-rendering: crisp-edges; 
+      padding-bottom: 10px; 
+    }
+    
+    .invoice-header { 
+      position: relative; 
+      padding-top: 10px; 
+      margin-top: 10px; 
+    }
+    
+    .Rechnung { 
+      color: white; 
+      border: 5px solid #019b98; 
+      background-color: #019b98; 
+      letter-spacing: 4px; 
+      font-weight: bold; 
+      border-radius: 15px; 
+      width: 50%; 
+      padding: 0px 12px; 
+      text-align: center; 
+      z-index: 1000; 
+      position: absolute; 
+      top: -20px; 
+      left: 0;
+    }
+    
+    .rechnung-row { 
+      border: 3px solid #019b98; 
+      background-color: white; 
+      border-radius: 15px;  
+      
+    }
+    
+    .rechnung-row p { 
+      margin-bottom: 0px; 
+      line-height: 1.0;
+    }
+    
+    .rechnung-row strong { 
+      color: #019b98; 
+    }
+    
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 5px; 
+      margin-top: 1rem;
+    }
+    
+    table thead .firsttr th { 
+      background-color: #f2f2f2; 
+      border-top: 2px solid black; 
+      font-size: small; 
+      padding: 8px; 
+      text-align: center; 
+    }
+    
+    table thead .sectr th { 
+      border-bottom: 2px solid black; 
+      background-color: #f2f2f2; 
+      padding: 8px; 
+      text-align: center; 
+      line-height: 0.5; 
+      font-size: 10px; 
+    }
+    
+    table th, table td { 
+      padding: 1px 2px; 
+      text-align: center; 
+      border-bottom: 0.5px solid #ddd; 
+      vertical-align: middle;
+    }
+    
+    table td { 
+      font-size: smaller; 
+    }
+    
+    table tbody tr:last-child td { 
+      border-bottom: none; 
+    }
+    
+    footer { 
+      width: 100%; 
+      border-top: 3px solid black; 
+      font-weight: bold; 
+      font-size: 12px; 
+      bottom: 0; 
+      position: relative; 
+      margin-top: 0rem;
+    }
+    
+    footer .flex { 
+      display: flex; 
+      justify-content: space-around; 
+    }
+    
+    footer .justify-content-around { 
+      justify-content: space-around; 
+    }
+    
+    .signature-line { 
+      border-top: 3px solid black; 
+      min-height: 60px; 
+      margin-top: 15px; 
+      padding-top: 15px; 
+    }
+    
+    .bank-info { 
+      border-top: 3px solid black; 
+      margin-top: 1rem; 
+    }
+    
+    .bank-info span { 
+      color: #ae1308; 
+    }
+    
+    .total-section { 
+      border-top: 3px solid #ae1308; 
+      padding-top: 10px; 
+      margin-top: 1rem; 
+    }
+    
+    .total-amount { 
+      font-weight: bold; 
+      font-size: 15px; 
+      color: black; 
+    }
+    
+    @media print {
+      .invoice { padding-top: 0; margin-top: 0; }
+      footer { page-break-inside: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      thead { display: table-header-group; }
+      tfoot { display: table-footer-group; }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice">
+    <div class="container mt-4 kk">
+      <div class="row">
+        <div class="col-9 text-left">
+          <h6 class="address">Brother Investment Group Horburger str.97 04205 Leipzig-Deutschland</h6>
+          <span><%= storeName %><br/></span>
+          <span><%= userName %><br/></span>
+          <span><%= storeAddress %><br/></span>
+          <span><%= storeCity %><br/></span>
+          <span><%= storePostalCode %><br/></span>
+        </div>
+        <div class="col-3 text-right">
+          <img src="Capture.png" alt="Logo" />
+          <div class="text-right-left">
+            <span>Horburger str.97</span><br/>
+            <span>04205 Leipzig</span><br/>
+            <span>Steuer-ID: 232/200/25047</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="invoice-header">
+        <h3 class="Rechnung">RECHNUNG :</h3>
+        <div class="rechnung-border">
+          <div class="row rechnung-row">
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Bestellung vom:</strong><br/><%= invoiceDate %></p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Rechnungsnr:</strong><br/><%= invoiceNumber %></p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Rechnungsdatum:</strong><br/><%= invoiceDate %></p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Kunden-Nr.</strong><br/><%= kundenNr %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="mt-4">
+        <thead>
+          <tr class="firsttr">
+            <th style="width: 8%;">Artikel-Nr</th>
+            <th style="width: 25%;">Artikel</th>
+            <th style="width: 8%;">Paket</th>
+            <th style="width: 12%;">Anzahl pro Paket</th>
+            <th style="width: 8%;">Menge</th>
+            <th style="width: 12%;">Netto-Einzelpreis</th>
+            <th style="width: 12%;">Brutto-Gesamtpreis</th>
+            <th style="width: 15%;" colspan="2">enthaltene MwSt</th>
+          </tr>
+          <tr style="line-height: 0.5; font-size: 10px; padding: 0;" class="sectr">
+            <th style="width: 8%;"></th>
+            <th style="width: 25%;"></th>
+            <th style="width: 8%;"></th>
+            <th style="width: 12%;"></th>
+            <th style="width: 8%;"></th>
+            <th style="width: 12%;"></th>
+            <th style="width: 12%;">pro Artikel</th>
+            <th style="width: 7.5%;">7%</th>
+            <th style="width: 7.5%;">19%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(function(item){ %>
+            <tr>
+              <td><%= item.id %></td>
+              <td><%= item.name %></td>
+              <td><%= item.packages %></td>
+              <td><%= item.numberPerPackage %></td>
+              <td><%= item.quantity %></td>
+              <td><%= item.adjustedPrice ? item.adjustedPrice.toFixed(2) : item.price.toFixed(2) %></td>
+              <td><%= item.total.toFixed(2) %></td>
+              <% if (item.tax7 > 0) { %>
+                <td><%= (item.tax7 || 0).toFixed(2) %>€</td>
+                <td>0€</td>
+              <% } else if (item.tax19 > 0) { %>
+                <td>0€</td>
+                <td><%= (item.tax19 || 0).toFixed(2) %>€</td>
+              <% } else { %>
+                <td>0€</td>
+                <td>0€</td>
+              <% } %>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <!-- Financial Summary - Every Page -->
+    <div class="row align-items-center">
+      <div class="col-6 mt-2 mb-3">
+        <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+      </div>
+      <div class="col-4 mt-2 mb-3">
+        <p>Netto-Gesamtbestellsumme:</p>
+        <p>zuzüglich 7% Mehrwertsteuer:</p>
+        <p>zuzüglich 19% Mehrwertsteuer:</p>
+      </div>
+      <div class="col-2">
+        <p><%= totalNet.toFixed(2) %>€</p>
+        <p><%= vat7.toFixed(2) %>€</p>
+        <p><%= vat19.toFixed(2) %>€</p>
+      </div>
+    </div>
+    
+    <div class="row align-items-center">
+      <div class="col-6"></div>
+      <div class="col-4 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount">Rechnungsbetrag:</h3>
+      </div>
+      <div class="col-2 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount"><%= totalGross.toFixed(2) %>€</h3>
+      </div>
+    </div>
+    
+    <!-- Signatures - Every Page -->
+    <div class="row flex justify-content-around mt-2">
+      <div class="col-4 signature-line">
+        <span>Unterschrift Kunde / Artikel erhalten:</span>
+      </div>
+      <div class="col-4 signature-line">
+        <span>Unterschrift Verkäufer / Artikel geliefert:</span>
+      </div>
+      <div class="col-4"></div>
+    </div>
+    
+    <!-- Bank Information - Last Page Only -->
+    <% if (typeof isLastPage !== 'undefined' && isLastPage === true) { %>
+    <div class="row flex my-5 justify-content bank-info">
+      <div class="col-1"></div>
+      <div class="col-5 mb-3 mt-3">
+        <span>IBAN:</span><br/>
+        <span>BIC:</span><br/>
+        <span>BANK:</span><br/>
+        <span>BANK-Anschrift:</span><br/>
+        <span>Verwendungszweck:</span>
+      </div>
+      <div class="col-5 mb-3 mt-3">
+        <span>DE44 8605 5592 1090 3534 28</span><br/>
+        <span>WELADE8LXXX</span><br/>
+        <span>Stadt- und kreissparkasse leipzig</span><br/>
+        <span>Humboldtstraße 25, 04008 Leipzig 7</span><br/>
+        <span>Geben Sie bitte die Rechnungsnummer an!</span>
+      </div>
+      <div class="col-1"></div>
+    </div>
+    <% } %>
+  </footer>
+</body>
+</html>

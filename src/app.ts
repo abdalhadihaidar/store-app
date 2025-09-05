@@ -3,8 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import routes from './routes';
 import { setupSwagger } from './config/swagger';
-import { errorHandler } from './middleware/error.middleware';
+import { errorHandler } from './middlewares/error.middleware';
 import sequelize from './config/database';
+import path from 'path';
 
 dotenv.config();
 
@@ -18,8 +19,10 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true })); // ✅ Supports form submissions
 app.use(express.json()); // ✅ Correctly parse JSON data
 
-app.use('/uploads', express.static('uploads')); // ✅ Serve images from the uploads folder
-
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../templates'));
+app.use('/static', express.static(path.join(__dirname, '../public')));
 
 
 // ❌ DO NOT use bodyParser.json() before file uploads (multer handles it)

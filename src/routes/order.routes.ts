@@ -301,4 +301,66 @@ router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeO
  */
 router.put('/:id', authMiddleware(['admin','client']), OrderController.updateOrderStatus);
 
+/**
+ * @swagger
+ * /orders/{id}/items:
+ *   post:
+ *     summary: Add item to existing order
+ *     description: Add a new item to an existing order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *               isPackage:
+ *                 type: boolean
+ *               taxRate:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Item added successfully
+ */
+router.post('/:id/items', authMiddleware(['admin']), OrderController.addItemToOrder);
+
+/**
+ * @swagger
+ * /orders/{id}/items/{itemId}:
+ *   delete:
+ *     summary: Remove item from order
+ *     description: Remove an item from an existing order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - name: itemId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Item removed successfully
+ */
+router.delete('/:id/items/:itemId', authMiddleware(['admin']), OrderController.removeItemFromOrder);
+
 export default router;

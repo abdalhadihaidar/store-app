@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
-import jwt from 'jsonwebtoken';
 import { ReturnService } from '../services/return.service';
 export class OrderController {
    
@@ -24,21 +23,17 @@ export class OrderController {
     // ✅ Admin approves & modifies order prices
     static async approveOrder(req: Request, res: Response, next: NextFunction):Promise<void> {
       try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-           res.status(401).json({ message: 'Unauthorized' });return
+        const userRole = req.user?.role;
+        
+        if (!userRole) {
+          res.status(401).json({ message: 'Unauthorized' });
+          return;
         }
-    
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
-          id: number; 
-          role: string 
-        };
     
         const { id } = req.params;
         const { updatedItems } = req.body;
         
-        const order = await OrderService.approveOrder(Number(id), decoded.role, updatedItems);
+        const order = await OrderService.approveOrder(Number(id), userRole, updatedItems);
         res.json(order);
       } catch (error) {
         next(error);
@@ -59,28 +54,17 @@ export class OrderController {
     // ✅ Get all orders (admin can see all, users see only theirs)
     static async getAllOrders(req: Request, res: Response, next: NextFunction): Promise<void>  {
       try {
-        // 1. Get token from headers
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        // Use the user info already set by authMiddleware
+        const userRole = req.user?.role;
+        const storeId = req.query.storeId ? Number(req.query.storeId) : undefined;
+        
+        if (!userRole) {
           res.status(401).json({ message: 'Unauthorized' });
-          return ;
+          return;
         }
   
-        // 2. Extract token
-        const token = authHeader.split(' ')[1];
-  
-        // 3. Verify and decode token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
-          id: number; 
-          role: string 
-        };
-  // console.log(decoded)
-        // 4. Now use the decoded values
-        const userId = decoded.id;
-        const userRole = decoded.role;
-  
-        // Rest of your controller logic...
-        const orders = await OrderService.getAllOrders(userId,userRole );
+        // Get orders based on user role and optional store filter
+        const orders = await OrderService.getAllOrders(userRole, storeId);
         res.json(orders);
   
       } catch (error) {
@@ -148,6 +132,30 @@ export class OrderController {
       res.json(order);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+    }
+  }
+
+  static async addItemToOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orderId = Number(req.params.id);
+      if (isNaN(orderId)) throw new Error('Invalid orderId');
+      const itemData = req.body;
+      const orderItem = await OrderService.addItemToOrder(orderId, itemData);
+      res.status(201).json(orderItem);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async removeItemFromOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orderId = Number(req.params.id);
+      const itemId = Number(req.params.itemId);
+      if (isNaN(orderId) || isNaN(itemId)) throw new Error('Invalid orderId or itemId');
+      await OrderService.removeItemFromOrder(orderId, itemId);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
   }
 }

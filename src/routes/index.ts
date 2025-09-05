@@ -7,6 +7,8 @@ import usersRoutes from './user.routes';
 import imageupladRoutes from './imageUpload.routes';
 import statsRoutes from './stats.routes';
 import storeRoutes from './store.routes';
+import invoiceRoutes from './invoice.routes';
+import creditNoteRoutes from './creditNote.routes';
 
 const router = express.Router();
 
@@ -19,4 +21,6 @@ router.use('/upload',imageupladRoutes);
 router.use('/stats', statsRoutes);
 router.use('/stores', storeRoutes);
 router.use('/returns',orderRoutes);
+router.use('/invoices', invoiceRoutes);
+router.use('/credit-notes', creditNoteRoutes);
 export default router;

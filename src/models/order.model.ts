@@ -23,7 +23,7 @@ export class Order extends Model {
 Order.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    userId: { type: DataTypes.INTEGER, allowNull: false },
+    userId: { type: DataTypes.INTEGER, allowNull: true },
     totalPrice: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     isPriceChangeRequested: { type: DataTypes.BOOLEAN, defaultValue: false },
     storeId: {
