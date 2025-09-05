@@ -2,16 +2,17 @@
   "name": "store-app",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "db:migrate": "npx sequelize-cli db:migrate --config config/config.js",
     "db:migrate:undo": "npx sequelize-cli db:migrate:undo --config config/config.js",
     "db:seed": "npx sequelize-cli db:seed:all --config config/config.js",
     "builddev": "tsc",
     "startdev": "node dist/server.js",
-    "build": "node node_modules/typescript/bin/tsc",
+    "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev src/server.ts"
+    "dev": "ts-node-dev src/server.ts",
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
