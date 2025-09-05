@@ -6,6 +6,8 @@ declare global {
         userId: number;  // Changed from 'id' to 'userId'
         role: string;
       };
+      files?: Multer.File[];
+      file?: Multer.File;
     }
     
     namespace Multer {
