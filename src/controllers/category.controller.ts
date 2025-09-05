@@ -28,7 +28,7 @@ export class CategoryController {
       if (err) {
         return res.status(400).json({ // Add return here
           message: err instanceof multer.MulterError
-            ? err.code === 'LIMIT_FILE_SIZE'
+            ? (err as multer.MulterError).code === 'LIMIT_FILE_SIZE'
               ? 'Image too large (max 5MB)'
               : 'Invalid file type'
             : 'File upload error'
@@ -58,7 +58,7 @@ export class CategoryController {
       if (err) {
         return res.status(400).json({ // Add return
           message: err instanceof multer.MulterError
-            ? err.message
+            ? (err as multer.MulterError).message
             : 'File upload error'
         });
       }

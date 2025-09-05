@@ -9,7 +9,7 @@ export class ImageUploadController {
       if (err) {
         return res.status(400).json({ // Add return
           message: err instanceof multer.MulterError
-            ? err.code === 'LIMIT_FILE_SIZE'
+            ? (err as multer.MulterError).code === 'LIMIT_FILE_SIZE'
               ? 'File too large (max 5MB)'
               : 'Too many files (max 4)'
             : 'File upload failed'
