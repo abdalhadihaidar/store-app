@@ -1,5 +1,6 @@
 import express from 'express';
 import { AuthController } from '../controllers/auth.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 /**
  * @swagger
@@ -79,7 +80,7 @@ router.post('/login', AuthController.login);
  *       401:
  *         description: Unauthorized
  */
-router.post('/register', AuthController.register);
+router.post('/register', authMiddleware(['admin']), AuthController.register);
 
 /**
  * @swagger

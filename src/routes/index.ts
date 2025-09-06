@@ -9,6 +9,7 @@ import statsRoutes from './stats.routes';
 import storeRoutes from './store.routes';
 import invoiceRoutes from './invoice.routes';
 import creditNoteRoutes from './creditNote.routes';
+import angebotRoutes from './angebot.routes';
 
 const router = express.Router();
 
@@ -23,4 +24,5 @@ router.use('/stores', storeRoutes);
 router.use('/returns',orderRoutes);
 router.use('/invoices', invoiceRoutes);
 router.use('/credit-notes', creditNoteRoutes);
+router.use('/angebots', angebotRoutes);
 export default router;

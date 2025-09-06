@@ -3,7 +3,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        userId: number;  // Changed from 'id' to 'userId'
+        id: number;     // Match JWT token structure
         role: string;
       };
       files?: Multer.File[];
@@ -27,6 +27,6 @@ declare global {
 }
 
 export interface DecodedUser {
-  userId: number;       // Consistent naming
+  id: number;          // Match JWT token structure
   role: string;
 }

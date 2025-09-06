@@ -13,7 +13,6 @@ ProductImage.init(
 );
 
 // ✅ One-to-Many: A Product has multiple images
-ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-//Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
+// Associations are defined in models/index.ts
 
 export default ProductImage;

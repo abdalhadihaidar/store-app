@@ -120,3 +120,48 @@ export async function generateCreditNotePdf(order: Order, templateData: any): Pr
   await generatePaginatedPdf(templatePath, templateData, filePath, 10);
   return { filePath };
 }
+
+export async function generateAngebotPdf(angebot: any, order: any, items: any[]): Promise<PdfGenerationResult> {
+  const uploadsDir = path.resolve(__dirname, '../../uploads/angebots');
+  ensureDir(uploadsDir);
+  const fileName = `angebot_${angebot.id}_${Date.now()}.pdf`;
+  const filePath = path.join(uploadsDir, fileName);
+
+  const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
+  
+  // Calculate totals
+  let totalNet = 0;
+  let tax7Amount = 0;
+  let tax19Amount = 0;
+  
+  items.forEach(item => {
+    const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+    totalNet += itemTotal;
+    
+    const taxRate = item.taxRate || 19;
+    const taxAmount = itemTotal * taxRate / 100;
+    
+    if (taxRate === 7) {
+      tax7Amount += taxAmount;
+    } else if (taxRate === 19) {
+      tax19Amount += taxAmount;
+    }
+  });
+  
+  const totalGross = totalNet + tax7Amount + tax19Amount;
+  
+  const templateData = {
+    angebot: {
+      ...angebot,
+      totalNet,
+      tax7Amount,
+      tax19Amount,
+      totalGross
+    },
+    order,
+    items
+  };
+
+  await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+  return { filePath };
+}

@@ -229,4 +229,82 @@ router.put('/:storeId', authMiddleware(['client', 'admin']), StoreController.upd
  */
 router.delete('/:storeId', authMiddleware(['admin']), StoreController.deleteStore);
 
+/**
+ * @swagger
+ * /stores/client/{clientId}:
+ *   get:
+ *     summary: Get all stores for a specific client (Admin Only)
+ *     tags: [Stores]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Client ID
+ *     responses:
+ *       200:
+ *         description: List of stores for the client
+ *       400:
+ *         description: Invalid client ID
+ *       404:
+ *         description: Client not found
+ */
+router.get('/client/:clientId', authMiddleware(['admin']), StoreController.getStoresByClient);
+
+/**
+ * @swagger
+ * /stores/client/{clientId}:
+ *   post:
+ *     summary: Create a new store for a specific client (Admin Only)
+ *     tags: [Stores]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - address
+ *               - city
+ *               - postalCode
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Client Store Name"
+ *               address:
+ *                 type: string
+ *                 example: "123 Client Street"
+ *               city:
+ *                 type: string
+ *                 example: "Berlin"
+ *               postalCode:
+ *                 type: string
+ *                 example: "10115"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 default: active
+ *     responses:
+ *       201:
+ *         description: Store created successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Client not found
+ */
+router.post('/client/:clientId', authMiddleware(['admin']), StoreController.createStoreForClient);
+
 export default router;

@@ -50,5 +50,4 @@ export default Invoice;
 // Define associations after both models are defined to avoid circular deps
 import Order from './order.model';
 
-Invoice.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-Order.hasMany(Invoice, { foreignKey: 'orderId', as: 'invoices' });
+// Associations are defined in models/index.ts

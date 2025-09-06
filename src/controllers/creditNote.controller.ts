@@ -7,7 +7,7 @@ export class CreditNoteController {
     try {
       const orderId = Number(req.params.orderId);
       if (isNaN(orderId)) throw new Error('Invalid orderId');
-      const createdBy = req.user?.userId ?? null;
+      const createdBy = req.user?.id ?? null;
       const credit = await CreditNoteService.create(orderId, createdBy);
 
       // stream PDF back to client
@@ -25,12 +25,21 @@ export class CreditNoteController {
     }
   }
 
-  static async getAllCreditNotes(_req: Request, res: Response, next: NextFunction) {
+  static async getAllCreditNotes(req: Request, res: Response, next: NextFunction) {
     try {
-      const credits = await CreditNoteService.getAll();
-      res.json(credits);
+      const page = Number(req.query.page) || 1;
+      const size = Number(req.query.size) || 25;
+
+      const { count, rows } = await CreditNoteService.getAll(page, size);
+
+      res.json({ total: count, page, size, data: rows });
     } catch (error) {
-      next(error);
+      console.error('Error retrieving credit notes:', error);
+      res.status(500).json({
+        error: {
+          message: error instanceof Error ? error.message : 'read ECONNRESET',
+        },
+      });
     }
   }
 

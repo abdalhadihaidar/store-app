@@ -9,9 +9,17 @@ interface MulterCategoryRequest extends Request {
 }
 
 export class CategoryController {
-  static async getCategories(_req: Request, res: Response) {
-    const categories = await CategoryService.getAllCategories();
-    res.json(categories);
+  static async getCategories(req: Request, res: Response) {
+    try {
+      const page = Number(req.query.page) || 1;
+      const size = Number(req.query.size) || 25;
+
+      const { count, rows } = await CategoryService.getAllCategories(page, size);
+
+      res.json({ total: count, page, size, data: rows });
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+    }
   }
   static async getById(req: Request, res: Response) {
     try {

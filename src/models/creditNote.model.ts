@@ -49,5 +49,4 @@ export default CreditNote;
 
 import Order from './order.model';
 
-CreditNote.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-Order.hasMany(CreditNote, { foreignKey: 'orderId', as: 'creditNotes' });
+// Associations are defined in models/index.ts

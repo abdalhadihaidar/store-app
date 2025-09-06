@@ -31,8 +31,6 @@ Return.init(
 );
 
 // ✅ Associations
-Return.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-Return.belongsTo(OrderItem, { foreignKey: 'orderItemId', as: 'orderItem' });
-Return.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+// Associations are defined in models/index.ts
 
 export default Return;

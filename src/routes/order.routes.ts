@@ -363,4 +363,134 @@ router.post('/:id/items', authMiddleware(['admin']), OrderController.addItemToOr
  */
 router.delete('/:id/items/:itemId', authMiddleware(['admin']), OrderController.removeItemFromOrder);
 
+/**
+ * @swagger
+ * /orders/for-angebot:
+ *   get:
+ *     summary: Get orders that can be converted to angebots
+ *     description: Retrieve all pending orders that can be converted to angebots
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: storeId
+ *         in: query
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of orders available for angebot creation
+ */
+router.get('/for-angebot', authMiddleware(['admin']), OrderController.getOrdersForAngebot);
+
+/**
+ * @swagger
+ * /orders/{id}/adjusted-prices:
+ *   put:
+ *     summary: Update adjusted prices for order items
+ *     description: Update the adjustedPrice and taxRate for specific order items in a pending order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     itemId:
+ *                       type: integer
+ *                     adjustedPrice:
+ *                       type: number
+ *                     taxRate:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Adjusted prices updated successfully
+ */
+router.put('/:id/adjusted-prices', authMiddleware(['admin']), OrderController.updateAdjustedPrices);
+
+/**
+ * @swagger
+ * /orders/{id}/create-angebot:
+ *   post:
+ *     summary: Create angebot from order
+ *     description: Create an angebot (quote) from a pending order with adjusted prices
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               validUntil:
+ *                 type: string
+ *                 format: date-time
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Angebot created successfully
+ */
+router.post('/:id/create-angebot', authMiddleware(['admin']), OrderController.createAngebotFromOrder);
+
+/**
+ * @swagger
+ * /orders/{id}/approve-from-angebot:
+ *   put:
+ *     summary: Approve order after client accepts angebot
+ *     description: Approve a pending order after the client has accepted the angebot
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Order approved successfully
+ */
+router.put('/:id/approve-from-angebot', authMiddleware(['admin']), OrderController.approveOrderFromAngebot);
+
+/**
+ * @swagger
+ * /orders/debug/connection:
+ *   get:
+ *     summary: Test database connection (Debug endpoint)
+ *     description: Test endpoint to verify database connectivity and basic operations
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Database connection test successful
+ *       500:
+ *         description: Database connection test failed
+ */
+router.get('/debug/connection', authMiddleware(['admin']), OrderController.testDatabaseConnection);
+
 export default router;

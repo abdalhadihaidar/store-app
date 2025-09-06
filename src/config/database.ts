@@ -19,6 +19,45 @@ const sequelize = new Sequelize({
   port: Number(process.env.DB_PORT),
   dialect: 'mysql',
   logging: false,
+  pool: {
+    max: 20,
+    min: 2,
+    acquire: 60000,
+    idle: 30000,
+    evict: 1000
+  },
+  dialectOptions: {
+    // Use correct MySQL2 options
+    charset: 'utf8mb4',
+    supportBigNumbers: true,
+    bigNumberStrings: true,
+    // Connection timeout options - use correct MySQL2 option names
+    connectTimeout: 60000,
+    // Keep connection alive
+    keepAliveInitialDelay: 0,
+    enableKeepAlive: true,
+    // Query timeout to prevent long-running queries
+    timeout: 30000
+  },
+  retry: {
+    match: [
+      /ETIMEDOUT/,
+      /EHOSTUNREACH/,
+      /ECONNRESET/,
+      /ECONNREFUSED/,
+      /ESOCKETTIMEDOUT/,
+      /EPIPE/,
+      /EAI_AGAIN/,
+      /SequelizeConnectionError/,
+      /SequelizeConnectionRefusedError/,
+      /SequelizeHostNotFoundError/,
+      /SequelizeHostNotReachableError/,
+      /SequelizeInvalidConnectionError/,
+      /SequelizeConnectionTimedOutError/,
+      /read ECONNRESET/
+    ],
+    max: 3
+  }
 });
 
 export default sequelize;

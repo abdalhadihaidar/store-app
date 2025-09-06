@@ -55,15 +55,4 @@ import OrderItem from './orderItem.model';
 import { User } from './user.model';
 import Store from './store.model';
 import Return from './return.model';
-// ✅ Define association after both models are defined
-Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items' });
-//OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-// After Order model definition
-Order.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'user'
-});
-Order.belongsTo(Store, { foreignKey: 'storeId', as: 'store' });
-Store.hasMany(Order, { foreignKey: 'storeId', as: 'orders' });
-// ✅ Order can have multiple return requests
-Order.hasMany(Return, { foreignKey: 'orderId', as: 'returns' });
+// Associations are defined in models/index.ts

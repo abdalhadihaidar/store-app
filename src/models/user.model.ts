@@ -47,7 +47,4 @@ User.init(
 export default User;
 import Order from './order.model';
 // Add this to your User model file
-User.hasMany(Order, {
-  foreignKey: 'userId',
-  as: 'orders'
-});
+// Associations are defined in models/index.ts

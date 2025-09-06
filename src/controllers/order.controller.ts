@@ -54,28 +54,48 @@ export class OrderController {
     // ✅ Get all orders (admin can see all, users see only theirs)
     static async getAllOrders(req: Request, res: Response, next: NextFunction): Promise<void>  {
       try {
+        console.log('🔍 getAllOrders called with:', {
+          userRole: req.user?.role,
+          storeId: req.query.storeId,
+          page: req.query.page,
+          size: req.query.size
+        });
+
         // Use the user info already set by authMiddleware
         const userRole = req.user?.role;
         const storeId = req.query.storeId ? Number(req.query.storeId) : undefined;
+        const page = Number(req.query.page) || 1;
+        const size = Number(req.query.size) || 25;
         
         if (!userRole) {
           res.status(401).json({ message: 'Unauthorized' });
           return;
         }
   
+        console.log('📊 Calling OrderService.getAllOrders with:', { userRole, storeId, page, size });
+        
         // Get orders based on user role and optional store filter
-        const orders = await OrderService.getAllOrders(userRole, storeId);
-        res.json(orders);
+        const { count, rows } = await OrderService.getAllOrders(userRole, storeId, page, size);
+        
+        console.log('✅ Orders retrieved successfully:', { count, rowsCount: rows.length });
+        res.json({ total: count, page, size, data: rows });
   
       } catch (error) {
+        console.error('❌ Error in getAllOrders:', error);
+        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         next(error);
       }
     }
     static async createOrder(req: Request, res: Response) {
       try {
-        const isAdmin = (req as any).user.role === 'admin';
+        if (!req.user) {
+          res.status(401).json({ message: 'Unauthorized' });
+          return;
+        }
+        
+        const isAdmin = req.user.role === 'admin';
         const order = await OrderService.createOrder(
-          (req as any).user.id,
+          req.user.id,
           isAdmin,
           req.body
         );
@@ -92,7 +112,7 @@ export class OrderController {
         
         // Add detailed price breakdown
         const response = {
-          ...order.toJSON(),
+          ...order,
           priceBreakdown: {
             subtotal: order.totalPrice,
             tax: order.totalTax,
@@ -108,9 +128,14 @@ export class OrderController {
   
     static async createReturn(req: Request, res: Response) {
       try {
+        if (!req.user) {
+          res.status(401).json({ message: 'Unauthorized' });
+          return;
+        }
+        
         const returns = await ReturnService.createReturnRequest(
           Number(req.params.id),
-          (req as any).user.id,
+          req.user.id,
           req.body.items
         );
         res.status(201).json(returns);
@@ -120,8 +145,11 @@ export class OrderController {
     }
     static async getAllReturns(req: Request, res: Response) {
       try {
-        const returns = await ReturnService.getAllReturns();
-        res.json(returns);
+        const page = Number(req.query.page) || 1;
+        const size = Number(req.query.size) || 25;
+
+        const { count, rows } = await ReturnService.getAllReturns(page, size);
+        res.json({ total: count, page, size, data: rows });
       } catch (error: any) {
         res.status(400).json({ message: error.message });
       }
@@ -155,6 +183,134 @@ export class OrderController {
       await OrderService.removeItemFromOrder(orderId, itemId);
       res.status(204).send();
     } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getOrdersForAngebot(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { storeId } = req.query;
+      const orders = await OrderService.getOrdersForAngebot(storeId ? Number(storeId) : undefined);
+      res.json({
+        success: true,
+        data: orders
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Update adjusted prices for order items
+  static async updateAdjustedPrices(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orderId = Number(req.params.id);
+      const { items } = req.body; // Array of { itemId, adjustedPrice, taxRate }
+
+      if (!items || !Array.isArray(items)) {
+        res.status(400).json({ message: 'Items array is required' });
+        return;
+      }
+
+      console.log('🔧 Updating adjusted prices for order:', orderId, 'items:', items.length);
+
+      const result = await OrderService.updateAdjustedPrices(orderId, items);
+      
+      res.json({
+        success: true,
+        message: 'Adjusted prices updated successfully',
+        data: result
+      });
+    } catch (error) {
+      console.error('❌ Error updating adjusted prices:', error);
+      next(error);
+    }
+  }
+
+  // Create angebot from order
+  static async createAngebotFromOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orderId = Number(req.params.id);
+      const { validUntil, notes } = req.body;
+
+      if (!req.user) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
+
+      console.log('📄 Creating angebot from order:', orderId);
+
+      const angebot = await OrderService.createAngebotFromOrder(
+        orderId,
+        req.user.id,
+        validUntil ? new Date(validUntil) : undefined,
+        notes
+      );
+
+      res.json({
+        success: true,
+        message: 'Angebot created successfully',
+        data: angebot
+      });
+    } catch (error) {
+      console.error('❌ Error creating angebot:', error);
+      next(error);
+    }
+  }
+
+  // Approve order (after client accepts angebot)
+  static async approveOrderFromAngebot(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orderId = Number(req.params.id);
+
+      if (!req.user) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
+
+      console.log('✅ Approving order from angebot:', orderId);
+
+      const order = await OrderService.approveOrderFromAngebot(orderId, req.user.id);
+
+      res.json({
+        success: true,
+        message: 'Order approved successfully',
+        data: order
+      });
+    } catch (error) {
+      console.error('❌ Error approving order:', error);
+      next(error);
+    }
+  }
+
+  // Debug endpoint to test database connectivity
+  static async testDatabaseConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      console.log('🔍 Testing database connection...');
+      
+      // Test basic database connectivity
+      const { Order } = await import('../models/order.model');
+      const sequelize = Order.sequelize;
+      
+      if (!sequelize) {
+        throw new Error('Sequelize instance not found');
+      }
+
+      // Test authentication
+      await sequelize.authenticate();
+      console.log('✅ Database authentication successful');
+
+      // Test simple query
+      const result = await Order.count();
+      console.log('✅ Database query successful, order count:', result);
+
+      res.json({
+        success: true,
+        message: 'Database connection is working',
+        orderCount: result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Database connection test failed:', error);
       next(error);
     }
   }

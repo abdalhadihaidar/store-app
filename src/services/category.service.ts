@@ -1,8 +1,16 @@
 import Category from '../models/category.model';
 
 export class CategoryService {
-  static async getAllCategories() {
-    return await Category.findAll();
+  static async getAllCategories(page = 1, size = 25) {
+    const limit = size;
+    const offset = (page - 1) * size;
+
+    return await Category.findAndCountAll({
+      limit,
+      offset,
+      attributes: ['id', 'name', 'image', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
   }
   static async getCategoryById(id: number) {
     const category = await Category.findByPk(id);

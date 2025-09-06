@@ -5,6 +5,7 @@ import routes from './routes';
 import { setupSwagger } from './config/swagger';
 import { errorHandler } from './middlewares/error.middleware';
 import sequelize from './config/database';
+import './models'; // Import all models and associations
 import path from 'path';
 
 dotenv.config();
@@ -36,9 +37,19 @@ app.use(errorHandler); // ✅ Add error handler last
 export default app;
 
 
-// Sync database
+// Test database connection and sync
+const testDatabaseConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+    
+    await sequelize.sync();
+    console.log('✅ Database schema updated!');
+  } catch (error) {
+    console.error('❌ Unable to connect to the database:', error);
+    process.exit(1);
+  }
+};
 
-//sequelize.sync().then(() => {
-  //console.log('✅ Database schema updated!');
-//});
+testDatabaseConnection();
 

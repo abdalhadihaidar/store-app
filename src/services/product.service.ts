@@ -1,15 +1,22 @@
 import Product from '../models/product.model';
 import ProductImage from '../models/productImage.model';
 export class ProductService {
-  static async getAllProducts() {
-    return await Product.findAll({
-      include: [{ model: ProductImage, as: 'images', attributes: ['imageUrl'] }] // ✅ Include images
+  static async getAllProducts(page = 1, size = 25) {
+    const limit = size;
+    const offset = (page - 1) * size;
+
+    return await Product.findAndCountAll({
+      limit,
+      offset,
+      attributes: ['id', 'name', 'price', 'quantity', 'package', 'numberperpackage', 'categoryId', 'createdAt'],
+      include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }],
+      order: [['createdAt', 'DESC']],
     });
   }
 
   static async getProductById(id: number) {
     const product = await Product.findByPk(id, {
-      include: [{ model: ProductImage, as: 'images', attributes: ['imageUrl'] }] // ✅ Include images
+      include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }] // ✅ Include images
     });
     if (!product) throw new Error('Product not found');
     return product;
@@ -18,7 +25,7 @@ export class ProductService {
   static async getProductsByCategoryId(categoryId: number) {
     return await Product.findAll({
       where: { categoryId },
-      include: [{ model: ProductImage, as: 'images', attributes: ['imageUrl'] }] // ✅ Include images
+      include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }] // ✅ Include images
     });
   }
   static async createProduct(productData: {
@@ -85,7 +92,7 @@ export class ProductService {
   }
 ) {
   const product = await Product.findByPk(productId, {
-    include: [{ model: ProductImage, as: 'images' }]
+    include: [{ model: ProductImage, as: 'productImages' }]
   });
   if (!product) throw new Error('Product not found');
 
@@ -115,7 +122,7 @@ export class ProductService {
     );
   }
 
-  return product.reload({ include: [{ model: ProductImage, as: 'images' }] });
+  return product.reload({ include: [{ model: ProductImage, as: 'productImages' }] });
 }
 
 

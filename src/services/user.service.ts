@@ -1,8 +1,18 @@
 import User from '../models/user.model';
 
 export class UserService {
-  static async getAllUsers() {
-    return await User.findAll();
+  /**
+   * Get paginated users list
+   */
+  static async getAllUsers(page = 1, size = 25) {
+    const limit = size;
+    const offset = (page - 1) * size;
+    return await User.findAndCountAll({
+      limit,
+      offset,
+      attributes: ['id', 'name', 'email', 'role', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
   }
 
   static async getUserById(userId: number) {
@@ -23,5 +33,13 @@ export class UserService {
     if (!user) throw new Error('User not found');
 
     await user.destroy();
+  }
+
+  // Get all clients
+  static async getClients() {
+    return await User.findAll({
+      where: { role: 'client' },
+      attributes: ['id', 'name', 'email', 'role', 'createdAt', 'updatedAt']
+    });
   }
 }

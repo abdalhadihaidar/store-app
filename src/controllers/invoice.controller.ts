@@ -10,7 +10,7 @@ export class InvoiceController {
     try {
       const orderId = Number(req.params.orderId);
       if (isNaN(orderId)) throw new Error('Invalid orderId');
-      const createdBy = req.user?.userId ?? null;
+      const createdBy = req.user?.id ?? null;
       
       // Extract data from request body (from print modal)
       const { invoiceNumber, invoiceDate, userName, kundenNr } = req.body;
@@ -53,12 +53,21 @@ export class InvoiceController {
     }
   }
 
-  static async getAllInvoices(_req: Request, res: Response, next: NextFunction) {
+  static async getAllInvoices(req: Request, res: Response, next: NextFunction) {
     try {
-      const invoices = await InvoiceService.getAll();
-      res.json(invoices);
+      const page = Number(req.query.page) || 1;
+      const size = Number(req.query.size) || 25;
+
+      const { count, rows } = await InvoiceService.getAll(page, size);
+
+      res.json({ total: count, page, size, data: rows });
     } catch (error) {
-      next(error);
+      console.error('Error retrieving invoices:', error);
+      res.status(500).json({
+        error: {
+          message: error instanceof Error ? error.message : 'read ECONNRESET',
+        },
+      });
     }
   }
 

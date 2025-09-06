@@ -34,13 +34,20 @@ export class ReturnService {
 
     return returnRequests;
   }
-  static async getAllReturns() {
-    return await Return.findAll({
+  static async getAllReturns(page = 1, size = 25) {
+    const limit = size;
+    const offset = (page - 1) * size;
+
+    return await Return.findAndCountAll({
+      limit,
+      offset,
+      attributes: ['id', 'orderId', 'orderItemId', 'userId', 'quantity', 'reason', 'status', 'createdAt', 'updatedAt'],
       include: [
-        { model: Order, as: 'order' },
-        { model: OrderItem, as: 'orderItem' },
-        { model: User, as: 'user' },
+        { model: Order, as: 'order', attributes: ['id', 'status', 'totalPrice'] },
+        { model: OrderItem, as: 'orderItem', attributes: ['id', 'productId', 'quantity', 'originalPrice'] },
+        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
       ],
+      order: [['createdAt', 'DESC']],
     });
   }
 }

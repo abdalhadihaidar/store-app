@@ -77,7 +77,6 @@ Store.init(
 );
 
 // Associations
-User.hasOne(Store, { foreignKey: 'userId', as: 'store' });
-Store.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+// Associations are defined in models/index.ts
 
 export default Store;

@@ -14,4 +14,4 @@ CategoryImage.init(
 
 export default CategoryImage;
 import Category from './category.model';
-CategoryImage.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+// Associations are defined in models/index.ts

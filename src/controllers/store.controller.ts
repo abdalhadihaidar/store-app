@@ -10,7 +10,8 @@ export class StoreController {
           if (missingFields.length > 0) {
              res.status(400).json({
               message: `Missing required fields: ${missingFields.join(', ')}`
-            });return
+            });
+            return;
           }
     
         
@@ -20,7 +21,8 @@ export class StoreController {
           });
           res.status(201).json(store);
         } catch (error:any) {
-          res.status(400).json({ message: error.message });
+          console.error('Error creating store:', error);
+          res.status(500).json({ message: error.message || 'Internal server error' });
         }
       }
     
@@ -47,16 +49,20 @@ export class StoreController {
   }
   static async getAllStores(req: Request, res: Response) {
     try {
-      const { page = 1, limit = 10, city, postalCode } = req.query;
-      const stores = await StoreService.getAllStores({
+      const { page = 1, limit = 25, city, postalCode } = req.query;
+      const { count, rows } = await StoreService.getAllStores({
         page: Number(page),
         limit: Number(limit),
         city: city?.toString(),
         postalCode: postalCode?.toString()
       });
-      res.json(stores);
+      res.json({ total: count, page: Number(page), size: Number(limit), data: rows });
     } catch (error) {
-      res.status(500).json({ message: 'Error retrieving stores' });
+      console.error('Error retrieving stores:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving stores',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
   static async updateStore(req: Request, res: Response) {
@@ -76,6 +82,52 @@ export class StoreController {
       res.status(204).send();
     } catch (error:any) {
       res.status(400).json({ message: error.message });
+    }
+  }
+
+  static async getStoresByClient(req: Request, res: Response) {
+    try {
+      const clientId = parseInt(req.params.clientId, 10);
+      if (isNaN(clientId)) {
+        res.status(400).json({ message: 'Invalid client ID' });
+        return;
+      }
+
+      const stores = await StoreService.getStoresByClientId(clientId);
+      res.json(stores);
+    } catch (error: any) {
+      console.error('Error retrieving stores for client:', error);
+      res.status(500).json({ 
+        message: error.message || 'Internal server error' 
+      });
+    }
+  }
+
+  static async createStoreForClient(req: Request, res: Response) {
+    try {
+      const clientId = parseInt(req.params.clientId, 10);
+      if (isNaN(clientId)) {
+        res.status(400).json({ message: 'Invalid client ID' });
+        return;
+      }
+
+      const requiredFields = ['name', 'address', 'city', 'postalCode'];
+      const missingFields = requiredFields.filter(field => !req.body[field]);
+      
+      if (missingFields.length > 0) {
+        res.status(400).json({
+          message: `Missing required fields: ${missingFields.join(', ')}`
+        });
+        return;
+      }
+
+      const store = await StoreService.createStoreForClient(req.body, clientId);
+      res.status(201).json(store);
+    } catch (error: any) {
+      console.error('Error creating store for client:', error);
+      res.status(500).json({ 
+        message: error.message || 'Internal server error' 
+      });
     }
   }
 }

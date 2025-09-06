@@ -49,9 +49,4 @@ export default OrderItem;
 import Order from './order.model';
 import Product from './product.model';
 
-// ✅ Define relationships after both models are defined
-OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-OrderItem.belongsTo(Product, {
-  foreignKey: 'productId',
-  as: 'product'
-});
+// Associations are defined in models/index.ts

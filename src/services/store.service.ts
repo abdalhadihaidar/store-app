@@ -68,4 +68,29 @@ export class StoreService {
     if (!store) throw new Error('Store not found');
     await store.destroy();
   }
+
+  static async getStoresByClientId(clientId: number) {
+    return await Store.findAll({
+      where: { userId: clientId },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email']
+      }]
+    });
+  }
+
+  // Create store for a specific client
+  static async createStoreForClient(storeData: Omit<StoreAttributes, 'id'>, clientId: number) {
+    // Verify the client exists
+    const client = await User.findByPk(clientId);
+    if (!client) throw new Error('Client not found');
+    if (client.role !== 'client') throw new Error('User is not a client');
+
+    // Create store with the client's ID
+    return await Store.create({
+      ...storeData,
+      userId: clientId
+    });
+  }
 }

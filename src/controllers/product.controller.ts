@@ -7,10 +7,14 @@ interface MulterRequest extends Request {
 }
 
 export class ProductController {
-  static async getProducts(_req: Request, res: Response, next: NextFunction) {
+  static async getProducts(req: Request, res: Response, next: NextFunction) {
     try {
-      const products = await ProductService.getAllProducts();
-      res.json(products);
+      const page = Number(req.query.page) || 1;
+      const size = Number(req.query.size) || 25;
+
+      const { count, rows } = await ProductService.getAllProducts(page, size);
+
+      res.json({ total: count, page, size, data: rows });
     } catch (error) {
       next(error);
     }

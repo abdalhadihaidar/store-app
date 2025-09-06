@@ -27,6 +27,56 @@ router.get('/', authMiddleware(['admin']), UserController.getAllUsers);
 
 /**
  * @swagger
+ * /users/clients:
+ *   get:
+ *     summary: Retrieve all clients (Admin Only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of clients
+ */
+router.get('/clients', authMiddleware(['admin']), UserController.getClients);
+
+/**
+ * @swagger
+ * /users/clients:
+ *   post:
+ *     summary: Create a new client (Admin Only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "John Doe"
+ *               email:
+ *                 type: string
+ *                 example: "john@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       201:
+ *         description: Client created successfully
+ *       400:
+ *         description: Validation error
+ */
+router.post('/clients', authMiddleware(['admin']), UserController.createClient);
+
+/**
+ * @swagger
  * /users/{id}:
  *   get:
  *     summary: Get user by ID (Admin Only)

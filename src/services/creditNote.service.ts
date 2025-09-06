@@ -97,18 +97,29 @@ export class CreditNoteService {
     return credit;
   }
 
-  static async getAll() {
-    return await CreditNote.findAll({ 
+  /**
+   * Get paginated credit notes list
+   */
+  static async getAll(page = 1, size = 25) {
+    const limit = size;
+    const offset = (page - 1) * size;
+
+    return await CreditNote.findAndCountAll({
+      limit,
+      offset,
+      attributes: ['id', 'orderId', 'number', 'date', 'totalGross', 'totalNet', 'totalVat', 'createdAt'],
       include: [
-        { 
-          model: Order, 
+        {
+          model: Order,
           as: 'order',
+          attributes: ['id', 'status', 'totalPrice', 'totalTax', 'storeId', 'userId'],
           include: [
-            { model: User, as: 'user' },
-            { model: Store, as: 'store' }
-          ]
-        }
-      ] 
+            { model: User, as: 'user', attributes: ['id', 'name'] },
+            { model: Store, as: 'store', attributes: ['id', 'name'] },
+          ],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
     });
   }
 

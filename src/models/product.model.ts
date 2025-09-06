@@ -49,9 +49,4 @@ export default Product;
 import Category from './category.model';
 import ProductImage from './productImage.model';
 
-// ✅ Define associations after both models are defined
-Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
-//Category.hasMany(Product, { foreignKey: 'categoryId', as: 'products' });
-
-Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
-//ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+// Associations are defined in models/index.ts
