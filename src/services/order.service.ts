@@ -616,8 +616,8 @@ export class OrderService {
         throw new Error('Order not found');
       }
 
-      if (order.status !== 'pending') {
-        throw new Error('Only pending orders can have adjusted prices');
+      if (order.status !== 'pending' && order.status !== 'new') {
+        throw new Error('Only pending or new orders can have adjusted prices');
       }
 
       let newTotalPrice = 0;
@@ -678,8 +678,8 @@ export class OrderService {
         throw new Error('Order not found');
       }
 
-      if (order.status !== 'pending') {
-        throw new Error('Only pending orders can be converted to angebots');
+      if (order.status !== 'pending' && order.status !== 'new') {
+        throw new Error('Only pending or new orders can be converted to angebots');
       }
 
       // Check if order has adjusted prices
