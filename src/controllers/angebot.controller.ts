@@ -3,6 +3,7 @@ import { AngebotService } from '../services/angebot.service';
 import Order from '../models/order.model';
 import OrderItem from '../models/orderItem.model';
 import Product from '../models/product.model';
+import Store from '../models/store.model';
 import fs from 'fs';
 import path from 'path';
 

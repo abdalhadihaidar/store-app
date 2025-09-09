@@ -157,12 +157,12 @@ export class AngebotService {
         // Update angebot with PDF path (without transaction)
         await angebot.update({ pdfPath: pdfResult.filePath });
         console.log('✅ PDF path updated in database');
-      } catch (pdfError) {
+      } catch (pdfError: any) {
         console.error('❌ Error generating angebot PDF:', pdfError);
         console.error('❌ PDF Error details:', {
-          message: pdfError.message,
-          stack: pdfError.stack,
-          name: pdfError.name
+          message: pdfError?.message || 'Unknown error',
+          stack: pdfError?.stack || 'No stack trace',
+          name: pdfError?.name || 'Unknown error type'
         });
         // Don't fail the entire operation if PDF generation fails
       }
