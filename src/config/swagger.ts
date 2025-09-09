@@ -4,7 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 import path from 'path';
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:8097';
+const SERVER_URL = process.env.SERVER_URL || 'https://www.api.brother-investment-group.com';
 
 const options: swaggerJsdoc.Options = {
   definition: {

@@ -147,13 +147,23 @@ export class AngebotService {
       // Generate PDF after successful creation (without transaction)
       try {
         console.log('📄 Generating angebot PDF...');
+        console.log('📄 Angebot data:', JSON.stringify(angebot.toJSON(), null, 2));
+        console.log('📄 Order data:', JSON.stringify(order, null, 2));
+        console.log('📄 Items data:', JSON.stringify(order.items || [], null, 2));
+        
         const pdfResult = await generateAngebotPdf(angebot, order, order.items || []);
         console.log('✅ Angebot PDF generated:', pdfResult.filePath);
         
         // Update angebot with PDF path (without transaction)
         await angebot.update({ pdfPath: pdfResult.filePath });
+        console.log('✅ PDF path updated in database');
       } catch (pdfError) {
         console.error('❌ Error generating angebot PDF:', pdfError);
+        console.error('❌ PDF Error details:', {
+          message: pdfError.message,
+          stack: pdfError.stack,
+          name: pdfError.name
+        });
         // Don't fail the entire operation if PDF generation fails
       }
       

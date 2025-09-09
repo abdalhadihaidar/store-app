@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import { AngebotService } from '../services/angebot.service';
+import Order from '../models/order.model';
+import OrderItem from '../models/orderItem.model';
+import Product from '../models/product.model';
 import fs from 'fs';
 import path from 'path';
 
@@ -353,6 +356,62 @@ export class AngebotController {
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to download PDF'
+      });
+    }
+  }
+
+  /**
+   * Regenerate angebot PDF (for debugging)
+   */
+  static async regeneratePdf(req: Request, res: Response): Promise<void> {
+    try {
+      const angebotId = Number(req.params.id);
+      console.log('regeneratePdf called with angebotId:', angebotId);
+      
+      const angebot = await AngebotService.getAngebotById(angebotId);
+      if (!angebot) {
+        res.status(404).json({
+          success: false,
+          message: 'Angebot not found'
+        });
+        return;
+      }
+
+      // Get order data
+      const order = angebot.orderId ? await Order.findByPk(angebot.orderId, {
+        include: [
+          { model: OrderItem, as: 'items', include: [{ model: Product, as: 'orderProduct' }] },
+          { model: Store, as: 'store' }
+        ]
+      }) : null;
+
+      if (!order) {
+        res.status(404).json({
+          success: false,
+          message: 'Order not found for this angebot'
+        });
+        return;
+      }
+
+      // Regenerate PDF
+      const { generateAngebotPdf } = await import('../utils/pdf.util');
+      const pdfResult = await generateAngebotPdf(angebot, order, order.items || []);
+      
+      // Update angebot with new PDF path
+      await angebot.update({ pdfPath: pdfResult.filePath });
+
+      res.json({
+        success: true,
+        message: 'PDF regenerated successfully',
+        data: {
+          pdfPath: pdfResult.filePath
+        }
+      });
+    } catch (error: any) {
+      console.error('Error regenerating angebot PDF:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to regenerate PDF'
       });
     }
   }

@@ -387,4 +387,27 @@ router.get('/customer/:customerId', authMiddleware(['admin', 'client']), Angebot
  */
 router.get('/:id/pdf', authMiddleware(['admin', 'client']), AngebotController.downloadPdf);
 
+/**
+ * @swagger
+ * /angebots/{id}/regenerate-pdf:
+ *   post:
+ *     summary: Regenerate angebot PDF (for debugging)
+ *     description: Manually regenerate the PDF for an angebot
+ *     tags: [Angebots]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: PDF regenerated successfully
+ *       404:
+ *         description: Angebot or order not found
+ */
+router.post('/:id/regenerate-pdf', authMiddleware(['admin']), AngebotController.regeneratePdf);
+
 export default router;

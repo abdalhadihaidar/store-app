@@ -35,14 +35,26 @@ async function renderHtmlToPdf(html: string, outPath: string) {
 }
 
 async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 10) {
-  const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+  console.log('🔧 Starting generatePaginatedPdf...');
+  console.log('🔧 Template path:', templatePath);
+  console.log('🔧 Output path:', outPath);
+  console.log('🔧 Template data keys:', Object.keys(templateData));
+  
+  const browser = await puppeteer.launch({ 
+    headless: 'new', 
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] 
+  });
+  
   try {
     const page = await browser.newPage();
     const templatesDir = path.resolve(__dirname, '../../templates');
+    console.log('🔧 Templates directory:', templatesDir);
+    
     await page.goto(`file://${templatesDir}/`);
     
     const items = templateData.items || templateData.returns || [];
     const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
+    console.log('🔧 Total items:', items.length, 'Total pages:', totalPages);
     
     const pdfPages: Buffer[] = [];
     
@@ -62,25 +74,35 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
         totalPages: totalPages
       };
       
-      console.log(`Page ${pageNum + 1}/${totalPages}, isLastPage: ${isLastPage}, items: ${pageItems.length}`);
+      console.log(`🔧 Page ${pageNum + 1}/${totalPages}, isLastPage: ${isLastPage}, items: ${pageItems.length}`);
       
-      const html = await ejs.renderFile(templatePath, pageData) as string;
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({ 
-        format: 'A4', 
-        printBackground: true,
-        margin: {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm'
-        }
-      });
-      
-      pdfPages.push(pdfBuffer);
+      try {
+        const html = await ejs.renderFile(templatePath, pageData) as string;
+        console.log('🔧 HTML generated, length:', html.length);
+        
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        console.log('🔧 Page content set');
+        
+        const pdfBuffer = await page.pdf({ 
+          format: 'A4', 
+          printBackground: true,
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm'
+          }
+        });
+        
+        console.log('🔧 PDF buffer generated, size:', pdfBuffer.length);
+        pdfPages.push(pdfBuffer);
+      } catch (pageError) {
+        console.error(`❌ Error generating page ${pageNum + 1}:`, pageError);
+        throw pageError;
+      }
     }
     
+    console.log('🔧 Combining PDF pages...');
     // Combine all pages into a single PDF
     const { PDFDocument } = await import('pdf-lib');
     const finalPdf = await PDFDocument.create();
@@ -92,8 +114,14 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
     }
     
     const finalPdfBytes = await finalPdf.save();
-    fs.writeFileSync(outPath, finalPdfBytes);
+    console.log('🔧 Final PDF bytes:', finalPdfBytes.length);
     
+    fs.writeFileSync(outPath, finalPdfBytes);
+    console.log('✅ PDF file written to:', outPath);
+    
+  } catch (error) {
+    console.error('❌ Error in generatePaginatedPdf:', error);
+    throw error;
   } finally {
     await browser.close();
   }
@@ -122,46 +150,84 @@ export async function generateCreditNotePdf(order: Order, templateData: any): Pr
 }
 
 export async function generateAngebotPdf(angebot: any, order: any, items: any[]): Promise<PdfGenerationResult> {
-  const uploadsDir = path.resolve(__dirname, '../../uploads/angebots');
-  ensureDir(uploadsDir);
-  const fileName = `angebot_${angebot.id}_${Date.now()}.pdf`;
-  const filePath = path.join(uploadsDir, fileName);
+  try {
+    console.log('🔧 Starting PDF generation for angebot:', angebot.id);
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/angebots');
+    ensureDir(uploadsDir);
+    const fileName = `angebot_${angebot.id}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
 
-  const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
-  
-  // Calculate totals
-  let totalNet = 0;
-  let tax7Amount = 0;
-  let tax19Amount = 0;
-  
-  items.forEach(item => {
-    const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
-    totalNet += itemTotal;
+    const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
+    console.log('🔧 Template path:', templatePath);
+    console.log('🔧 Output path:', filePath);
     
-    const taxRate = item.taxRate || 19;
-    const taxAmount = itemTotal * taxRate / 100;
-    
-    if (taxRate === 7) {
-      tax7Amount += taxAmount;
-    } else if (taxRate === 19) {
-      tax19Amount += taxAmount;
+    // Check if template exists
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`Template file not found: ${templatePath}`);
     }
-  });
-  
-  const totalGross = totalNet + tax7Amount + tax19Amount;
-  
-  const templateData = {
-    angebot: {
-      ...angebot,
-      totalNet,
-      tax7Amount,
-      tax19Amount,
-      totalGross
-    },
-    order,
-    items
-  };
+    
+    // Calculate totals
+    let totalNet = 0;
+    let tax7Amount = 0;
+    let tax19Amount = 0;
+    
+    console.log('🔧 Processing items:', items.length);
+    items.forEach((item, index) => {
+      const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+      totalNet += itemTotal;
+      
+      const taxRate = item.taxRate || 19;
+      const taxAmount = itemTotal * taxRate / 100;
+      
+      if (taxRate === 7) {
+        tax7Amount += taxAmount;
+      } else if (taxRate === 19) {
+        tax19Amount += taxAmount;
+      }
+      
+      console.log(`🔧 Item ${index + 1}:`, {
+        name: item.productName || item.orderProduct?.name,
+        quantity: item.quantity,
+        price: item.adjustedPrice || item.originalPrice,
+        total: itemTotal,
+        taxRate: taxRate
+      });
+    });
+    
+    const totalGross = totalNet + tax7Amount + tax19Amount;
+    console.log('🔧 Calculated totals:', { totalNet, tax7Amount, tax19Amount, totalGross });
+    
+    const templateData = {
+      angebot: {
+        ...angebot,
+        totalNet,
+        tax7Amount,
+        tax19Amount,
+        totalGross
+      },
+      order,
+      items
+    };
 
-  await generatePaginatedPdf(templatePath, templateData, filePath, 10);
-  return { filePath };
+    console.log('🔧 Calling generatePaginatedPdf...');
+    await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+    
+    // Verify file was created
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`PDF file was not created: ${filePath}`);
+    }
+    
+    const stats = fs.statSync(filePath);
+    console.log('✅ PDF file created successfully:', {
+      path: filePath,
+      size: stats.size,
+      created: stats.birthtime
+    });
+    
+    return { filePath };
+  } catch (error) {
+    console.error('❌ Error in generateAngebotPdf:', error);
+    throw error;
+  }
 }
