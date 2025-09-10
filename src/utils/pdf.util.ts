@@ -224,11 +224,11 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     });
     
     return { filePath };
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in generateAngebotPdf:', error);
     
     // If Puppeteer fails, try to create a simple HTML file as fallback
-    if (error.message && error.message.includes('Chrome')) {
+    if (error?.message && error.message.includes('Chrome')) {
       console.log('🔄 Puppeteer failed, creating HTML fallback...');
       return await createHtmlFallback(angebot, order, items);
     }
@@ -287,7 +287,7 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
     
     console.log('✅ HTML fallback created:', filePath);
     return { filePath };
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error creating HTML fallback:', error);
     throw error;
   }
