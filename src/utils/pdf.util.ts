@@ -3,13 +3,14 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
 import Order from '../models/order.model';
+import { launchPuppeteer } from './puppeteer.config';
 
 interface PdfGenerationResult { filePath: string; }
 
 function ensureDir(dir: string) { if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); }
 
 async function renderHtmlToPdf(html: string, outPath: string) {
-  const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+  const browser = await launchPuppeteer();
   try {
     const page = await browser.newPage();
     
@@ -40,10 +41,7 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
   console.log('🔧 Output path:', outPath);
   console.log('🔧 Template data keys:', Object.keys(templateData));
   
-  const browser = await puppeteer.launch({ 
-    headless: 'new', 
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] 
-  });
+  const browser = await launchPuppeteer();
   
   try {
     const page = await browser.newPage();
@@ -228,6 +226,69 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     return { filePath };
   } catch (error) {
     console.error('❌ Error in generateAngebotPdf:', error);
+    
+    // If Puppeteer fails, try to create a simple HTML file as fallback
+    if (error.message && error.message.includes('Chrome')) {
+      console.log('🔄 Puppeteer failed, creating HTML fallback...');
+      return await createHtmlFallback(angebot, order, items);
+    }
+    
+    throw error;
+  }
+}
+
+async function createHtmlFallback(angebot: any, order: any, items: any[]): Promise<PdfGenerationResult> {
+  try {
+    console.log('🔄 Creating HTML fallback for angebot:', angebot.id);
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/angebots');
+    ensureDir(uploadsDir);
+    const fileName = `angebot_${angebot.id}_${Date.now()}.html`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
+    
+    // Calculate totals
+    let totalNet = 0;
+    let tax7Amount = 0;
+    let tax19Amount = 0;
+    
+    items.forEach((item) => {
+      const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+      totalNet += itemTotal;
+      
+      const taxRate = item.taxRate || 19;
+      const taxAmount = itemTotal * taxRate / 100;
+      
+      if (taxRate === 7) {
+        tax7Amount += taxAmount;
+      } else if (taxRate === 19) {
+        tax19Amount += taxAmount;
+      }
+    });
+    
+    const totalGross = totalNet + tax7Amount + tax19Amount;
+    
+    const templateData = {
+      angebot: {
+        ...angebot,
+        totalNet,
+        tax7Amount,
+        tax19Amount,
+        totalGross
+      },
+      order,
+      items
+    };
+
+    // Generate HTML instead of PDF
+    const html = await ejs.renderFile(templatePath, templateData) as string;
+    fs.writeFileSync(filePath, html);
+    
+    console.log('✅ HTML fallback created:', filePath);
+    return { filePath };
+  } catch (error) {
+    console.error('❌ Error creating HTML fallback:', error);
     throw error;
   }
 }

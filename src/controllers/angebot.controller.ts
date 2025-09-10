@@ -335,9 +335,10 @@ export class AngebotController {
         return;
       }
 
-      const fileName = `angebot_${angebot.angebotNumber || angebot.id}.pdf`;
+      const isHtmlFile = angebot.pdfPath.endsWith('.html');
+      const fileName = `angebot_${angebot.angebotNumber || angebot.id}.${isHtmlFile ? 'html' : 'pdf'}`;
       
-      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       
       const fileStream = fs.createReadStream(angebot.pdfPath);
