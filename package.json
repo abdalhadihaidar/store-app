@@ -12,7 +12,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
-    "postinstall": "npm run build && npx puppeteer browsers install chrome"
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",

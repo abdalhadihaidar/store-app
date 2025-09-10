@@ -60,7 +60,7 @@ export function getPuppeteerConfig() {
   };
 
   if (isProduction) {
-    // Production-specific configuration
+    // Production-specific configuration for Render.com
     return {
       ...baseConfig,
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
@@ -68,7 +68,24 @@ export function getPuppeteerConfig() {
         ...baseConfig.args,
         '--disable-dev-shm-usage',
         '--memory-pressure-off',
-        '--max_old_space_size=4096'
+        '--max_old_space_size=4096',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--disable-hang-monitor',
+        '--disable-prompt-on-repost',
+        '--disable-sync',
+        '--disable-translate',
+        '--disable-windows10-custom-titlebar',
+        '--metrics-recording-only',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--enable-automation',
+        '--password-store=basic',
+        '--use-mock-keychain',
+        '--disable-blink-features=AutomationControlled'
       ]
     };
   }
@@ -78,6 +95,7 @@ export function getPuppeteerConfig() {
 
 export async function launchPuppeteer() {
   const config = getPuppeteerConfig();
+  const isProduction = process.env.NODE_ENV === 'production';
   
   try {
     console.log('🔧 Launching Puppeteer with config:', {
@@ -96,7 +114,16 @@ export async function launchPuppeteer() {
     console.log('🔄 Trying fallback configuration...');
     const fallbackConfig = {
       headless: 'new' as const,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process'
+      ],
+      ...(isProduction && process.env.PUPPETEER_EXECUTABLE_PATH ? {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+      } : {})
     };
     
     try {
