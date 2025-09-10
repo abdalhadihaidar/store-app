@@ -410,4 +410,33 @@ router.get('/:id/pdf', authMiddleware(['admin', 'client']), AngebotController.do
  */
 router.post('/:id/regenerate-pdf', authMiddleware(['admin']), AngebotController.regeneratePdf);
 
+/**
+ * @swagger
+ * /angebots/test-puppeteer:
+ *   get:
+ *     summary: Test Puppeteer connection
+ *     description: Test if Puppeteer is working correctly for PDF generation
+ *     tags: [Angebots]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Puppeteer test result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     puppeteerWorking:
+ *                       type: boolean
+ */
+router.get('/test-puppeteer', authMiddleware(['admin']), AngebotController.testPuppeteer);
+
 export default router;

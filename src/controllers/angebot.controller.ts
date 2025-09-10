@@ -406,7 +406,8 @@ export class AngebotController {
         success: true,
         message: 'PDF regenerated successfully',
         data: {
-          pdfPath: pdfResult.filePath
+          pdfPath: pdfResult.filePath,
+          isHtml: pdfResult.filePath.endsWith('.html')
         }
       });
     } catch (error: any) {
@@ -414,6 +415,30 @@ export class AngebotController {
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to regenerate PDF'
+      });
+    }
+  }
+
+  /**
+   * Test Puppeteer connection
+   */
+  static async testPuppeteer(req: Request, res: Response): Promise<void> {
+    try {
+      const { testPuppeteerConnection } = await import('../utils/pdf.util');
+      const isWorking = await testPuppeteerConnection();
+      
+      res.json({
+        success: isWorking,
+        message: isWorking ? 'Puppeteer is working correctly' : 'Puppeteer is not working',
+        data: {
+          puppeteerWorking: isWorking
+        }
+      });
+    } catch (error: any) {
+      console.error('Error testing Puppeteer:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to test Puppeteer'
       });
     }
   }

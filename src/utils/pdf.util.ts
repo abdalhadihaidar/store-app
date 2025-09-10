@@ -117,11 +117,20 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
     fs.writeFileSync(outPath, finalPdfBytes);
     console.log('✅ PDF file written to:', outPath);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in generatePaginatedPdf:', error);
+    console.error('❌ Error details:', {
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'Unknown error type'
+    });
     throw error;
   } finally {
-    await browser.close();
+    try {
+      await browser.close();
+    } catch (closeError) {
+      console.error('❌ Error closing browser:', closeError);
+    }
   }
 }
 
@@ -226,9 +235,15 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error in generateAngebotPdf:', error);
+    console.error('❌ Error details:', {
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'Unknown error type'
+    });
     
     // If Puppeteer fails, try to create a simple HTML file as fallback
-    if (error && typeof error === 'object' && 'message' in error && error.message && error.message.includes('Chrome')) {
+    if (error && typeof error === 'object' && 'message' in error && error.message && 
+        (error.message.includes('Chrome') || error.message.includes('puppeteer') || error.message.includes('browser'))) {
       console.log('🔄 Puppeteer failed, creating HTML fallback...');
       return await createHtmlFallback(angebot, order, items);
     }
@@ -290,5 +305,25 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
   } catch (error: any) {
     console.error('❌ Error creating HTML fallback:', error);
     throw error;
+  }
+}
+
+/**
+ * Test if Puppeteer is working correctly
+ */
+export async function testPuppeteerConnection(): Promise<boolean> {
+  try {
+    console.log('🧪 Testing Puppeteer connection...');
+    const browser = await launchPuppeteer();
+    const page = await browser.newPage();
+    await page.setContent('<html><body><h1>Test</h1></body></html>');
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+    
+    console.log('✅ Puppeteer test successful, PDF size:', pdfBuffer.length);
+    return true;
+  } catch (error: any) {
+    console.error('❌ Puppeteer test failed:', error);
+    return false;
   }
 }
