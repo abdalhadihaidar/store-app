@@ -228,7 +228,7 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     console.error('❌ Error in generateAngebotPdf:', error);
     
     // If Puppeteer fails, try to create a simple HTML file as fallback
-    if (error?.message && error.message.includes('Chrome')) {
+    if (error && typeof error === 'object' && 'message' in error && error.message && error.message.includes('Chrome')) {
       console.log('🔄 Puppeteer failed, creating HTML fallback...');
       return await createHtmlFallback(angebot, order, items);
     }

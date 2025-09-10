@@ -82,14 +82,14 @@ export async function launchPuppeteer() {
   try {
     console.log('🔧 Launching Puppeteer with config:', {
       headless: config.headless,
-      executablePath: config.executablePath,
+      executablePath: 'executablePath' in config ? config.executablePath : 'default',
       argsCount: config.args.length
     });
     
     const browser = await puppeteer.launch(config);
     console.log('✅ Puppeteer launched successfully');
     return browser;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Failed to launch Puppeteer:', error);
     
     // Try fallback configuration
@@ -103,9 +103,9 @@ export async function launchPuppeteer() {
       const browser = await puppeteer.launch(fallbackConfig);
       console.log('✅ Puppeteer launched with fallback config');
       return browser;
-    } catch (fallbackError) {
+    } catch (fallbackError: any) {
       console.error('❌ Fallback configuration also failed:', fallbackError);
-      throw new Error(`Puppeteer launch failed: ${error.message}. Fallback also failed: ${fallbackError.message}`);
+      throw new Error(`Puppeteer launch failed: ${error?.message || 'Unknown error'}. Fallback also failed: ${fallbackError?.message || 'Unknown error'}`);
     }
   }
 }
