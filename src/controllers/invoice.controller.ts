@@ -9,7 +9,14 @@ export class InvoiceController {
   static async createInvoice(req: Request, res: Response, next: NextFunction) {
     try {
       const orderId = Number(req.params.orderId);
-      if (isNaN(orderId)) throw new Error('Invalid orderId');
+      if (isNaN(orderId)) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid order ID'
+        });
+        return;
+      }
+      
       const createdBy = req.user?.id ?? null;
       
       // Extract data from request body (from print modal)
@@ -23,6 +30,24 @@ export class InvoiceController {
       };
       
       const invoice = await InvoiceService.create(orderId, createdBy, printData);
+
+      if (!invoice.pdfPath) {
+        res.status(500).json({
+          success: false,
+          message: 'Failed to generate PDF for invoice'
+        });
+        return;
+      }
+
+      // Check if file exists
+      const fs = require('fs');
+      if (!fs.existsSync(invoice.pdfPath)) {
+        res.status(500).json({
+          success: false,
+          message: 'PDF file was not created properly'
+        });
+        return;
+      }
 
       // load related data for response headers (optional)
       await invoice.reload({
@@ -38,18 +63,37 @@ export class InvoiceController {
         ],
       });
 
-      // stream PDF back to client
-      res.setHeader('Content-Type', 'application/pdf');
+      // Check if it's an HTML fallback file
+      const isHtmlFile = invoice.pdfPath.endsWith('.html');
+      
+      // stream PDF/HTML back to client
+      res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=invoice_${invoice.number}.pdf`
+        `attachment; filename=invoice_${invoice.number}.${isHtmlFile ? 'html' : 'pdf'}`
       );
 
       const stream = createReadStream(invoice.pdfPath);
       stream.pipe(res);
+      
+      stream.on('error', (error) => {
+        console.error('Error streaming invoice PDF:', error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            message: 'Error reading PDF file'
+          });
+        }
+      });
        
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      console.error('Error creating invoice:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: error?.message || 'Failed to create invoice'
+        });
+      }
     }
   }
 
@@ -107,25 +151,72 @@ export class InvoiceController {
   static async downloadInvoice(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      if (isNaN(id)) throw new Error('Invalid id');
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid invoice ID'
+        });
+        return;
+      }
+      
       const invoice = await InvoiceService.getById(id);
+      if (!invoice) {
+        res.status(404).json({
+          success: false,
+          message: 'Invoice not found'
+        });
+        return;
+      }
       
       if (!invoice.pdfPath) {
-        throw new Error('PDF file not found');
+        res.status(404).json({
+          success: false,
+          message: 'PDF file not found for this invoice'
+        });
+        return;
       }
 
-      // stream PDF back to client
-      res.setHeader('Content-Type', 'application/pdf');
+      // Check if file exists
+      const fs = require('fs');
+      if (!fs.existsSync(invoice.pdfPath)) {
+        res.status(404).json({
+          success: false,
+          message: 'PDF file does not exist on server'
+        });
+        return;
+      }
+
+      // Check if it's an HTML fallback file
+      const isHtmlFile = invoice.pdfPath.endsWith('.html');
+      
+      // stream PDF/HTML back to client
+      res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=invoice_${invoice.number}.pdf`
+        `attachment; filename=invoice_${invoice.number}.${isHtmlFile ? 'html' : 'pdf'}`
       );
 
       const stream = createReadStream(invoice.pdfPath);
       stream.pipe(res);
+      
+      stream.on('error', (error) => {
+        console.error('Error streaming invoice PDF:', error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            message: 'Error reading PDF file'
+          });
+        }
+      });
        
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      console.error('Error downloading invoice PDF:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: error?.message || 'Failed to download PDF'
+        });
+      }
     }
   }
 }

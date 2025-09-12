@@ -58,3 +58,7 @@ If you still encounter issues:
 - `PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable`
 
 The deployment should now work without permission errors!
+
+
+
+

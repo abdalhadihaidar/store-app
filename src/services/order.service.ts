@@ -6,6 +6,7 @@ import Return from '../models/return.model';
 import Store from '../models/store.model';
 import { User } from '../models/user.model';
 import { round2 } from '../utils/number.util';
+import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
 export class OrderService {
   static async getAllOrders(requestingUserRole: string, storeId?: number, page = 1, size = 25) {
@@ -44,7 +45,7 @@ export class OrderService {
         
         const orderItems = await OrderItem.findAll({
           where: { orderId: orderIds },
-          attributes: ['id', 'orderId', 'productId', 'quantity', 'packages', 'originalPrice', 'adjustedPrice', 'taxRate', 'taxAmount'],
+          attributes: ['id', 'orderId', 'productId', 'quantity', 'packages', 'originalPrice', 'adjustedPrice', 'taxRate', 'taxAmount', 'unitPerPackageSnapshot'],
           include: [{ 
             model: Product, 
             as: 'orderProduct', 
@@ -52,12 +53,16 @@ export class OrderService {
           }],
         });
 
-        // Group items by orderId
+        // Group items by orderId and add German terminology
         const itemsByOrderId = orderItems.reduce((acc, item) => {
           if (!acc[item.orderId]) {
             acc[item.orderId] = [];
           }
-          acc[item.orderId].push(item);
+          
+          // Add German business terminology to each order item
+          const itemWithGermanFields = addGermanFieldsToOrderItem(item.toJSON());
+          
+          acc[item.orderId].push(itemWithGermanFields);
           return acc;
         }, {} as Record<number, any[]>);
 
@@ -180,9 +185,9 @@ export class OrderService {
           if (item.quantity <= 0 || !Number.isInteger(item.quantity)) {
             throw new Error('Package quantity must be a positive integer');
           }
-          // snapshot of units for later but pricing based on packages
+          // Convert packages to pieces for quantity and pricing
           quantity = item.quantity * product.numberperpackage;
-          price = product.price * item.quantity; // price per package * packages
+          price = product.price * quantity; // price per piece * total pieces
         } else {
           if (item.quantity <= 0) throw new Error('Quantity must be positive');
           price = product.price * item.quantity;
@@ -306,7 +311,7 @@ export class OrderService {
 
       const itemsWithProducts = orderItems.map(item => {
         const product = productMap[item.productId];
-        return {
+        const baseItem = {
           ...item.dataValues,
           orderProduct: product ? product.dataValues : null,
           // Also include product data directly for easier frontend access
@@ -314,6 +319,9 @@ export class OrderService {
           productName: product ? product.name : 'N/A',
           productPrice: product ? product.price : 0
         };
+        
+        // Add German business terminology
+        return addGermanFieldsToOrderItem(baseItem);
       });
 
       // Create the final result object

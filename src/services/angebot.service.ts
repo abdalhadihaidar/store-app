@@ -8,6 +8,7 @@ import Product from '../models/product.model';
 import { User } from '../models/user.model';
 import Store from '../models/store.model';
 import { generateAngebotPdf } from '../utils/pdf.util';
+import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
 export class AngebotService {
   /**
@@ -279,7 +280,7 @@ export class AngebotService {
    * Get angebot by ID with all related data
    */
   static async getAngebotById(angebotId: number): Promise<Angebot | null> {
-    return await Angebot.findByPk(angebotId, {
+    const angebot = await Angebot.findByPk(angebotId, {
       include: [
         { model: AngebotItemModel, as: 'items', include: [{ model: Product, as: 'angebotProduct' }] },
         { model: Order, as: 'order' },
@@ -287,6 +288,16 @@ export class AngebotService {
         { model: Store, as: 'store' }
       ]
     });
+
+    if (!angebot) return null;
+
+    // Add German business terminology to angebot items
+    const angebotWithGermanFields = {
+      ...angebot.toJSON(),
+      items: angebot.items?.map(item => addGermanFieldsToOrderItem(item.toJSON()))
+    };
+
+    return angebotWithGermanFields as any;
   }
 
   /**

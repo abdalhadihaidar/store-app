@@ -424,14 +424,18 @@ export class AngebotController {
    */
   static async testPuppeteer(req: Request, res: Response): Promise<void> {
     try {
-      const { testPuppeteerConnection } = await import('../utils/pdf.util');
-      const isWorking = await testPuppeteerConnection();
+      const { testPuppeteerConnection, getSystemInfo } = await import('../utils/pdf.util');
+      const testResult = await testPuppeteerConnection();
+      const systemInfo = getSystemInfo();
       
       res.json({
-        success: isWorking,
-        message: isWorking ? 'Puppeteer is working correctly' : 'Puppeteer is not working',
+        success: testResult.success,
+        message: testResult.success ? 'Puppeteer is working correctly' : `Puppeteer is not working: ${testResult.error}`,
         data: {
-          puppeteerWorking: isWorking
+          puppeteerWorking: testResult.success,
+          error: testResult.error,
+          details: testResult.details,
+          systemInfo: systemInfo
         }
       });
     } catch (error: any) {

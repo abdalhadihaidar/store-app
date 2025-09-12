@@ -94,3 +94,7 @@ Look for these log messages in your Render.com logs:
 4. **Verify** that new angebots generate proper PDF files
 
 The PDF generation should now work correctly on Render.com!
+
+
+
+

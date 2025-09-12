@@ -135,14 +135,34 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
 }
 
 export async function generateInvoicePdf(order: Order, templateData: any): Promise<PdfGenerationResult> {
-  const uploadsDir = path.resolve(__dirname, '../../uploads/invoices');
-  ensureDir(uploadsDir);
-  const fileName = `invoice_${order.id}_${Date.now()}.pdf`;
-  const filePath = path.join(uploadsDir, fileName);
+  try {
+    const uploadsDir = path.resolve(__dirname, '../../uploads/invoices');
+    ensureDir(uploadsDir);
+    const fileName = `invoice_${order.id}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
 
-  const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
-  await generatePaginatedPdf(templatePath, templateData, filePath, 10);
-  return { filePath };
+    const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
+    await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+    return { filePath };
+  } catch (error: any) {
+    console.error('❌ Error in generateInvoicePdf:', error);
+    
+    // If Puppeteer fails, try to create a simple HTML file as fallback
+    if (error && typeof error === 'object' && 'message' in error && error.message && 
+        (error.message.includes('Chrome') || error.message.includes('puppeteer') || 
+         error.message.includes('browser') || error.message.includes('ENOENT') ||
+         error.message.includes('spawn') || error.message.includes('launch'))) {
+      console.log('🔄 Puppeteer failed for invoice, creating HTML fallback...');
+      try {
+        return await createInvoiceHtmlFallback(order, templateData);
+      } catch (fallbackError: any) {
+        console.error('❌ HTML fallback also failed:', fallbackError);
+        throw new Error(`Invoice PDF generation failed: ${error.message}. HTML fallback also failed: ${fallbackError?.message || 'Unknown error'}`);
+      }
+    }
+    
+    throw error;
+  }
 }
 
 export async function generateCreditNotePdf(order: Order, templateData: any): Promise<PdfGenerationResult> {
@@ -243,11 +263,41 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     
     // If Puppeteer fails, try to create a simple HTML file as fallback
     if (error && typeof error === 'object' && 'message' in error && error.message && 
-        (error.message.includes('Chrome') || error.message.includes('puppeteer') || error.message.includes('browser'))) {
+        (error.message.includes('Chrome') || error.message.includes('puppeteer') || 
+         error.message.includes('browser') || error.message.includes('ENOENT') ||
+         error.message.includes('spawn') || error.message.includes('launch'))) {
       console.log('🔄 Puppeteer failed, creating HTML fallback...');
-      return await createHtmlFallback(angebot, order, items);
+      try {
+        return await createHtmlFallback(angebot, order, items);
+      } catch (fallbackError: any) {
+        console.error('❌ HTML fallback also failed:', fallbackError);
+        throw new Error(`PDF generation failed: ${error.message}. HTML fallback also failed: ${fallbackError?.message || 'Unknown error'}`);
+      }
     }
     
+    throw error;
+  }
+}
+
+async function createInvoiceHtmlFallback(order: Order, templateData: any): Promise<PdfGenerationResult> {
+  try {
+    console.log('🔄 Creating HTML fallback for invoice, order:', order.id);
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/invoices');
+    ensureDir(uploadsDir);
+    const fileName = `invoice_${order.id}_${Date.now()}.html`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
+
+    // Generate HTML instead of PDF
+    const html = await ejs.renderFile(templatePath, templateData) as string;
+    fs.writeFileSync(filePath, html);
+    
+    console.log('✅ Invoice HTML fallback created:', filePath);
+    return { filePath };
+  } catch (error: any) {
+    console.error('❌ Error creating invoice HTML fallback:', error);
     throw error;
   }
 }
@@ -311,7 +361,7 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
 /**
  * Test if Puppeteer is working correctly
  */
-export async function testPuppeteerConnection(): Promise<boolean> {
+export async function testPuppeteerConnection(): Promise<{ success: boolean; error?: string; details?: any }> {
   try {
     console.log('🧪 Testing Puppeteer connection...');
     const browser = await launchPuppeteer();
@@ -321,9 +371,49 @@ export async function testPuppeteerConnection(): Promise<boolean> {
     await browser.close();
     
     console.log('✅ Puppeteer test successful, PDF size:', pdfBuffer.length);
-    return true;
+    return { success: true };
   } catch (error: any) {
     console.error('❌ Puppeteer test failed:', error);
-    return false;
+    return { 
+      success: false, 
+      error: error.message || 'Unknown error',
+      details: {
+        message: error?.message || 'Unknown error',
+        stack: error?.stack || 'No stack trace',
+        name: error?.name || 'Unknown error type'
+      }
+    };
   }
+}
+
+/**
+ * Get system information for debugging
+ */
+export function getSystemInfo(): any {
+  const fs = require('fs');
+  const path = require('path');
+  
+  const possibleChromePaths = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/opt/google/chrome/chrome',
+    '/usr/local/bin/chrome'
+  ];
+  
+  const chromeStatus = possibleChromePaths.map(chromePath => ({
+    path: chromePath,
+    exists: chromePath ? fs.existsSync(chromePath) : false
+  }));
+  
+  return {
+    nodeVersion: process.version,
+    platform: process.platform,
+    arch: process.arch,
+    env: process.env.NODE_ENV,
+    chromePaths: chromeStatus,
+    puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+  };
 }

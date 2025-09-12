@@ -4,6 +4,7 @@ import User from '../models/user.model';
 import Store from '../models/store.model';
 import { generateInvoicePdf } from '../utils/pdf.util';
 import { OrderService } from './order.service';
+import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
 interface PrintData {
   invoiceNumber?: string;
@@ -38,7 +39,7 @@ export class InvoiceService {
       kundenNr: printData?.kundenNr || order.userId,
       items: (order.items || []).map(i => {
         const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
-        return {
+        const baseItem = {
           id: i.productId,
           name: (i as any).product?.name || i.productId,
           packages: i.packages,
@@ -50,6 +51,9 @@ export class InvoiceService {
           tax7: Math.abs(ratePercent - 7) < 0.01 ? i.taxAmount : 0,
           tax19: Math.abs(ratePercent - 19) < 0.01 ? i.taxAmount : 0,
         };
+        
+        // Add German business terminology
+        return addGermanFieldsToOrderItem(baseItem);
       }),
       totalNet: order.totalPrice,
       vat7: vat7Sum,

@@ -60,10 +60,34 @@ export function getPuppeteerConfig() {
   };
 
   if (isProduction) {
-    // Production-specific configuration for Render.com
+    // Production-specific configuration for Render.com and Docker
+    // Try multiple possible Chrome paths
+    const possibleChromePaths = [
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/opt/google/chrome/chrome',
+      '/usr/local/bin/chrome'
+    ];
+    
+    let executablePath = null;
+    for (const chromePath of possibleChromePaths) {
+      if (chromePath && require('fs').existsSync(chromePath)) {
+        executablePath = chromePath;
+        console.log('✅ Found Chrome at:', chromePath);
+        break;
+      }
+    }
+    
+    if (!executablePath) {
+      console.log('⚠️ Chrome not found in standard paths, using default');
+    }
+    
     return {
       ...baseConfig,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
+      ...(executablePath && { executablePath }),
       args: [
         ...baseConfig.args,
         '--disable-dev-shm-usage',
@@ -112,6 +136,27 @@ export async function launchPuppeteer() {
     
     // Try fallback configuration
     console.log('🔄 Trying fallback configuration...');
+    
+    // Try to find Chrome for fallback
+    const possibleChromePaths = [
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/opt/google/chrome/chrome',
+      '/usr/local/bin/chrome'
+    ];
+    
+    let fallbackExecutablePath = null;
+    for (const chromePath of possibleChromePaths) {
+      if (chromePath && require('fs').existsSync(chromePath)) {
+        fallbackExecutablePath = chromePath;
+        console.log('✅ Found Chrome for fallback at:', chromePath);
+        break;
+      }
+    }
+    
     const fallbackConfig = {
       headless: 'new' as const,
       args: [
@@ -121,9 +166,7 @@ export async function launchPuppeteer() {
         '--disable-gpu',
         '--single-process'
       ],
-      ...(isProduction && process.env.PUPPETEER_EXECUTABLE_PATH ? {
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-      } : {})
+      ...(fallbackExecutablePath && { executablePath: fallbackExecutablePath })
     };
     
     try {

@@ -1,17 +1,36 @@
 import Product from '../models/product.model';
 import ProductImage from '../models/productImage.model';
+import { addGermanFieldsToProduct, validateAndFixProductData } from '../utils/germanBusiness.util';
 export class ProductService {
   static async getAllProducts(page = 1, size = 25) {
     const limit = size;
     const offset = (page - 1) * size;
 
-    return await Product.findAndCountAll({
+    const result = await Product.findAndCountAll({
       limit,
       offset,
       attributes: ['id', 'name', 'price', 'quantity', 'package', 'numberperpackage', 'categoryId', 'createdAt'],
       include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }],
       order: [['createdAt', 'DESC']],
     });
+
+    // Add German business terminology fields and validate data consistency
+    const productsWithGermanFields = result.rows.map(product => {
+      const productData = product.toJSON();
+      const { product: validatedProduct, errors } = validateAndFixProductData(productData);
+      
+      // Log validation errors if any
+      if (errors.length > 0) {
+        console.warn(`Product ${productData.id} has data consistency issues:`, errors);
+      }
+      
+      return addGermanFieldsToProduct(validatedProduct);
+    });
+
+    return {
+      count: result.count,
+      rows: productsWithGermanFields
+    };
   }
 
   static async getProductById(id: number) {
@@ -19,13 +38,36 @@ export class ProductService {
       include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }] // ✅ Include images
     });
     if (!product) throw new Error('Product not found');
-    return product;
+    
+    // Add German business terminology fields and validate data consistency
+    const productData = product.toJSON();
+    const { product: validatedProduct, errors } = validateAndFixProductData(productData);
+    
+    // Log validation errors if any
+    if (errors.length > 0) {
+      console.warn(`Product ${productData.id} has data consistency issues:`, errors);
+    }
+    
+    return addGermanFieldsToProduct(validatedProduct);
   }
 
   static async getProductsByCategoryId(categoryId: number) {
-    return await Product.findAll({
+    const products = await Product.findAll({
       where: { categoryId },
       include: [{ model: ProductImage, as: 'productImages', attributes: ['imageUrl'] }] // ✅ Include images
+    });
+    
+    // Add German business terminology fields and validate data consistency
+    return products.map(product => {
+      const productData = product.toJSON();
+      const { product: validatedProduct, errors } = validateAndFixProductData(productData);
+      
+      // Log validation errors if any
+      if (errors.length > 0) {
+        console.warn(`Product ${productData.id} has data consistency issues:`, errors);
+      }
+      
+      return addGermanFieldsToProduct(validatedProduct);
     });
   }
   static async createProduct(productData: {
@@ -109,6 +151,16 @@ export class ProductService {
   }
 
   const updatedDataWithQuantity = { ...updateData, quantity: newQuantity };
+  
+  // Validate the updated data for consistency
+  const { product: validatedData, errors } = validateAndFixProductData({
+    ...product.toJSON(),
+    ...updatedDataWithQuantity
+  });
+  
+  if (errors.length > 0) {
+    console.warn(`Product ${productId} update has data consistency issues:`, errors);
+  }
 
   await product.update(updatedDataWithQuantity);
 
