@@ -72,7 +72,7 @@ export function getPuppeteerConfig() {
       '/usr/local/bin/chrome'
     ];
     
-    let executablePath = null;
+    let executablePath: string | null = null;
     for (const chromePath of possibleChromePaths) {
       if (chromePath && require('fs').existsSync(chromePath)) {
         executablePath = chromePath;
@@ -85,9 +85,8 @@ export function getPuppeteerConfig() {
       console.log('⚠️ Chrome not found in standard paths, using default');
     }
     
-    return {
+    const config = {
       ...baseConfig,
-      ...(executablePath && { executablePath }),
       args: [
         ...baseConfig.args,
         '--disable-dev-shm-usage',
@@ -112,6 +111,12 @@ export function getPuppeteerConfig() {
         '--disable-blink-features=AutomationControlled'
       ]
     };
+
+    if (executablePath) {
+      (config as any).executablePath = executablePath;
+    }
+
+    return config;
   }
 
   return baseConfig;
@@ -148,7 +153,7 @@ export async function launchPuppeteer() {
       '/usr/local/bin/chrome'
     ];
     
-    let fallbackExecutablePath = null;
+    let fallbackExecutablePath: string | null = null;
     for (const chromePath of possibleChromePaths) {
       if (chromePath && require('fs').existsSync(chromePath)) {
         fallbackExecutablePath = chromePath;
@@ -157,7 +162,7 @@ export async function launchPuppeteer() {
       }
     }
     
-    const fallbackConfig = {
+    const fallbackConfig: any = {
       headless: 'new' as const,
       args: [
         '--no-sandbox', 
@@ -165,9 +170,12 @@ export async function launchPuppeteer() {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--single-process'
-      ],
-      ...(fallbackExecutablePath && { executablePath: fallbackExecutablePath })
+      ]
     };
+
+    if (fallbackExecutablePath) {
+      fallbackConfig.executablePath = fallbackExecutablePath;
+    }
     
     try {
       const browser = await puppeteer.launch(fallbackConfig);
