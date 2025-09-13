@@ -130,6 +130,7 @@ export class OrderService {
       items: Array<{
         productId: number;
         quantity: number;
+        packages?: number; // ✅ Number of packages (Menge)
         isPackage?: boolean;
         taxRate?: number;  // ✅ Ensure taxRate is part of item
       }>;
@@ -180,18 +181,13 @@ export class OrderService {
         let price = 0;
        
         // ✅ Compute price & tax
-              // ✅ Adjust price & quantity based on whether it's a package or unit
-        if (item.isPackage) {
-          if (item.quantity <= 0 || !Number.isInteger(item.quantity)) {
-            throw new Error('Package quantity must be a positive integer');
-          }
-          // Convert packages to pieces for quantity and pricing
-          quantity = item.quantity * product.numberperpackage;
-          price = product.price * quantity; // price per piece * total pieces
-        } else {
-          if (item.quantity <= 0) throw new Error('Quantity must be positive');
-          price = product.price * item.quantity;
+        // ✅ The mobile app already sends the correct total quantity (packages × VPE)
+        // ✅ So we use the quantity as-is for both package and unit orders
+        if (item.quantity <= 0) {
+          throw new Error('Quantity must be positive');
         }
+        quantity = item.quantity; // Use quantity as sent by mobile app
+        price = product.price * quantity; // price per piece * total pieces
         price = round2(price);
         const tax = round2(price * (taxRate / 100));
   
@@ -210,8 +206,8 @@ export class OrderService {
           await product.save({ transaction });
         }
   
-        // ✅ Handle packages correctly
-        const packages = item.isPackage ? item.quantity : 0;
+        // ✅ Handle packages correctly - use the packages field from mobile app
+        const packages = item.isPackage ? (item.packages || 0) : 0;
   
         // ✅ Create OrderItem entry
         await OrderItem.create(
@@ -478,6 +474,7 @@ export class OrderService {
   static async addItemToOrder(orderId: number, itemData: {
     productId: number;
     quantity: number;
+    packages?: number; // ✅ Number of packages (Menge)
     isPackage?: boolean;
     taxRate?: number;
   }) {
@@ -493,21 +490,18 @@ export class OrderService {
       let quantity = itemData.quantity;
       let price = 0;
 
-      // Calculate price & quantity based on whether it's a package or unit
-      if (itemData.isPackage) {
-        if (itemData.quantity <= 0 || !Number.isInteger(itemData.quantity)) {
-          throw new Error('Package quantity must be a positive integer');
-        }
-        quantity = itemData.quantity * product.numberperpackage;
-        price = product.price * itemData.quantity;
-      } else {
-        if (itemData.quantity <= 0) throw new Error('Quantity must be positive');
-        price = product.price * itemData.quantity;
+      // ✅ The mobile app already sends the correct total quantity (packages × VPE)
+      // ✅ So we use the quantity as-is for both package and unit orders
+      if (itemData.quantity <= 0) {
+        throw new Error('Quantity must be positive');
       }
+      quantity = itemData.quantity; // Use quantity as sent by mobile app
+      price = product.price * quantity; // price per piece * total pieces
 
       price = round2(price);
       const tax = round2(price * (taxRate / 100));
-      const packages = itemData.isPackage ? itemData.quantity : 0;
+      // ✅ Handle packages correctly - use the packages field from mobile app
+      const packages = itemData.isPackage ? (itemData.packages || 0) : 0;
 
       // Create new OrderItem
       const orderItem = await OrderItem.create({
