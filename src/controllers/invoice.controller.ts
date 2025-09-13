@@ -29,7 +29,7 @@ export class InvoiceController {
         kundenNr: kundenNr as string
       };
       
-      const invoice = await InvoiceService.create(orderId, createdBy, printData);
+      let invoice = await InvoiceService.create(orderId, createdBy, printData);
 
       if (!invoice.pdfPath) {
         res.status(500).json({
@@ -39,14 +39,34 @@ export class InvoiceController {
         return;
       }
 
-      // Check if file exists
+      // Check if file exists, if not try to regenerate
       const fs = require('fs');
       if (!fs.existsSync(invoice.pdfPath)) {
-        res.status(500).json({
-          success: false,
-          message: 'PDF file was not created properly'
-        });
-        return;
+        console.log('🔄 Invoice PDF not found, attempting to regenerate...');
+        try {
+          // Regenerate the invoice PDF
+          const { InvoiceService } = await import('../services/invoice.service');
+          const regeneratedInvoice = await InvoiceService.create(orderId, createdBy, printData);
+          
+          if (!regeneratedInvoice.pdfPath || !fs.existsSync(regeneratedInvoice.pdfPath)) {
+            res.status(500).json({
+              success: false,
+              message: 'PDF file was not created properly'
+            });
+            return;
+          }
+          
+          // Update the invoice with the new path
+          invoice = regeneratedInvoice;
+          console.log('✅ Invoice PDF regenerated successfully:', invoice.pdfPath);
+        } catch (regenerateError: any) {
+          console.error('❌ Failed to regenerate invoice PDF:', regenerateError);
+          res.status(500).json({
+            success: false,
+            message: 'PDF file was not created properly and could not be regenerated'
+          });
+          return;
+        }
       }
 
       // load related data for response headers (optional)
@@ -159,7 +179,7 @@ export class InvoiceController {
         return;
       }
       
-      const invoice = await InvoiceService.getById(id);
+      let invoice = await InvoiceService.getById(id);
       if (!invoice) {
         res.status(404).json({
           success: false,
@@ -176,14 +196,34 @@ export class InvoiceController {
         return;
       }
 
-      // Check if file exists
+      // Check if file exists, if not try to regenerate
       const fs = require('fs');
       if (!fs.existsSync(invoice.pdfPath)) {
-        res.status(404).json({
-          success: false,
-          message: 'PDF file does not exist on server'
-        });
-        return;
+        console.log('🔄 Invoice PDF not found, attempting to regenerate...');
+        try {
+          // Regenerate the invoice PDF
+          const { InvoiceService } = await import('../services/invoice.service');
+          const regeneratedInvoice = await InvoiceService.create(invoice.orderId, null, {});
+          
+          if (!regeneratedInvoice.pdfPath || !fs.existsSync(regeneratedInvoice.pdfPath)) {
+            res.status(404).json({
+              success: false,
+              message: 'PDF file does not exist on server and could not be regenerated'
+            });
+            return;
+          }
+          
+          // Update the invoice with the new path
+          invoice = regeneratedInvoice;
+          console.log('✅ Invoice PDF regenerated successfully:', invoice.pdfPath);
+        } catch (regenerateError: any) {
+          console.error('❌ Failed to regenerate invoice PDF:', regenerateError);
+          res.status(404).json({
+            success: false,
+            message: 'PDF file does not exist on server and could not be regenerated'
+          });
+          return;
+        }
       }
 
       // Check if it's an HTML fallback file

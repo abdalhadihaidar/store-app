@@ -318,7 +318,7 @@ export class AngebotController {
       console.log('downloadPdf called with params:', req.params, 'angebotId:', angebotId, 'Type:', typeof angebotId);
       
       // Use a simple query to avoid connection issues - we only need basic angebot data for PDF download
-      const angebot = await AngebotService.getBasicAngebotById(angebotId);
+      let angebot = await AngebotService.getBasicAngebotById(angebotId);
       if (!angebot) {
         res.status(404).json({
           success: false,
@@ -327,21 +327,62 @@ export class AngebotController {
         return;
       }
 
+      // If PDF doesn't exist, try to regenerate it
       if (!angebot.pdfPath || !fs.existsSync(angebot.pdfPath)) {
-        res.status(404).json({
-          success: false,
-          message: 'PDF file not found'
-        });
-        return;
+        console.log('🔄 PDF not found, attempting to regenerate...');
+        try {
+          // Get full angebot data for PDF generation
+          const fullAngebot = await AngebotService.getAngebotById(angebotId);
+          if (!fullAngebot) {
+            res.status(404).json({
+              success: false,
+              message: 'Angebot not found'
+            });
+            return;
+          }
+
+          // Get order data if available
+          const order = fullAngebot.orderId ? await Order.findByPk(fullAngebot.orderId, {
+            include: [
+              { model: OrderItem, as: 'items', include: [{ model: Product, as: 'orderProduct' }] },
+              { model: Store, as: 'store' }
+            ]
+          }) : null;
+
+          if (!order) {
+            res.status(404).json({
+              success: false,
+              message: 'Order not found for this angebot'
+            });
+            return;
+          }
+
+          // Regenerate PDF
+          const { generateAngebotPdf } = await import('../utils/pdf.util');
+          const pdfResult = await generateAngebotPdf(fullAngebot, order, order.items || []);
+          
+          // Update angebot with new PDF path
+          await fullAngebot.update({ pdfPath: pdfResult.filePath });
+          angebot = fullAngebot; // Use the updated angebot
+          
+          console.log('✅ PDF regenerated successfully:', pdfResult.filePath);
+        } catch (regenerateError: any) {
+          console.error('❌ Failed to regenerate PDF:', regenerateError);
+          res.status(500).json({
+            success: false,
+            message: 'PDF file not found and could not be regenerated'
+          });
+          return;
+        }
       }
 
-      const isHtmlFile = angebot.pdfPath.endsWith('.html');
+      const isHtmlFile = angebot.pdfPath!.endsWith('.html');
       const fileName = `angebot_${angebot.angebotNumber || angebot.id}.${isHtmlFile ? 'html' : 'pdf'}`;
       
       res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       
-      const fileStream = fs.createReadStream(angebot.pdfPath);
+      const fileStream = fs.createReadStream(angebot.pdfPath!);
       fileStream.pipe(res);
       
       fileStream.on('error', (error) => {
