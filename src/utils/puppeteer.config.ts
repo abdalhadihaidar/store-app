@@ -72,7 +72,7 @@ export function getPuppeteerConfig() {
       '/usr/local/bin/chrome'
     ];
     
-    let executablePath: string | null = null;
+    let executablePath: string | undefined = undefined;
     for (const chromePath of possibleChromePaths) {
       if (chromePath && require('fs').existsSync(chromePath)) {
         executablePath = chromePath;
@@ -85,7 +85,7 @@ export function getPuppeteerConfig() {
       console.log('⚠️ Chrome not found in standard paths, using default');
     }
     
-    const config = {
+    const config: any = {
       ...baseConfig,
       args: [
         ...baseConfig.args,
@@ -113,7 +113,7 @@ export function getPuppeteerConfig() {
     };
 
     if (executablePath) {
-      (config as any).executablePath = executablePath;
+      config.executablePath = executablePath;
     }
 
     return config;
@@ -153,7 +153,7 @@ export async function launchPuppeteer() {
       '/usr/local/bin/chrome'
     ];
     
-    let fallbackExecutablePath: string | null = null;
+    let fallbackExecutablePath: string | undefined = undefined;
     for (const chromePath of possibleChromePaths) {
       if (chromePath && require('fs').existsSync(chromePath)) {
         fallbackExecutablePath = chromePath;
