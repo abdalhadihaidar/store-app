@@ -52,7 +52,37 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
     
     const items = templateData.items || templateData.returns || [];
     const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
-    console.log('🔧 Total items:', items.length, 'Total pages:', totalPages);
+    // 👉 Fast-path: if everything fits on one page, render once and skip costly PDF merge logic
+    if (totalPages === 1) {
+      try {
+        const singleHtml = await ejs.renderFile(templatePath, {
+          ...templateData,
+          items,
+          returns: items, // for credit notes
+          isLastPage: true,
+          currentPage: 1,
+          totalPages: 1,
+        }) as string;
+
+        await page.setContent(singleHtml, { waitUntil: 'networkidle0' });
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
+          },
+        });
+
+        fs.writeFileSync(outPath, pdfBuffer);
+        console.log('✅ Single-page PDF written:', outPath, 'size:', pdfBuffer.length);
+        return; // finished
+      } finally {
+        await browser.close();
+      }
+    }
     
     const pdfPages: Buffer[] = [];
     
