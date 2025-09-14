@@ -14,6 +14,56 @@ interface PrintData {
 }
 
 export class InvoiceService {
+  static async regeneratePdf(invoiceId: number): Promise<Invoice | null> {
+    try {
+      console.log('🔄 Regenerating PDF for existing invoice:', invoiceId);
+      
+      // Get the existing invoice
+      const invoice = await Invoice.findByPk(invoiceId, {
+        include: [
+          {
+            model: Order,
+            as: 'order',
+            include: [
+              { model: User, as: 'user', attributes: ['id', 'name'] },
+              { model: Store, as: 'store', attributes: ['id', 'name', 'address', 'city', 'postalCode'] },
+              {
+                model: require('../models/orderItem.model').default,
+                as: 'items',
+                include: [
+                  { model: require('../models/product.model').default, as: 'product' }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      if (!invoice) {
+        console.error('❌ Invoice not found:', invoiceId);
+        return null;
+      }
+
+      // Generate new PDF using existing invoice data
+      const result = await generateInvoicePdf((invoice as any).order, (invoice as any).order.items || []);
+      
+      if (result && result.filePath) {
+        // Update the invoice with the new PDF path
+        invoice.pdfPath = result.filePath;
+        await invoice.save();
+        
+        console.log('✅ Invoice PDF regenerated successfully:', result.filePath);
+        return invoice;
+      } else {
+        console.error('❌ Failed to generate PDF for invoice:', invoiceId);
+        return null;
+      }
+    } catch (error: any) {
+      console.error('❌ Error regenerating invoice PDF:', error);
+      return null;
+    }
+  }
+
   static async create(orderId: number, createdBy: number | null = null, printData: PrintData = {}) {
     // Fetch order with associations
     const order = await OrderService.getOrderDetails(orderId);

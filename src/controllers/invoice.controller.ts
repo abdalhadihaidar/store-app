@@ -201,11 +201,11 @@ export class InvoiceController {
       if (!fs.existsSync(invoice.pdfPath)) {
         console.log('🔄 Invoice PDF not found, attempting to regenerate...');
         try {
-          // Regenerate the invoice PDF
+          // Regenerate the PDF for the existing invoice (don't create new invoice)
           const { InvoiceService } = await import('../services/invoice.service');
-          const regeneratedInvoice = await InvoiceService.create(invoice.orderId, null, {});
+          const regeneratedInvoice = await InvoiceService.regeneratePdf(invoice.id);
           
-          if (!regeneratedInvoice.pdfPath || !fs.existsSync(regeneratedInvoice.pdfPath)) {
+          if (!regeneratedInvoice || !regeneratedInvoice.pdfPath || !fs.existsSync(regeneratedInvoice.pdfPath)) {
             res.status(404).json({
               success: false,
               message: 'PDF file does not exist on server and could not be regenerated'
@@ -213,7 +213,7 @@ export class InvoiceController {
             return;
           }
           
-          // Update the invoice with the new path
+          // Use the regenerated invoice
           invoice = regeneratedInvoice;
           console.log('✅ Invoice PDF regenerated successfully:', invoice.pdfPath);
         } catch (regenerateError: any) {
