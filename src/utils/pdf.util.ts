@@ -91,6 +91,20 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
       fs.writeFileSync(outPath, pdfBuffer);
       console.log('✅ Alternative PDF generation successful:', outPath);
       
+      // Check if file is actually a PDF by reading first few bytes
+      const buffer = fs.readFileSync(outPath, { encoding: null });
+      const fileSignature = buffer.slice(0, 4);
+      const isPdf = fileSignature.toString('hex') === '25504446'; // %PDF
+      console.log('🔍 Alternative PDF file signature check:', {
+        signature: fileSignature.toString('hex'),
+        isPdf: isPdf,
+        firstBytes: buffer.slice(0, 20).toString()
+      });
+      
+      if (!isPdf) {
+        console.warn('⚠️ Alternative generated file does not appear to be a valid PDF!');
+      }
+      
       // Verify file was created
       if (fs.existsSync(outPath)) {
         const stats = fs.statSync(outPath);
@@ -454,6 +468,20 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
         created: stats.birthtime
       });
       
+      // Check if file is actually a PDF by reading first few bytes
+      const buffer = fs.readFileSync(filePath, { encoding: null });
+      const fileSignature = buffer.slice(0, 4);
+      const isPdf = fileSignature.toString('hex') === '25504446'; // %PDF
+      console.log('🔍 File signature check:', {
+        signature: fileSignature.toString('hex'),
+        isPdf: isPdf,
+        firstBytes: buffer.slice(0, 20).toString()
+      });
+      
+      if (!isPdf) {
+        console.warn('⚠️ Generated file does not appear to be a valid PDF!');
+      }
+      
       return { filePath };
     } catch (puppeteerError: any) {
       console.error('❌ Primary PDF generation failed:', puppeteerError);
@@ -520,6 +548,8 @@ async function createInvoiceHtmlFallback(order: Order, templateData: any): Promi
     ensureDir(uploadsDir);
     const fileName = `invoice_${order.id}_${Date.now()}.html`;
     const filePath = path.join(uploadsDir, fileName);
+    
+    console.log('🔧 HTML fallback file path:', filePath);
 
     const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
 
@@ -531,7 +561,17 @@ async function createInvoiceHtmlFallback(order: Order, templateData: any): Promi
     
     fs.writeFileSync(filePath, enhancedHtml);
     
-    console.log('✅ Pixel-perfect invoice HTML fallback created:', filePath);
+    // Verify HTML file was created properly
+    const stats = fs.statSync(filePath);
+    const htmlContent = fs.readFileSync(filePath, 'utf8');
+    const isHtml = htmlContent.trim().startsWith('<!DOCTYPE html>') || htmlContent.trim().startsWith('<html');
+    
+    console.log('✅ Pixel-perfect invoice HTML fallback created:', {
+      path: filePath,
+      size: stats.size,
+      isHtml: isHtml,
+      startsWith: htmlContent.trim().substring(0, 50)
+    });
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error creating invoice HTML fallback:', error);
@@ -547,6 +587,8 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
     ensureDir(uploadsDir);
     const fileName = `angebot_${angebot.id}_${Date.now()}.html`;
     const filePath = path.join(uploadsDir, fileName);
+    
+    console.log('🔧 HTML fallback file path:', filePath);
 
     const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
     
@@ -591,7 +633,17 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
     
     fs.writeFileSync(filePath, enhancedHtml);
     
-    console.log('✅ Pixel-perfect angebot HTML fallback created:', filePath);
+    // Verify HTML file was created properly
+    const stats = fs.statSync(filePath);
+    const htmlContent = fs.readFileSync(filePath, 'utf8');
+    const isHtml = htmlContent.trim().startsWith('<!DOCTYPE html>') || htmlContent.trim().startsWith('<html');
+    
+    console.log('✅ Pixel-perfect angebot HTML fallback created:', {
+      path: filePath,
+      size: stats.size,
+      isHtml: isHtml,
+      startsWith: htmlContent.trim().substring(0, 50)
+    });
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error creating HTML fallback:', error);
