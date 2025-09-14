@@ -6,6 +6,60 @@ import { generateCreditNotePdf } from '../utils/pdf.util';
 import { OrderService } from './order.service';
 
 export class CreditNoteService {
+  static async regeneratePdf(creditNoteId: number): Promise<CreditNote | null> {
+    try {
+      console.log('🔄 Regenerating PDF for existing credit note:', creditNoteId);
+      
+      // Get the existing credit note
+      const creditNote = await CreditNote.findByPk(creditNoteId, {
+        include: [
+          {
+            model: Order,
+            as: 'order',
+            include: [
+              { model: User, as: 'user', attributes: ['id', 'name'] },
+              { model: Store, as: 'store', attributes: ['id', 'name', 'address', 'city', 'postalCode'] },
+              {
+                model: require('../models/orderItem.model').default,
+                as: 'items',
+                include: [
+                  { model: require('../models/product.model').default, as: 'product' }
+                ]
+              },
+              {
+                model: require('../models/return.model').default,
+                as: 'returns'
+              }
+            ]
+          }
+        ]
+      });
+
+      if (!creditNote) {
+        console.error('❌ Credit note not found:', creditNoteId);
+        return null;
+      }
+
+      // Generate new PDF using existing credit note data
+      const result = await generateCreditNotePdf((creditNote as any).order, (creditNote as any).order.items || [], (creditNote as any).order.returns || []);
+      
+      if (result && result.filePath) {
+        // Update the credit note with the new PDF path
+        creditNote.pdfPath = result.filePath;
+        await creditNote.save();
+        
+        console.log('✅ Credit note PDF regenerated successfully:', result.filePath);
+        return creditNote;
+      } else {
+        console.error('❌ Failed to generate PDF for credit note:', creditNoteId);
+        return null;
+      }
+    } catch (error: any) {
+      console.error('❌ Error regenerating credit note PDF:', error);
+      return null;
+    }
+  }
+
   /**
    * Generate a credit note for an order's returns and store it.
    */

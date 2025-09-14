@@ -128,7 +128,7 @@ export class CreditNoteController {
         return;
       }
       
-      const credit = await CreditNoteService.getById(id);
+      let credit = await CreditNoteService.getById(id);
       if (!credit) {
         res.status(404).json({
           success: false,
@@ -145,21 +145,44 @@ export class CreditNoteController {
         return;
       }
 
-      // Check if file exists
+      // Check if file exists, if not try to regenerate
       const fs = require('fs');
       if (!fs.existsSync(credit.pdfPath)) {
-        res.status(404).json({
-          success: false,
-          message: 'PDF file does not exist on server'
-        });
-        return;
+        console.log('🔄 Credit note PDF not found, attempting to regenerate...');
+        try {
+          // Regenerate the PDF for the existing credit note (don't create new credit note)
+          const { CreditNoteService } = await import('../services/creditNote.service');
+          const regeneratedCredit = await CreditNoteService.regeneratePdf(credit.id);
+          
+          if (!regeneratedCredit || !regeneratedCredit.pdfPath || !fs.existsSync(regeneratedCredit.pdfPath)) {
+            res.status(404).json({
+              success: false,
+              message: 'PDF file does not exist on server and could not be regenerated'
+            });
+            return;
+          }
+          
+          // Use the regenerated credit note
+          credit = regeneratedCredit;
+          console.log('✅ Credit note PDF regenerated successfully:', credit.pdfPath);
+        } catch (regenerateError: any) {
+          console.error('❌ Failed to regenerate credit note PDF:', regenerateError);
+          res.status(404).json({
+            success: false,
+            message: 'PDF file does not exist on server and could not be regenerated'
+          });
+          return;
+        }
       }
 
-      // stream PDF back to client
-      res.setHeader('Content-Type', 'application/pdf');
+      // Check if it's an HTML fallback file
+      const isHtmlFile = credit.pdfPath.endsWith('.html');
+      
+      // stream PDF/HTML back to client
+      res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=credit_note_${credit.number}.pdf`
+        `attachment; filename=credit_note_${credit.number}.${isHtmlFile ? 'html' : 'pdf'}`
       );
 
       const stream = createReadStream(credit.pdfPath);
