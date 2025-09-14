@@ -4,6 +4,7 @@ import Order from '../models/order.model';
 import OrderItem from '../models/orderItem.model';
 import Product from '../models/product.model';
 import Store from '../models/store.model';
+import Angebot from '../models/angebot.model';
 import fs from 'fs';
 import path from 'path';
 
@@ -362,8 +363,11 @@ export class AngebotController {
           const pdfResult = await generateAngebotPdf(fullAngebot, order, order.items || []);
           
           // Update angebot with new PDF path
-          await fullAngebot.update({ pdfPath: pdfResult.filePath });
-          angebot = fullAngebot; // Use the updated angebot
+          await Angebot.update(
+            { pdfPath: pdfResult.filePath },
+            { where: { id: angebotId } }
+          );
+          angebot = await AngebotService.getBasicAngebotById(angebotId); // Refresh the angebot data
           
           console.log('✅ PDF regenerated successfully:', pdfResult.filePath);
         } catch (regenerateError: any) {
@@ -441,7 +445,10 @@ export class AngebotController {
       const pdfResult = await generateAngebotPdf(angebot, order, order.items || []);
       
       // Update angebot with new PDF path
-      await angebot.update({ pdfPath: pdfResult.filePath });
+      await Angebot.update(
+        { pdfPath: pdfResult.filePath },
+        { where: { id: angebotId } }
+      );
 
       res.json({
         success: true,
