@@ -44,8 +44,79 @@ export class InvoiceService {
         return null;
       }
 
-      // Generate new PDF using existing invoice data
-      const result = await generateInvoicePdf((invoice as any).order, (invoice as any).order.items || []);
+      console.log('📋 Invoice found:', {
+        id: invoice.id,
+        number: invoice.number,
+        orderId: invoice.orderId,
+        hasOrder: !!(invoice as any).order,
+        hasItems: !!(invoice as any).order?.items?.length
+      });
+
+      // Generate new PDF using existing invoice data with proper template data
+      const order = (invoice as any).order;
+      const items = order.items || [];
+      
+      // Calculate totals (same logic as create method)
+      const vat7Sum = items.reduce((acc: number, i: any) => {
+        const rp = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
+        return Math.abs(rp - 7) < 0.01 ? acc + i.taxAmount : acc;
+      }, 0);
+      const vat19Sum = items.reduce((acc: number, i: any) => {
+        const rp = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
+        return Math.abs(rp - 19) < 0.01 ? acc + i.taxAmount : acc;
+      }, 0);
+
+      const templateData = {
+        storeName: order.store?.name,
+        userName: order.user?.name,
+        storeAddress: order.store?.address,
+        storeCity: order.store?.city,
+        storePostalCode: order.store?.postalCode,
+        invoiceNumber: invoice.number,
+        orderId: order.id,
+        invoiceDate: invoice.date.toLocaleDateString('de-DE'),
+        kundenNr: order.userId,
+        items: items.map((i: any) => {
+          const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
+          const baseItem = {
+            id: i.productId,
+            name: (i as any).product?.name || i.productId,
+            packages: i.packages,
+            numberPerPackage: (i as any).product?.numberperpackage || 0,
+            quantity: i.quantity,
+            price: i.adjustedPrice ?? i.originalPrice,
+            adjustedPrice: i.adjustedPrice,
+            total: (i.adjustedPrice ?? i.originalPrice) * i.quantity,
+            tax7: Math.abs(ratePercent - 7) < 0.01 ? i.taxAmount : 0,
+            tax19: Math.abs(ratePercent - 19) < 0.01 ? i.taxAmount : 0,
+          };
+          
+          // Add German business terminology
+          return addGermanFieldsToOrderItem(baseItem);
+        }),
+        totalNet: invoice.totalNet,
+        vat7: vat7Sum,
+        vat19: vat19Sum,
+        totalGross: invoice.totalGross,
+        isLastPage: true // Always show bank details for invoices
+      };
+      
+      console.log('🔧 Generating PDF with template data:', {
+        storeName: templateData.storeName,
+        userName: templateData.userName,
+        invoiceNumber: templateData.invoiceNumber,
+        itemsCount: templateData.items.length,
+        totalNet: templateData.totalNet,
+        totalGross: templateData.totalGross
+      });
+      
+      const result = await generateInvoicePdf(order, templateData);
+      
+      console.log('📄 PDF generation result:', {
+        success: !!result,
+        hasFilePath: !!(result && result.filePath),
+        filePath: result?.filePath
+      });
       
       if (result && result.filePath) {
         // Update the invoice with the new PDF path
