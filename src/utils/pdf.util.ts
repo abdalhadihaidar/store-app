@@ -433,7 +433,8 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
         totalGross
       },
       order,
-      items
+      items,
+      isLastPage: true // Always show validity information for angebots
     };
 
     // Try multiple approaches to generate PDF

@@ -58,7 +58,8 @@ export class InvoiceService {
       totalNet: order.totalPrice,
       vat7: vat7Sum,
       vat19: vat19Sum,
-      totalGross: order.totalPrice + order.totalTax
+      totalGross: order.totalPrice + order.totalTax,
+      isLastPage: true // Always show bank details for invoices
     };
 
     const { filePath } = await generateInvoicePdf(order, templateData);

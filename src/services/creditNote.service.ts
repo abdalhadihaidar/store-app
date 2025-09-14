@@ -79,6 +79,7 @@ export class CreditNoteService {
       vat7,
       vat19,
       totalGross,
+      isLastPage: true // Always show bank details for credit notes
     };
 
     const { filePath } = await generateCreditNotePdf(order, templateData);
