@@ -35,6 +35,52 @@ async function renderHtmlToPdf(html: string, outPath: string) {
   }
 }
 
+async function generatePdfAlternative(templatePath: string, templateData: any, outPath: string) {
+  console.log('🔧 Using alternative PDF generation method...');
+  
+  try {
+    // Generate HTML from template
+    const html = await ejs.renderFile(templatePath, templateData) as string;
+    
+    // Try to use a simpler Puppeteer configuration
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process'
+      ]
+    });
+    
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
+        }
+      });
+      
+      fs.writeFileSync(outPath, pdfBuffer);
+      console.log('✅ Alternative PDF generation successful:', outPath);
+    } finally {
+      await browser.close();
+    }
+  } catch (error: any) {
+    console.error('❌ Alternative PDF generation failed:', error);
+    throw error;
+  }
+}
+
 async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 10) {
   console.log('🔧 Starting generatePaginatedPdf...');
   console.log('🔧 Template path:', templatePath);
@@ -172,25 +218,29 @@ export async function generateInvoicePdf(order: Order, templateData: any): Promi
     const filePath = path.join(uploadsDir, fileName);
 
     const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
-    await generatePaginatedPdf(templatePath, templateData, filePath, 10);
-    return { filePath };
-  } catch (error: any) {
-    console.error('❌ Error in generateInvoicePdf:', error);
     
-    // If Puppeteer fails, try to create a simple HTML file as fallback
-    if (error && typeof error === 'object' && 'message' in error && error.message && 
-        (error.message.includes('Chrome') || error.message.includes('puppeteer') || 
-         error.message.includes('browser') || error.message.includes('ENOENT') ||
-         error.message.includes('spawn') || error.message.includes('launch'))) {
-      console.log('🔄 Puppeteer failed for invoice, creating HTML fallback...');
+    // Try multiple approaches to generate PDF
+    try {
+      await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+      return { filePath };
+    } catch (puppeteerError: any) {
+      console.error('❌ Puppeteer PDF generation failed:', puppeteerError);
+      
+      // Try alternative PDF generation method
+      console.log('🔄 Trying alternative PDF generation...');
       try {
+        await generatePdfAlternative(templatePath, templateData, filePath);
+        return { filePath };
+      } catch (altError: any) {
+        console.error('❌ Alternative PDF generation failed:', altError);
+        
+        // Only as last resort, create HTML fallback
+        console.log('🔄 Creating HTML fallback as last resort...');
         return await createInvoiceHtmlFallback(order, templateData);
-      } catch (fallbackError: any) {
-        console.error('❌ HTML fallback also failed:', fallbackError);
-        throw new Error(`Invoice PDF generation failed: ${error.message}. HTML fallback also failed: ${fallbackError?.message || 'Unknown error'}`);
       }
     }
-    
+  } catch (error: any) {
+    console.error('❌ Error in generateInvoicePdf:', error);
     throw error;
   }
 }
@@ -267,44 +317,55 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       items
     };
 
-    console.log('🔧 Calling generatePaginatedPdf...');
-    await generatePaginatedPdf(templatePath, templateData, filePath, 10);
-    
-    // Verify file was created
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`PDF file was not created: ${filePath}`);
-    }
-    
-    const stats = fs.statSync(filePath);
-    console.log('✅ PDF file created successfully:', {
-      path: filePath,
-      size: stats.size,
-      created: stats.birthtime
-    });
-    
-    return { filePath };
-  } catch (error: any) {
-    console.error('❌ Error in generateAngebotPdf:', error);
-    console.error('❌ Error details:', {
-      message: error?.message || 'Unknown error',
-      stack: error?.stack || 'No stack trace',
-      name: error?.name || 'Unknown error type'
-    });
-    
-    // If Puppeteer fails, try to create a simple HTML file as fallback
-    if (error && typeof error === 'object' && 'message' in error && error.message && 
-        (error.message.includes('Chrome') || error.message.includes('puppeteer') || 
-         error.message.includes('browser') || error.message.includes('ENOENT') ||
-         error.message.includes('spawn') || error.message.includes('launch'))) {
-      console.log('🔄 Puppeteer failed, creating HTML fallback...');
+    // Try multiple approaches to generate PDF
+    try {
+      console.log('🔧 Calling generatePaginatedPdf...');
+      await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+      
+      // Verify file was created
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`PDF file was not created: ${filePath}`);
+      }
+      
+      const stats = fs.statSync(filePath);
+      console.log('✅ PDF file created successfully:', {
+        path: filePath,
+        size: stats.size,
+        created: stats.birthtime
+      });
+      
+      return { filePath };
+    } catch (puppeteerError: any) {
+      console.error('❌ Puppeteer PDF generation failed:', puppeteerError);
+      
+      // Try alternative PDF generation method
+      console.log('🔄 Trying alternative PDF generation...');
       try {
+        await generatePdfAlternative(templatePath, templateData, filePath);
+        
+        // Verify file was created
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`PDF file was not created: ${filePath}`);
+        }
+        
+        const stats = fs.statSync(filePath);
+        console.log('✅ Alternative PDF file created successfully:', {
+          path: filePath,
+          size: stats.size,
+          created: stats.birthtime
+        });
+        
+        return { filePath };
+      } catch (altError: any) {
+        console.error('❌ Alternative PDF generation failed:', altError);
+        
+        // Only as last resort, create HTML fallback
+        console.log('🔄 Creating HTML fallback as last resort...');
         return await createHtmlFallback(angebot, order, items);
-      } catch (fallbackError: any) {
-        console.error('❌ HTML fallback also failed:', fallbackError);
-        throw new Error(`PDF generation failed: ${error.message}. HTML fallback also failed: ${fallbackError?.message || 'Unknown error'}`);
       }
     }
-    
+  } catch (error: any) {
+    console.error('❌ Error in generateAngebotPdf:', error);
     throw error;
   }
 }
