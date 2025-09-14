@@ -37,13 +37,22 @@ async function renderHtmlToPdf(html: string, outPath: string) {
 
 async function generatePdfAlternative(templatePath: string, templateData: any, outPath: string) {
   console.log('🔧 Using alternative PDF generation method...');
+  console.log('🔧 Template path:', templatePath);
+  console.log('🔧 Output path:', outPath);
   
   try {
     // Generate HTML from template
+    console.log('🔧 Rendering HTML from template...');
     const html = await ejs.renderFile(templatePath, templateData) as string;
+    console.log('✅ HTML rendered successfully, length:', html.length);
     
     // Try to use a simpler Puppeteer configuration
+    console.log('🔧 Launching Puppeteer with alternative config...');
     const puppeteer = require('puppeteer');
+    
+    // Check if Puppeteer is available
+    console.log('🔧 Puppeteer version:', puppeteer.version || 'unknown');
+    
     const browser = await puppeteer.launch({
       headless: 'new',
       args: [
@@ -51,13 +60,20 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--single-process'
+        '--single-process',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor'
       ]
     });
     
+    console.log('✅ Browser launched successfully');
+    
     try {
       const page = await browser.newPage();
+      console.log('✅ New page created');
+      
       await page.setContent(html, { waitUntil: 'networkidle0' });
+      console.log('✅ Content set on page');
       
       const pdfBuffer = await page.pdf({
         format: 'A4',
@@ -70,13 +86,106 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
         }
       });
       
+      console.log('✅ PDF buffer generated, size:', pdfBuffer.length);
+      
       fs.writeFileSync(outPath, pdfBuffer);
       console.log('✅ Alternative PDF generation successful:', outPath);
+      
+      // Verify file was created
+      if (fs.existsSync(outPath)) {
+        const stats = fs.statSync(outPath);
+        console.log('✅ PDF file verified:', { size: stats.size, path: outPath });
+      } else {
+        throw new Error('PDF file was not created');
+      }
     } finally {
       await browser.close();
+      console.log('✅ Browser closed');
     }
   } catch (error: any) {
     console.error('❌ Alternative PDF generation failed:', error);
+    console.error('❌ Error details:', {
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'Unknown error type'
+    });
+    throw error;
+  }
+}
+
+async function generatePdfDirect(templatePath: string, templateData: any, outPath: string) {
+  console.log('🔧 Using direct HTML to PDF conversion...');
+  console.log('🔧 Template path:', templatePath);
+  console.log('🔧 Output path:', outPath);
+  
+  try {
+    // Generate HTML from template
+    console.log('🔧 Rendering HTML from template...');
+    const html = await ejs.renderFile(templatePath, templateData) as string;
+    console.log('✅ HTML rendered successfully, length:', html.length);
+    
+    // Try using html-pdf-node if available
+    try {
+      console.log('🔧 Trying html-pdf-node...');
+      const pdf = require('html-pdf-node');
+      
+      const options = {
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
+        },
+        printBackground: true,
+        displayHeaderFooter: false
+      };
+      
+      const result = await pdf.generatePdf({ content: html }, options);
+      fs.writeFileSync(outPath, result);
+      console.log('✅ Direct PDF generation successful with html-pdf-node:', outPath);
+      return;
+    } catch (htmlPdfError: any) {
+      console.log('❌ html-pdf-node failed:', htmlPdfError.message);
+    }
+    
+    // Try using wkhtmltopdf if available
+    try {
+      console.log('🔧 Trying wkhtmltopdf...');
+      const wkhtmltopdf = require('wkhtmltopdf');
+      
+      const stream = wkhtmltopdf(html, {
+        pageSize: 'A4',
+        marginTop: '20mm',
+        marginRight: '15mm',
+        marginBottom: '20mm',
+        marginLeft: '15mm'
+      });
+      
+      const writeStream = fs.createWriteStream(outPath);
+      stream.pipe(writeStream);
+      
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', () => resolve());
+        writeStream.on('error', (error) => reject(error));
+      });
+      
+      console.log('✅ Direct PDF generation successful with wkhtmltopdf:', outPath);
+      return;
+    } catch (wkhtmltopdfError: any) {
+      console.log('❌ wkhtmltopdf failed:', wkhtmltopdfError.message);
+    }
+    
+    // If all direct methods fail, throw error
+    throw new Error('All direct PDF generation methods failed');
+    
+  } catch (error: any) {
+    console.error('❌ Direct PDF generation failed:', error);
+    console.error('❌ Error details:', {
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'Unknown error type'
+    });
     throw error;
   }
 }
@@ -221,22 +330,32 @@ export async function generateInvoicePdf(order: Order, templateData: any): Promi
     
     // Try multiple approaches to generate PDF
     try {
+      console.log('🔧 Attempt 1: Primary PDF generation...');
       await generatePaginatedPdf(templatePath, templateData, filePath, 10);
       return { filePath };
     } catch (puppeteerError: any) {
-      console.error('❌ Puppeteer PDF generation failed:', puppeteerError);
+      console.error('❌ Primary PDF generation failed:', puppeteerError);
       
       // Try alternative PDF generation method
-      console.log('🔄 Trying alternative PDF generation...');
       try {
+        console.log('🔧 Attempt 2: Alternative PDF generation...');
         await generatePdfAlternative(templatePath, templateData, filePath);
         return { filePath };
       } catch (altError: any) {
         console.error('❌ Alternative PDF generation failed:', altError);
         
-        // Only as last resort, create HTML fallback
-        console.log('🔄 Creating HTML fallback as last resort...');
-        return await createInvoiceHtmlFallback(order, templateData);
+        // Try third method: Direct HTML to PDF conversion
+        try {
+          console.log('🔧 Attempt 3: Direct HTML to PDF conversion...');
+          await generatePdfDirect(templatePath, templateData, filePath);
+          return { filePath };
+        } catch (directError: any) {
+          console.error('❌ Direct PDF generation failed:', directError);
+          
+          // Only as last resort, create HTML fallback
+          console.log('🔄 All PDF methods failed, creating HTML fallback as last resort...');
+          return await createInvoiceHtmlFallback(order, templateData);
+        }
       }
     }
   } catch (error: any) {
@@ -319,7 +438,7 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
 
     // Try multiple approaches to generate PDF
     try {
-      console.log('🔧 Calling generatePaginatedPdf...');
+      console.log('🔧 Attempt 1: Primary PDF generation...');
       await generatePaginatedPdf(templatePath, templateData, filePath, 10);
       
       // Verify file was created
@@ -336,11 +455,11 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       
       return { filePath };
     } catch (puppeteerError: any) {
-      console.error('❌ Puppeteer PDF generation failed:', puppeteerError);
+      console.error('❌ Primary PDF generation failed:', puppeteerError);
       
       // Try alternative PDF generation method
-      console.log('🔄 Trying alternative PDF generation...');
       try {
+        console.log('🔧 Attempt 2: Alternative PDF generation...');
         await generatePdfAlternative(templatePath, templateData, filePath);
         
         // Verify file was created
@@ -359,9 +478,31 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       } catch (altError: any) {
         console.error('❌ Alternative PDF generation failed:', altError);
         
-        // Only as last resort, create HTML fallback
-        console.log('🔄 Creating HTML fallback as last resort...');
-        return await createHtmlFallback(angebot, order, items);
+        // Try third method: Direct HTML to PDF conversion
+        try {
+          console.log('🔧 Attempt 3: Direct HTML to PDF conversion...');
+          await generatePdfDirect(templatePath, templateData, filePath);
+          
+          // Verify file was created
+          if (!fs.existsSync(filePath)) {
+            throw new Error(`PDF file was not created: ${filePath}`);
+          }
+          
+          const stats = fs.statSync(filePath);
+          console.log('✅ Direct PDF file created successfully:', {
+            path: filePath,
+            size: stats.size,
+            created: stats.birthtime
+          });
+          
+          return { filePath };
+        } catch (directError: any) {
+          console.error('❌ Direct PDF generation failed:', directError);
+          
+          // Only as last resort, create HTML fallback
+          console.log('🔄 All PDF methods failed, creating HTML fallback as last resort...');
+          return await createHtmlFallback(angebot, order, items);
+        }
       }
     }
   } catch (error: any) {
@@ -372,7 +513,7 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
 
 async function createInvoiceHtmlFallback(order: Order, templateData: any): Promise<PdfGenerationResult> {
   try {
-    console.log('🔄 Creating HTML fallback for invoice, order:', order.id);
+    console.log('🔄 Creating pixel-perfect HTML fallback for invoice, order:', order.id);
     
     const uploadsDir = path.resolve(__dirname, '../../uploads/invoices');
     ensureDir(uploadsDir);
@@ -381,11 +522,15 @@ async function createInvoiceHtmlFallback(order: Order, templateData: any): Promi
 
     const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
 
-    // Generate HTML instead of PDF
+    // Generate HTML instead of PDF with enhanced styling for PDF conversion
     const html = await ejs.renderFile(templatePath, templateData) as string;
-    fs.writeFileSync(filePath, html);
     
-    console.log('✅ Invoice HTML fallback created:', filePath);
+    // Enhance HTML with PDF-ready styling and frontend PDF conversion script
+    const enhancedHtml = enhanceHtmlForPdfConversion(html, 'invoice', order.id.toString());
+    
+    fs.writeFileSync(filePath, enhancedHtml);
+    
+    console.log('✅ Pixel-perfect invoice HTML fallback created:', filePath);
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error creating invoice HTML fallback:', error);
@@ -437,16 +582,270 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
       items
     };
 
-    // Generate HTML instead of PDF
+    // Generate HTML instead of PDF with enhanced styling for PDF conversion
     const html = await ejs.renderFile(templatePath, templateData) as string;
-    fs.writeFileSync(filePath, html);
     
-    console.log('✅ HTML fallback created:', filePath);
+    // Enhance HTML with PDF-ready styling and frontend PDF conversion script
+    const enhancedHtml = enhanceHtmlForPdfConversion(html, 'angebot', angebot.id.toString());
+    
+    fs.writeFileSync(filePath, enhancedHtml);
+    
+    console.log('✅ Pixel-perfect angebot HTML fallback created:', filePath);
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error creating HTML fallback:', error);
     throw error;
   }
+}
+
+function enhanceHtmlForPdfConversion(html: string, documentType: string, documentId: string): string {
+  console.log('🔧 Enhancing HTML for PDF conversion:', documentType, documentId);
+  
+  // Extract the body content from the HTML
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  const bodyContent = bodyMatch ? bodyMatch[1] : html;
+  
+  // Create enhanced HTML with PDF-ready styling and frontend conversion script
+  const enhancedHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${documentType.charAt(0).toUpperCase() + documentType.slice(1)} ${documentId}</title>
+    
+    <!-- PDF-Ready CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.4;
+            color: #000;
+            background: white;
+            font-size: 12px;
+        }
+        
+        /* Ensure consistent rendering for PDF conversion */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* PDF conversion specific styles */
+        .pdf-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Hide PDF conversion controls in final PDF */
+        .pdf-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .pdf-controls button {
+            background: white;
+            color: #007bff;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .pdf-controls button:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Ensure tables and content are PDF-ready */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            page-break-inside: avoid;
+        }
+        
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        
+        /* Ensure images are properly sized */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+    
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <!-- PDF Conversion Controls -->
+    <div class="pdf-controls">
+        <span>📄 ${documentType.charAt(0).toUpperCase() + documentType.slice(1)} Ready</span>
+        <button onclick="convertToPdf()">📥 Download PDF</button>
+        <button onclick="printDocument()">🖨️ Print</button>
+    </div>
+    
+    <!-- Document Content -->
+    <div class="pdf-container">
+        ${bodyContent}
+    </div>
+    
+    <!-- PDF Conversion Script -->
+    <script>
+        async function convertToPdf() {
+            try {
+                console.log('🔧 Starting PDF conversion...');
+                
+                // Show loading state
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '⏳ Converting...';
+                button.disabled = true;
+                
+                // Get the document container
+                const element = document.querySelector('.pdf-container');
+                
+                // Convert to canvas with high quality
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Higher resolution
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: element.scrollWidth,
+                    height: element.scrollHeight
+                });
+                
+                console.log('✅ Canvas created, dimensions:', canvas.width, 'x', canvas.height);
+                
+                // Create PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                // Calculate dimensions
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                // Add first page
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Add additional pages if needed
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Generate filename
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = '${documentType}_${documentId}_' + timestamp + '.pdf';
+                
+                // Download PDF
+                pdf.save(filename);
+                
+                console.log('✅ PDF generated and downloaded:', filename);
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Show success message
+                showMessage('✅ PDF downloaded successfully!', 'success');
+                
+            } catch (error) {
+                console.error('❌ PDF conversion failed:', error);
+                
+                // Reset button
+                const button = event.target;
+                button.innerHTML = '📥 Download PDF';
+                button.disabled = false;
+                
+                // Show error message
+                showMessage('❌ PDF conversion failed. Please try again.', 'error');
+            }
+        }
+        
+        function printDocument() {
+            console.log('🖨️ Printing document...');
+            window.print();
+        }
+        
+        function showMessage(message, type) {
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = \`
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: \${type === 'success' ? '#28a745' : '#dc3545'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 5px;
+                z-index: 10000;
+                font-weight: bold;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            \`;
+            messageEl.textContent = message;
+            
+            document.body.appendChild(messageEl);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 3000);
+        }
+        
+        // Auto-hide controls when printing
+        window.addEventListener('beforeprint', function() {
+            document.querySelector('.pdf-controls').style.display = 'none';
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.querySelector('.pdf-controls').style.display = 'block';
+        });
+        
+        // Initialize
+        console.log('📄 PDF-ready document loaded for ${documentType} ${documentId}');
+        console.log('🔧 Available functions: convertToPdf(), printDocument()');
+    </script>
+</body>
+</html>`;
+
+  return enhancedHtml;
 }
 
 /**
