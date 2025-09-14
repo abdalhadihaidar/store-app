@@ -41,7 +41,67 @@ export class CreditNoteService {
       }
 
       // Generate new PDF using existing credit note data
-      const result = await generateCreditNotePdf((creditNote as any).order, (creditNote as any).order.items || [], (creditNote as any).order.returns || []);
+      const order = (creditNote as any).order;
+      const items = order.items || [];
+      const returns = order.returns || [];
+      
+      // Calculate refund and tax breakdown (same logic as create method)
+      let refundAmount = 0;
+      let totalNet = 0;
+      let vat7 = 0;
+      let vat19 = 0;
+      
+      returns.forEach((ret: any) => {
+        const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
+        const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0;
+        const taxRate = relatedItem?.taxRate || 0;
+        const itemTotal = price * ret.quantity;
+        refundAmount += itemTotal;
+        totalNet += itemTotal / (1 + taxRate);
+        
+        if (Math.abs(taxRate - 0.07) < 0.01) {
+          vat7 += itemTotal - (itemTotal / 1.07);
+        } else if (Math.abs(taxRate - 0.19) < 0.01) {
+          vat19 += itemTotal - (itemTotal / 1.19);
+        }
+      });
+      
+      const totalGross = totalNet + vat7 + vat19;
+      
+      const templateData = {
+        storeName: order.store?.name,
+        userName: order.user?.name,
+        storeAddress: order.store?.address,
+        storeCity: order.store?.city,
+        storePostalCode: order.store?.postalCode,
+        creditNumber: creditNote.number,
+        orderId: order.id,
+        creditDate: creditNote.date.toLocaleDateString('de-DE'),
+        kundenNr: order.userId,
+        items: returns.map((ret: any) => {
+          const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
+          const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0;
+          const taxRate = relatedItem?.taxRate || 0;
+          const ratePercent = taxRate < 1 ? taxRate * 100 : taxRate;
+          
+          return {
+            id: ret.orderItemId,
+            name: relatedItem?.orderProduct?.name || ret.orderItemId,
+            quantity: ret.quantity,
+            price: price,
+            total: price * ret.quantity,
+            taxRate: ratePercent,
+            taxAmount: (price * ret.quantity) - ((price * ret.quantity) / (1 + taxRate))
+          };
+        }),
+        totalNet,
+        vat7,
+        vat19,
+        totalGross,
+        isLastPage: true // Always show bank details for credit notes
+      };
+      
+      const result = await generateCreditNotePdf(order, templateData);
       
       if (result && result.filePath) {
         // Update the credit note with the new PDF path
