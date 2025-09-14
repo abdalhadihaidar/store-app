@@ -35,11 +35,14 @@ export class CreditNoteController {
         return;
       }
 
-      // stream PDF back to client
-      res.setHeader('Content-Type', 'application/pdf');
+      // Check if it's an HTML fallback file
+      const isHtmlFile = credit.pdfPath.endsWith('.html');
+      
+      // stream PDF/HTML back to client
+      res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=credit_note_${credit.number}.pdf`
+        `attachment; filename=credit_note_${credit.number}.${isHtmlFile ? 'html' : 'pdf'}`
       );
 
       const stream = createReadStream(credit.pdfPath);
