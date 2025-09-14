@@ -380,13 +380,22 @@ export class AngebotController {
         }
       }
 
-      const isHtmlFile = angebot.pdfPath!.endsWith('.html');
+      // Final null check after potential regeneration
+      if (!angebot || !angebot.pdfPath) {
+        res.status(404).json({
+          success: false,
+          message: 'PDF file not found for this angebot'
+        });
+        return;
+      }
+
+      const isHtmlFile = angebot.pdfPath.endsWith('.html');
       const fileName = `angebot_${angebot.angebotNumber || angebot.id}.${isHtmlFile ? 'html' : 'pdf'}`;
       
       res.setHeader('Content-Type', isHtmlFile ? 'text/html' : 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       
-      const fileStream = fs.createReadStream(angebot.pdfPath!);
+      const fileStream = fs.createReadStream(angebot.pdfPath);
       fileStream.pipe(res);
       
       fileStream.on('error', (error) => {
