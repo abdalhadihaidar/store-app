@@ -601,35 +601,31 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
 function enhanceHtmlForPdfConversion(html: string, documentType: string, documentId: string): string {
   console.log('🔧 Enhancing HTML for PDF conversion:', documentType, documentId);
   
+  // Extract the head content (including styles) from the original HTML
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  const headContent = headMatch ? headMatch[1] : '';
+  
   // Extract the body content from the HTML
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const bodyContent = bodyMatch ? bodyMatch[1] : html;
+  let bodyContent = bodyMatch ? bodyMatch[1] : html;
   
-  // Create enhanced HTML with PDF-ready styling and frontend conversion script
+  // Fix logo and asset paths to be accessible
+  bodyContent = fixAssetPaths(bodyContent);
+  
+  // Create enhanced HTML with original styling preserved and frontend conversion script
   const enhancedHtml = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${documentType.charAt(0).toUpperCase() + documentType.slice(1)} ${documentId}</title>
     
-    <!-- PDF-Ready CSS -->
+    <!-- Original Template Styles (Preserved) -->
+    ${headContent}
+    
+    <!-- Additional PDF-Ready CSS -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.4;
-            color: #000;
-            background: white;
-            font-size: 12px;
-        }
-        
         /* Ensure consistent rendering for PDF conversion */
         @media print {
             body {
@@ -640,11 +636,12 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
         
         /* PDF conversion specific styles */
         .pdf-container {
-            width: 210mm;
-            min-height: 297mm;
+            width: 100%;
+            max-width: 210mm;
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
         }
         
         /* Hide PDF conversion controls in final PDF */
@@ -687,9 +684,15 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
             page-break-after: auto;
         }
         
-        /* Ensure images are properly sized */
+        /* Ensure images are properly sized and visible */
         img {
             max-width: 100%;
+            height: auto;
+        }
+        
+        /* Ensure logo and images are visible */
+        .logo, .company-logo {
+            max-width: 200px;
             height: auto;
         }
     </style>
@@ -706,7 +709,7 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
         <button onclick="printDocument()">🖨️ Print</button>
     </div>
     
-    <!-- Document Content -->
+    <!-- Document Content (Preserving Original Structure) -->
     <div class="pdf-container">
         ${bodyContent}
     </div>
@@ -846,6 +849,67 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
 </html>`;
 
   return enhancedHtml;
+}
+
+function fixAssetPaths(bodyContent: string): string {
+  console.log('🔧 Fixing asset paths in HTML content...');
+  
+  try {
+    // Check if logo file exists and convert to base64
+    const logoPath = path.resolve(__dirname, '../../templates/Capture.png');
+    if (fs.existsSync(logoPath)) {
+      console.log('✅ Logo file found, converting to base64...');
+      
+      // Read logo file and convert to base64
+      const logoBuffer = fs.readFileSync(logoPath);
+      const logoBase64 = logoBuffer.toString('base64');
+      const logoMimeType = 'image/png'; // Assuming PNG based on filename
+      const logoDataUrl = `data:${logoMimeType};base64,${logoBase64}`;
+      
+      // Replace logo references with base64 data URL
+      bodyContent = bodyContent.replace(
+        /src="Capture\.png"/g,
+        `src="${logoDataUrl}"`
+      );
+      
+      console.log('✅ Logo converted to base64 and embedded');
+    } else {
+      console.log('⚠️ Logo file not found at:', logoPath);
+    }
+    
+    // Fix any other relative image paths
+    bodyContent = bodyContent.replace(
+      /src="([^"]+\.(png|jpg|jpeg|gif|svg))"/g,
+      (match, imagePath) => {
+        // If it's a relative path, try to convert to base64
+        if (!imagePath.startsWith('http') && !imagePath.startsWith('data:')) {
+          const fullImagePath = path.resolve(__dirname, '../../templates', imagePath);
+          if (fs.existsSync(fullImagePath)) {
+            try {
+              const imageBuffer = fs.readFileSync(fullImagePath);
+              const imageBase64 = imageBuffer.toString('base64');
+              const extension = path.extname(imagePath).toLowerCase();
+              const mimeType = extension === '.png' ? 'image/png' : 
+                              extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' :
+                              extension === '.gif' ? 'image/gif' :
+                              extension === '.svg' ? 'image/svg+xml' : 'image/png';
+              const imageDataUrl = `data:${mimeType};base64,${imageBase64}`;
+              console.log('✅ Converted image to base64:', imagePath);
+              return `src="${imageDataUrl}"`;
+            } catch (error) {
+              console.log('⚠️ Could not convert image to base64:', imagePath, error);
+            }
+          }
+        }
+        return match;
+      }
+    );
+    
+  } catch (error) {
+    console.error('❌ Error fixing asset paths:', error);
+  }
+  
+  return bodyContent;
 }
 
 /**
