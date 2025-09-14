@@ -379,14 +379,48 @@ export async function generateInvoicePdf(order: Order, templateData: any): Promi
 }
 
 export async function generateCreditNotePdf(order: Order, templateData: any): Promise<PdfGenerationResult> {
-  const uploadsDir = path.resolve(__dirname, '../../uploads/credit_notes');
-  ensureDir(uploadsDir);
-  const fileName = `credit_note_${order.id}_${Date.now()}.pdf`;
-  const filePath = path.join(uploadsDir, fileName);
+  try {
+    const uploadsDir = path.resolve(__dirname, '../../uploads/credit_notes');
+    ensureDir(uploadsDir);
+    const fileName = `credit_note_${order.id}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
 
-  const templatePath = path.resolve(__dirname, '../../templates/creditNote.ejs');
-  await generatePaginatedPdf(templatePath, templateData, filePath, 10);
-  return { filePath };
+    const templatePath = path.resolve(__dirname, '../../templates/creditNote.ejs');
+    
+    // Try multiple approaches to generate PDF
+    try {
+      console.log('🔧 Attempt 1: Direct PDF generation (html-pdf-node/wkhtmltopdf)...');
+      await generatePdfDirect(templatePath, templateData, filePath);
+      return { filePath };
+    } catch (directError: any) {
+      console.error('❌ Direct PDF generation failed:', directError);
+      
+      // Try alternative PDF generation method
+      try {
+        console.log('🔧 Attempt 2: Alternative PDF generation...');
+        await generatePdfAlternative(templatePath, templateData, filePath);
+        return { filePath };
+      } catch (altError: any) {
+        console.error('❌ Alternative PDF generation failed:', altError);
+        
+        // Try third method: Paginated PDF generation
+        try {
+          console.log('🔧 Attempt 3: Paginated PDF generation...');
+          await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+          return { filePath };
+        } catch (paginatedError: any) {
+          console.error('❌ Paginated PDF generation failed:', paginatedError);
+          
+          // Only as last resort, create HTML fallback
+          console.log('🔄 All PDF methods failed, creating HTML fallback as last resort...');
+          return await createCreditNoteHtmlFallback(order, templateData);
+        }
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ Error in generateCreditNotePdf:', error);
+    throw error;
+  }
 }
 
 export async function generateAngebotPdf(angebot: any, order: any, items: any[]): Promise<PdfGenerationResult> {
@@ -575,6 +609,45 @@ async function createInvoiceHtmlFallback(order: Order, templateData: any): Promi
     return { filePath };
   } catch (error: any) {
     console.error('❌ Error creating invoice HTML fallback:', error);
+    throw error;
+  }
+}
+
+async function createCreditNoteHtmlFallback(order: Order, templateData: any): Promise<PdfGenerationResult> {
+  try {
+    console.log('🔄 Creating pixel-perfect HTML fallback for credit note, order:', order.id);
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/credit_notes');
+    ensureDir(uploadsDir);
+    const fileName = `credit_note_${order.id}_${Date.now()}.html`;
+    const filePath = path.join(uploadsDir, fileName);
+    
+    console.log('🔧 HTML fallback file path:', filePath);
+
+    const templatePath = path.resolve(__dirname, '../../templates/creditNote.ejs');
+
+    // Generate HTML instead of PDF with enhanced styling for PDF conversion
+    const html = await ejs.renderFile(templatePath, templateData) as string;
+    
+    // Enhance HTML with PDF-ready styling and frontend PDF conversion script
+    const enhancedHtml = enhanceHtmlForPdfConversion(html, 'credit_note', order.id.toString());
+    
+    fs.writeFileSync(filePath, enhancedHtml);
+    
+    // Verify HTML file was created properly
+    const stats = fs.statSync(filePath);
+    const htmlContent = fs.readFileSync(filePath, 'utf8');
+    const isHtml = htmlContent.trim().startsWith('<!DOCTYPE html>') || htmlContent.trim().startsWith('<html');
+    
+    console.log('✅ Pixel-perfect credit note HTML fallback created:', {
+      path: filePath,
+      size: stats.size,
+      isHtml: isHtml,
+      startsWith: htmlContent.trim().substring(0, 50)
+    });
+    return { filePath };
+  } catch (error: any) {
+    console.error('❌ Error creating credit note HTML fallback:', error);
     throw error;
   }
 }
