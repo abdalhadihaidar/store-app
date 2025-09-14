@@ -82,7 +82,16 @@ export function getPuppeteerConfig() {
     }
     
     if (!executablePath) {
-      console.log('⚠️ Chrome not found in standard paths, using default');
+      console.log('⚠️ Chrome not found in standard paths, trying Puppeteer bundled Chromium...');
+      try {
+        // Try to use Puppeteer's bundled Chromium
+        const puppeteer = require('puppeteer');
+        executablePath = puppeteer.executablePath();
+        console.log('✅ Using Puppeteer bundled Chromium:', executablePath);
+      } catch (error) {
+        console.log('❌ Puppeteer bundled Chromium not available:', error);
+        console.log('⚠️ Will use default Puppeteer configuration');
+      }
     }
     
     const config: any = {

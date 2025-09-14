@@ -344,11 +344,11 @@ export async function generateInvoicePdf(order: Order, templateData: any): Promi
     
     // Try multiple approaches to generate PDF
     try {
-      console.log('🔧 Attempt 1: Primary PDF generation...');
-      await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+      console.log('🔧 Attempt 1: Direct PDF generation (html-pdf-node/wkhtmltopdf)...');
+      await generatePdfDirect(templatePath, templateData, filePath);
       return { filePath };
-    } catch (puppeteerError: any) {
-      console.error('❌ Primary PDF generation failed:', puppeteerError);
+    } catch (directError: any) {
+      console.error('❌ Direct PDF generation failed:', directError);
       
       // Try alternative PDF generation method
       try {
@@ -453,8 +453,8 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
 
     // Try multiple approaches to generate PDF
     try {
-      console.log('🔧 Attempt 1: Primary PDF generation...');
-      await generatePaginatedPdf(templatePath, templateData, filePath, 10);
+      console.log('🔧 Attempt 1: Direct PDF generation (html-pdf-node/wkhtmltopdf)...');
+      await generatePdfDirect(templatePath, templateData, filePath);
       
       // Verify file was created
       if (!fs.existsSync(filePath)) {
@@ -483,8 +483,8 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       }
       
       return { filePath };
-    } catch (puppeteerError: any) {
-      console.error('❌ Primary PDF generation failed:', puppeteerError);
+    } catch (directError: any) {
+      console.error('❌ Direct PDF generation failed:', directError);
       
       // Try alternative PDF generation method
       try {
