@@ -38,7 +38,7 @@ router.get('/:id', CategoryController.getById);
  * @swagger
  * /categories:
  *   post:
- *     summary: Create a new category (Admin Only)
+ *     summary: Create a new category with image path (Admin Only)
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -51,17 +51,20 @@ router.get('/:id', CategoryController.getById);
  *             properties:
  *               name:
  *                 type: string
+ *               image:
+ *                 type: string
+ *                 description: Image path from frontend upload
  *     responses:
  *       201:
  *         description: Category created successfully
  */
-router.post('/', authMiddleware(['admin']), CategoryController.createCategory);
+router.post('/', authMiddleware(['admin']), CategoryController.createCategoryWithImagePath);
 
 /**
  * @swagger
  * /categories/{id}:
  *   put:
- *     summary: Update a category (Admin Only)
+ *     summary: Update a category with image path (Admin Only)
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -80,11 +83,14 @@ router.post('/', authMiddleware(['admin']), CategoryController.createCategory);
  *             properties:
  *               name:
  *                 type: string
+ *               image:
+ *                 type: string
+ *                 description: Image path from frontend upload
  *     responses:
  *       200:
  *         description: Category updated successfully
  */
-router.put('/:id', authMiddleware(['admin']), CategoryController.updateCategory);
+router.put('/:id', authMiddleware(['admin']), CategoryController.updateCategoryWithImagePath);
 
 /**
  * @swagger

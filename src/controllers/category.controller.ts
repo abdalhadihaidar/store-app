@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { CategoryService } from '../services/category.service';
 import { categoryImageUpload } from '../services/fileUpload.service';
 import multer from 'multer';
-const DEFAULT_CATEGORY_IMAGE = '/uploads/default-category.jpg';
+const DEFAULT_CATEGORY_IMAGE = '/images/default-category.jpg';
 // Proper type extension for Multer requests
 interface MulterCategoryRequest extends Request {
   file?: Express.Multer.File;
@@ -29,6 +29,33 @@ export class CategoryController {
       res.status(404).json({  message: error instanceof Error ? error.message : 'An unknown error occurred' });
     }
   }
+  /**
+   * Create category with image path (new method)
+   */
+  static async createCategoryWithImagePath(req: Request, res: Response) {
+    try {
+      const { name, image } = req.body;
+
+      if (!name) {
+        return res.status(400).json({ message: 'Category name is required' });
+      }
+
+      const category = await CategoryService.createCategory({ 
+        name,
+        image: image || DEFAULT_CATEGORY_IMAGE
+      });
+      
+      return res.status(201).json(category);
+    } catch (error) {
+      return res.status(400).json({ 
+        message: error instanceof Error ? error.message : 'An unknown error occurred' 
+      });
+    }
+  }
+
+  /**
+   * Legacy create category method (deprecated)
+   */
   static async createCategory(req: Request, res: Response, next: NextFunction) {
     const multerReq = req as MulterCategoryRequest;
     
@@ -59,6 +86,36 @@ export class CategoryController {
     });
   }
   
+  /**
+   * Update category with image path (new method)
+   */
+  static async updateCategoryWithImagePath(req: Request, res: Response) {
+    try {
+      const { name, image } = req.body;
+      const categoryId = req.params.id;
+
+      if (!name) {
+        return res.status(400).json({ message: 'Category name is required' });
+      }
+
+      const updateData: { name: string; image?: string } = { name };
+      if (image) {
+        updateData.image = image;
+      }
+
+      const category = await CategoryService.updateCategory(categoryId, updateData);
+      
+      return res.json(category);
+    } catch (error) {
+      return res.status(400).json({ 
+        message: error instanceof Error ? error.message : 'An unknown error occurred' 
+      });
+    }
+  }
+
+  /**
+   * Legacy update category method (deprecated)
+   */
   static async updateCategory(req: Request, res: Response) {
     const multerReq = req as MulterCategoryRequest;
     

@@ -5,25 +5,39 @@ const router = express.Router();
 
 /**
  * @swagger
- * /upload:
+ * /upload/validate:
  *   post:
- *     summary: Upload images before linking them to a product/category
+ *     summary: Validate image paths sent from frontend
  *     tags: [Uploads]
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               images:
+ *               imagePaths:
  *                 type: array
  *                 items:
  *                   type: string
- *                   format: binary
+ *                 maxItems: 4
  *     responses:
- *       201:
- *         description: Images uploaded successfully
+ *       200:
+ *         description: Image paths validated successfully
+ *       400:
+ *         description: Invalid image paths
+ */
+router.post('/validate', ImageUploadController.validateImagePaths);
+
+/**
+ * @swagger
+ * /upload:
+ *   post:
+ *     summary: Legacy upload endpoint (deprecated)
+ *     tags: [Uploads]
+ *     responses:
+ *       410:
+ *         description: Endpoint deprecated - use frontend upload service
  */
 router.post('/', ImageUploadController.uploadImages);
 
