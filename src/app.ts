@@ -13,9 +13,12 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: '*',  // Allow all origins (not recommended for production)
-  methods: ['GET', 'POST', 'PUT', 'DELETE','patch'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: true, // Allow all origins (including mobile apps)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
 app.use(express.urlencoded({ extended: true })); // ✅ Supports form submissions
 app.use(express.json()); // ✅ Correctly parse JSON data

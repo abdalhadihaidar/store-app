@@ -37,7 +37,7 @@ const sequelize = new Sequelize({
     keepAliveInitialDelay: 0,
     enableKeepAlive: true,
     // Query timeout to prevent long-running queries
-    timeout: 30000
+    queryTimeout: 30000
   },
   retry: {
     match: [
