@@ -116,12 +116,33 @@ static async createProductWithQuantity(req: Request, res: Response, next: NextFu
         // Remove 'quantity' from body to prevent manual override
         const restBody = multerReq.body; // Keep all fields including 'quantity'
 
+        // Handle images from frontend (new format) or existing images (legacy format)
+        let images = [];
+        
+        if (restBody.images) {
+          // New format: images sent directly from frontend
+          try {
+            images = JSON.parse(restBody.images);
+          } catch (e) {
+            // If parsing fails, treat as single image string
+            images = [restBody.images];
+          }
+        } else if (restBody.existingImages) {
+          // Legacy format: existing images
+          images = JSON.parse(restBody.existingImages || '[]');
+        }
+        
+        // Add any new uploaded files
+        if (multerReq.files && multerReq.files.length > 0) {
+          images = [
+            ...images,
+            ...(multerReq.files.map(file => `/uploads/${file.filename}`))
+          ];
+        }
+
         const productData = {
           ...restBody,
-          images: [
-            ...(JSON.parse(restBody.existingImages || '[]')),
-            ...(multerReq.files?.map(file => `/uploads/${file.filename}`) || [])
-          ]
+          images
         };
 
         const product = await ProductService.updateProduct(
