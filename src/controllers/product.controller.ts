@@ -117,7 +117,7 @@ static async createProductWithQuantity(req: Request, res: Response, next: NextFu
         const restBody = multerReq.body; // Keep all fields including 'quantity'
 
         // Handle images from frontend (new format) or existing images (legacy format)
-        let images = [];
+        let images: string[] = [];
         
         if (restBody.images) {
           // New format: images sent directly from frontend
