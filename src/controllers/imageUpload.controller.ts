@@ -6,20 +6,22 @@ export class ImageUploadController {
    * Validates image paths sent from frontend
    * This endpoint now only validates paths, doesn't handle file uploads
    */
-  static async validateImagePaths(req: Request, res: Response) {
+  static async validateImagePaths(req: Request, res: Response): Promise<void> {
     try {
       const { imagePaths } = req.body;
 
       if (!imagePaths || !Array.isArray(imagePaths)) {
-        return res.status(400).json({
+        res.status(400).json({
           message: 'Image paths array is required'
         });
+        return;
       }
 
       if (imagePaths.length > 4) {
-        return res.status(400).json({
+        res.status(400).json({
           message: 'Maximum 4 images allowed'
         });
+        return;
       }
 
       // Validate that all paths are valid URLs or relative paths
@@ -29,19 +31,20 @@ export class ImageUploadController {
       });
 
       if (validPaths.length !== imagePaths.length) {
-        return res.status(400).json({
+        res.status(400).json({
           message: 'Invalid image path format'
         });
+        return;
       }
 
-      return res.json({ 
+      res.json({ 
         success: true,
         message: 'Image paths validated successfully',
         imagePaths: validPaths
       });
 
     } catch (error) {
-      return res.status(500).json({ 
+      res.status(500).json({ 
         message: 'Image path validation failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -52,8 +55,8 @@ export class ImageUploadController {
    * Legacy endpoint for backward compatibility
    * Now returns a message directing to use frontend upload
    */
-  static async uploadImages(req: Request, res: Response) {
-    return res.status(410).json({
+  static async uploadImages(req: Request, res: Response): Promise<void> {
+    res.status(410).json({
       message: 'File upload endpoint deprecated. Please use frontend upload service.',
       instructions: 'Upload files directly from frontend to your hosting service, then send image paths to this API.'
     });

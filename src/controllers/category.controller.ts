@@ -32,12 +32,13 @@ export class CategoryController {
   /**
    * Create category with image path (new method)
    */
-  static async createCategoryWithImagePath(req: Request, res: Response) {
+  static async createCategoryWithImagePath(req: Request, res: Response): Promise<void> {
     try {
       const { name, image } = req.body;
 
       if (!name) {
-        return res.status(400).json({ message: 'Category name is required' });
+        res.status(400).json({ message: 'Category name is required' });
+        return;
       }
 
       const category = await CategoryService.createCategory({ 
@@ -45,9 +46,9 @@ export class CategoryController {
         image: image || DEFAULT_CATEGORY_IMAGE
       });
       
-      return res.status(201).json(category);
+      res.status(201).json(category);
     } catch (error) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         message: error instanceof Error ? error.message : 'An unknown error occurred' 
       });
     }
@@ -89,13 +90,14 @@ export class CategoryController {
   /**
    * Update category with image path (new method)
    */
-  static async updateCategoryWithImagePath(req: Request, res: Response) {
+  static async updateCategoryWithImagePath(req: Request, res: Response): Promise<void> {
     try {
       const { name, image } = req.body;
       const categoryId = req.params.id;
 
       if (!name) {
-        return res.status(400).json({ message: 'Category name is required' });
+        res.status(400).json({ message: 'Category name is required' });
+        return;
       }
 
       const updateData: { name: string; image?: string } = { name };
@@ -105,9 +107,9 @@ export class CategoryController {
 
       const category = await CategoryService.updateCategory(categoryId, updateData);
       
-      return res.json(category);
+      res.json(category);
     } catch (error) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         message: error instanceof Error ? error.message : 'An unknown error occurred' 
       });
     }
