@@ -88,14 +88,13 @@ export class OrderController {
     }
     static async createOrder(req: Request, res: Response) {
       try {
-        if (!req.user) {
-          res.status(401).json({ message: 'Unauthorized' });
-          return;
-        }
+        // No authentication required - allow anonymous order creation
+        // Use a default creator ID of 0 for anonymous orders
+        const creatorId = req.user?.id || 0;
+        const isAdmin = req.user?.role === 'admin' || false;
         
-        const isAdmin = req.user.role === 'admin';
         const order = await OrderService.createOrder(
-          req.user.id,
+          creatorId,
           isAdmin,
           req.body
         );

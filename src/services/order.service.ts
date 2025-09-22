@@ -143,10 +143,8 @@ export class OrderService {
       let totalPrice = 0;
       let totalTax = 0;
   
-      // ✅ Check if the user is allowed to create this order
-      if (!isAdmin && creatorId !== orderData.userId) {
-        throw new Error('Unauthorized order creation');
-      }
+      // ✅ Allow anonymous order creation - no authorization check needed
+      // For anonymous orders (creatorId = 0), we trust the userId in the request
   
       // ✅ Determine which userId to store
       const resolvedUserId =

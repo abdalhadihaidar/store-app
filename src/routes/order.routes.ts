@@ -148,9 +148,10 @@ router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController
  * @swagger
  * /orders:
  *   post:
- *     summary: Create a new order (Client Only)
+ *     summary: Create a new order (No Authentication Required)
  *     description: |
- *       Users can place an order by providing product details, store ID, and optional flags for price change requests and POS orders.
+ *       Anyone can place an order by providing product details, store ID, and optional flags for price change requests and POS orders.
+ *       No authentication is required for this endpoint.
  *       
  *       **Workflow:**
  *       - **POS Orders (`isPOS: true`):**  
@@ -161,8 +162,6 @@ router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController
  *         The client then reviews the offer (with the adjusted prices and taxes) and approves it, which updates the order status to **approved**.  
  *         Finally, the admin finalizes the order by marking it as **completed**.
  *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -200,7 +199,7 @@ router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController
  *       201:
  *         description: Order created successfully
  */
-router.post('/', authMiddleware(['client','admin']), OrderController.createOrder);
+router.post('/', OrderController.createOrder);
 
 /**
  * @swagger
