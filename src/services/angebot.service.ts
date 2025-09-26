@@ -112,23 +112,23 @@ export class AngebotService {
       let totalVat = 0;
 
       for (const orderItem of order.items || []) {
-        const unitPrice = orderItem.adjustedPrice || orderItem.originalPrice;
-        const taxAmount = unitPrice * orderItem.quantity * (orderItem.taxRate / 100);
-        const itemTotal = (unitPrice * orderItem.quantity) + taxAmount;
+        const unitPrice = orderItem.adjustedPrice || orderItem.originalPrice; // Price per packet
+        const taxAmount = unitPrice * orderItem.packages * (orderItem.taxRate / 100); // Tax on packet-based price
+        const itemTotal = (unitPrice * orderItem.packages) + taxAmount; // Packet-based total
 
         await AngebotItemModel.create({
           angebotId: angebot.id,
           productId: orderItem.productId,
-          quantity: orderItem.quantity,
-          packages: orderItem.packages,
-          unitPrice,
+          quantity: orderItem.quantity, // Total pieces (calculated)
+          packages: orderItem.packages, // Number of packets (can be fractional)
+          unitPrice, // Price per packet
           taxRate: orderItem.taxRate,
           taxAmount,
           totalPrice: itemTotal,
           unitPerPackageSnapshot: orderItem.unitPerPackageSnapshot || 1
         }, { transaction });
 
-        totalNet += unitPrice * orderItem.quantity;
+        totalNet += unitPrice * orderItem.packages; // Packet-based net calculation
         totalVat += taxAmount;
       }
 
@@ -415,20 +415,24 @@ export class AngebotService {
 
         await angebotItem.update(updates, { transaction });
 
-        // Recalculate totals
-        const quantity = updates.quantity || angebotItem.quantity;
-        const unitPrice = updates.unitPrice || angebotItem.unitPrice;
+        // Recalculate totals (packet-based)
+        const packages = updates.packages !== undefined ? updates.packages : angebotItem.packages;
+        const unitPrice = updates.unitPrice || angebotItem.unitPrice; // Price per packet
         const taxRate = updates.taxRate || angebotItem.taxRate;
         
-        const taxAmount = unitPrice * quantity * taxRate;
-        const itemTotal = (unitPrice * quantity) + taxAmount;
+        // Calculate quantity from packages
+        const quantity = packages * (angebotItem.unitPerPackageSnapshot || 1);
+        
+        const taxAmount = unitPrice * packages * (taxRate / 100); // Tax on packet-based price
+        const itemTotal = (unitPrice * packages) + taxAmount; // Packet-based total
 
         await angebotItem.update({
+          quantity, // Update calculated quantity
           taxAmount,
           totalPrice: itemTotal
         }, { transaction });
 
-        totalNet += unitPrice * quantity;
+        totalNet += unitPrice * packages; // Packet-based net calculation
         totalVat += taxAmount;
       }
 

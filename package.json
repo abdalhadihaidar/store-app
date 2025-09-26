@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "db:migrate": "npx sequelize-cli db:migrate --config config/config.js",
-    "db:migrate:undo": "npx sequelize-cli db:migrate:undo --config config/config.js",
-    "db:seed": "npx sequelize-cli db:seed:all --config config/config.js",
+    "db:migrate": "npx sequelize-cli db:migrate --config src/config/config.js",
+    "db:migrate:undo": "npx sequelize-cli db:migrate:undo --config src/config/config.js",
+    "db:seed": "npx sequelize-cli db:seed:all --config src/config/config.js",
     "builddev": "tsc",
     "startdev": "node dist/server.js",
     "build": "tsc",

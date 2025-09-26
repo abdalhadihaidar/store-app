@@ -129,9 +129,7 @@ export class OrderService {
       storeId: number;
       items: Array<{
         productId: number;
-        quantity: number;
-        packages?: number; // ✅ Number of packages (Menge)
-        isPackage?: boolean;
+        packages: number; // ✅ Number of packages (Menge) - required for packet-based system
         taxRate?: number;  // ✅ Ensure taxRate is part of item
       }>;
       isPriceChangeRequested?: boolean;
@@ -175,46 +173,46 @@ export class OrderService {
   
         // ✅ Ensure tax rate is provided (from request OR product)
         const taxRate = item.taxRate ?? product.taxRate;
-        let quantity = item.quantity;
+        let packages = item.packages || 0;
+        let quantity = 0;
         let price = 0;
        
-        // ✅ Compute price & tax
-        // ✅ The mobile app already sends the correct total quantity (packages × VPE)
-        // ✅ So we use the quantity as-is for both package and unit orders
-        if (item.quantity <= 0) {
-          throw new Error('Quantity must be positive');
+        // ✅ Compute price & tax (packet-based)
+        // ✅ Product.price is now price per packet
+        if (packages <= 0) {
+          throw new Error('Package quantity must be positive');
         }
-        quantity = item.quantity; // Use quantity as sent by mobile app
-        price = product.price * quantity; // price per piece * total pieces
+        
+        // Calculate total pieces from packages
+        quantity = packages * product.numberperpackage;
+        
+        // Calculate price: price per packet × number of packets
+        price = product.price * packages;
         price = round2(price);
         const tax = round2(price * (taxRate / 100));
   
         totalPrice += price;
         totalTax += tax;
   
-        // ✅ Handle stock reduction for POS orders
+        // ✅ Handle stock reduction for POS orders (packet-based)
         if (orderData.isPOS) {
-          if (product.quantity < quantity) {
-            throw new Error(`Insufficient stock for product ${product.id}`);
+          if (product.package < packages) {
+            throw new Error(`Insufficient stock for product ${product.id}. Available: ${product.package} packets, Requested: ${packages} packets`);
           }
-          product.quantity -= quantity;
-          if (product.numberperpackage > 0) {
-            product.package = Math.floor(product.quantity / product.numberperpackage);
-          }
+          product.package -= packages;
+          // Update total quantity based on remaining packages
+          product.quantity = product.package * product.numberperpackage;
           await product.save({ transaction });
         }
   
-        // ✅ Handle packages correctly - use the packages field from mobile app
-        const packages = item.isPackage ? (item.packages || 0) : 0;
-  
-        // ✅ Create OrderItem entry
+        // ✅ Create OrderItem entry (packet-based)
         await OrderItem.create(
           {
             orderId: order.id,
             productId: product.id,
-            quantity: quantity,
-            packages,
-            originalPrice: product.price,
+            quantity: quantity, // Total pieces (calculated)
+            packages: packages, // Number of packets (can be fractional)
+            originalPrice: product.price, // Price per packet
             adjustedPrice: orderData.isPOS ? product.price : null,
             taxRate,
             taxAmount: tax,
@@ -471,9 +469,7 @@ export class OrderService {
 
   static async addItemToOrder(orderId: number, itemData: {
     productId: number;
-    quantity: number;
-    packages?: number; // ✅ Number of packages (Menge)
-    isPackage?: boolean;
+    packages: number; // ✅ Number of packages (Menge) - required for packet-based system
     taxRate?: number;
   }) {
     const transaction = await Order.sequelize?.transaction();
@@ -485,29 +481,31 @@ export class OrderService {
       if (!product) throw new Error(`Product ${itemData.productId} not found`);
 
       const taxRate = itemData.taxRate ?? product.taxRate;
-      let quantity = itemData.quantity;
+      const packages = itemData.packages;
+      let quantity = 0;
       let price = 0;
 
-      // ✅ The mobile app already sends the correct total quantity (packages × VPE)
-      // ✅ So we use the quantity as-is for both package and unit orders
-      if (itemData.quantity <= 0) {
-        throw new Error('Quantity must be positive');
+      // ✅ Packet-based calculation
+      if (packages <= 0) {
+        throw new Error('Package quantity must be positive');
       }
-      quantity = itemData.quantity; // Use quantity as sent by mobile app
-      price = product.price * quantity; // price per piece * total pieces
+      
+      // Calculate total pieces from packages
+      quantity = packages * product.numberperpackage;
+      
+      // Calculate price: price per packet × number of packets
+      price = product.price * packages;
 
       price = round2(price);
       const tax = round2(price * (taxRate / 100));
-      // ✅ Handle packages correctly - use the packages field from mobile app
-      const packages = itemData.isPackage ? (itemData.packages || 0) : 0;
 
-      // Create new OrderItem
+      // Create new OrderItem (packet-based)
       const orderItem = await OrderItem.create({
         orderId: order.id,
         productId: product.id,
-        quantity: quantity,
-        packages,
-        originalPrice: product.price,
+        quantity: quantity, // Total pieces (calculated)
+        packages: packages, // Number of packets (can be fractional)
+        originalPrice: product.price, // Price per packet
         adjustedPrice: null,
         taxRate,
         taxAmount: tax,

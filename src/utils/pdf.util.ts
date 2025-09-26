@@ -448,7 +448,8 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
     
     console.log('🔧 Processing items:', items.length);
     items.forEach((item, index) => {
-      const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+      // Packet-based calculation
+      const itemTotal = (item.adjustedPrice || item.originalPrice) * item.packages;
       totalNet += itemTotal;
       
       const taxRate = item.taxRate || 19;
@@ -462,6 +463,7 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       
       console.log(`🔧 Item ${index + 1}:`, {
         name: item.productName || item.orderProduct?.name,
+        packages: item.packages,
         quantity: item.quantity,
         price: item.adjustedPrice || item.originalPrice,
         total: itemTotal,

@@ -163,12 +163,12 @@ export class InvoiceService {
         const baseItem = {
           id: i.productId,
           name: (i as any).product?.name || i.productId,
-          packages: i.packages,
+          packages: i.packages, // Number of packets (can be fractional)
           numberPerPackage: (i as any).product?.numberperpackage || 0,
-          quantity: i.quantity,
-          price: i.adjustedPrice ?? i.originalPrice, // use store-adjusted price if available
+          quantity: i.quantity, // Total pieces (calculated)
+          price: i.adjustedPrice ?? i.originalPrice, // Price per packet
           adjustedPrice: i.adjustedPrice,
-          total: (i.adjustedPrice ?? i.originalPrice) * i.quantity,
+          total: (i.adjustedPrice ?? i.originalPrice) * i.packages, // Packet-based total
           tax7: Math.abs(ratePercent - 7) < 0.01 ? i.taxAmount : 0,
           tax19: Math.abs(ratePercent - 19) < 0.01 ? i.taxAmount : 0,
         };

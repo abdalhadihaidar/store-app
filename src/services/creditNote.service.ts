@@ -139,10 +139,13 @@ export class CreditNoteService {
     
     (order.returns || []).forEach(ret => {
       const relatedItem = (order.items || []).find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
-      const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0;
+      const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // Price per packet
       const taxRate = relatedItem?.taxRate || 0;
-      const itemTotal = price * ret.quantity;
-      const itemTaxAmount = relatedItem?.taxAmount || 0;
+      
+      // Calculate return quantity in packets
+      const returnPackages = ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1);
+      const itemTotal = price * returnPackages; // Packet-based calculation
+      const itemTaxAmount = itemTotal * (taxRate / 100);
       
       totalNet += itemTotal;
       if (taxRate === 7) {
@@ -168,20 +171,23 @@ export class CreditNoteService {
       returns: (order.returns || []).map(ret => {
         const relatedItem = (order.items || []).find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
         const name = (relatedItem as any)?.product?.name || relatedItem?.productId || ret.orderItemId;
-        const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0;
+        const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // Price per packet
         const taxRate = relatedItem?.taxRate || 0;
-        const itemTaxAmount = relatedItem?.taxAmount || 0;
+        
+        // Calculate return quantity in packets
+        const returnPackages = ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1);
+        const itemTaxAmount = price * returnPackages * (taxRate / 100);
         const tax7 = taxRate === 7 ? itemTaxAmount : 0;
         const tax19 = taxRate === 19 ? itemTaxAmount : 0;
-        const total = price * ret.quantity;
+        const total = price * returnPackages; // Packet-based total
         
         return {
           id: relatedItem?.productId || ret.orderItemId,
           name,
-          packages: relatedItem?.packages || 0,
+          packages: returnPackages, // Return quantity in packets
           numberPerPackage: relatedItem?.unitPerPackageSnapshot || 0,
-          quantity: ret.quantity,
-          price: price,
+          quantity: ret.quantity, // Total pieces returned
+          price: price, // Price per packet
           total: total,
           tax7: tax7,
           tax19: tax19,
