@@ -352,37 +352,37 @@
           <% }); %>
         </tbody>
       </table>
+
+      <!-- Financial Summary - Inside main content -->
+      <div class="row align-items-center mt-4" style="margin-bottom: 30px;">
+        <div class="col-6 mt-2 mb-3">
+          <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+        </div>
+        <div class="col-4 mt-2 mb-3">
+          <p>Netto-Gesamtbestellsumme:</p>
+          <p>zuzüglich 7% Mehrwertsteuer:</p>
+          <p>zuzüglich 19% Mehrwertsteuer:</p>
+        </div>
+        <div class="col-2">
+          <p><%= angebot.totalNet.toFixed(2) %>€</p>
+          <p><%= angebot.tax7Amount.toFixed(2) %>€</p>
+          <p><%= angebot.tax19Amount.toFixed(2) %>€</p>
+        </div>
+      </div>
+      
+      <div class="row align-items-center">
+        <div class="col-6"></div>
+        <div class="col-4 total-section mt-2">
+          <h3 class="mt-2 pt-2 total-amount">Angebotsbetrag:</h3>
+        </div>
+        <div class="col-2 total-section mt-2">
+          <h3 class="mt-2 pt-2 total-amount"><%= angebot.totalGross.toFixed(2) %>€</h3>
+        </div>
+      </div>
     </div>
   </div>
 
   <footer>
-    <!-- Financial Summary - Every Page -->
-    <div class="row align-items-center">
-      <div class="col-6 mt-2 mb-3">
-        <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
-      </div>
-      <div class="col-4 mt-2 mb-3">
-        <p>Netto-Gesamtbestellsumme:</p>
-        <p>zuzüglich 7% Mehrwertsteuer:</p>
-        <p>zuzüglich 19% Mehrwertsteuer:</p>
-      </div>
-      <div class="col-2">
-        <p><%= angebot.totalNet.toFixed(2) %>€</p>
-        <p><%= angebot.tax7Amount.toFixed(2) %>€</p>
-        <p><%= angebot.tax19Amount.toFixed(2) %>€</p>
-      </div>
-    </div>
-    
-    <div class="row align-items-center">
-      <div class="col-6"></div>
-      <div class="col-4 total-section mt-2">
-        <h3 class="mt-2 pt-2 total-amount">Angebotsbetrag:</h3>
-      </div>
-      <div class="col-2 total-section mt-2">
-        <h3 class="mt-2 pt-2 total-amount"><%= angebot.totalGross.toFixed(2) %>€</h3>
-      </div>
-    </div>
-    
     <!-- Signatures - Every Page -->
     <div class="row flex justify-content-around mt-2">
       <div class="col-4 signature-line">
