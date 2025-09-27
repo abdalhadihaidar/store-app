@@ -301,23 +301,13 @@
           <tr class="firsttr">
             <th style="width: 8%;">Artikel-Nr</th>
             <th style="width: 25%;">Artikel</th>
-            <th style="width: 12%;">Anzahl pro Paket</th>
+            <th style="width: 8%;">Anzahl pro Paket</th>
             <th style="width: 8%;">Menge</th>
-            <th style="width: 12%;">Netto-Einzelpreis</th>
-            <th style="width: 12%;">Brutto-Gesamtpreis</th>
-            <th style="width: 15%;" colspan="3">enthaltene MwSt</th>
-          </tr>
-          <tr style="line-height: 0.5; font-size: 10px; padding: 0;" class="sectr">
-            <th style="width: 8%;"></th>
-            <th style="width: 25%;"></th>
-            <th style="width: 8%;"></th>
-            <th style="width: 12%;"></th>
-            <th style="width: 8%;"></th>
-            <th style="width: 12%;"></th>
-            <th style="width: 12%;"></th>
-            <th style="width: 5%;">7%</th>
-            <th style="width: 5%;">19%</th>
-            <th style="width: 5%;">pro Artikel</th>
+            <th style="width: 10%;">Netto-Einzelpreis</th>
+            <th style="width: 10%;">Brutto-Gesamtpreis</th>
+            <th style="width: 8%;">7%</th>
+            <th style="width: 8%;">19%</th>
+            <th style="width: 15%;">enthaltene MwSt</th>
           </tr>
         </thead>
         <tbody>
@@ -335,19 +325,9 @@
                 const tax7 = taxRate === 7 ? (itemTotal * 0.07) : 0;
                 const tax19 = taxRate === 19 ? (itemTotal * 0.19) : 0;
               %>
-              <% if (tax7 > 0) { %>
-                <td><%= tax7.toFixed(2) %>€</td>
-                <td>0€</td>
-                <td><%= tax7.toFixed(2) %>€</td>
-              <% } else if (tax19 > 0) { %>
-                <td>0€</td>
-                <td><%= tax19.toFixed(2) %>€</td>
-                <td><%= tax19.toFixed(2) %>€</td>
-              <% } else { %>
-                <td>0€</td>
-                <td>0€</td>
-                <td>0€</td>
-              <% } %>
+              <td><%= tax7.toFixed(2) %>€</td>
+              <td><%= tax19.toFixed(2) %>€</td>
+              <td><%= (tax7 + tax19).toFixed(2) %>€</td>
             </tr>
           <% }); %>
         </tbody>
