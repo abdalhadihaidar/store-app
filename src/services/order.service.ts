@@ -177,8 +177,8 @@ export class OrderService {
         let quantity = 0;
         let price = 0;
        
-        // ✅ Compute price & tax (packet-based)
-        // ✅ Product.price is now price per packet
+        // ✅ Compute price & tax (piece-based)
+        // ✅ Product.price is now E-Preis (price per piece)
         if (packages <= 0) {
           throw new Error('Package quantity must be positive');
         }
@@ -186,8 +186,8 @@ export class OrderService {
         // Calculate total pieces from packages
         quantity = packages * product.numberperpackage;
         
-        // Calculate price: price per packet × number of packets
-        price = product.price * packages;
+        // Calculate price: E-Preis × total pieces
+        price = product.price * quantity;
         price = round2(price);
         const tax = round2(price * (taxRate / 100));
   
@@ -212,7 +212,7 @@ export class OrderService {
             productId: product.id,
             quantity: quantity, // Total pieces (calculated)
             packages: packages, // Number of packets (can be fractional)
-            originalPrice: product.price, // Price per packet
+            originalPrice: product.price, // E-Preis (price per piece)
             adjustedPrice: orderData.isPOS ? product.price : null,
             taxRate,
             taxAmount: tax,
@@ -493,8 +493,8 @@ export class OrderService {
       // Calculate total pieces from packages
       quantity = packages * product.numberperpackage;
       
-      // Calculate price: price per packet × number of packets
-      price = product.price * packages;
+      // Calculate price: E-Preis × total pieces
+      price = product.price * quantity;
 
       price = round2(price);
       const tax = round2(price * (taxRate / 100));
@@ -505,7 +505,7 @@ export class OrderService {
         productId: product.id,
         quantity: quantity, // Total pieces (calculated)
         packages: packages, // Number of packets (can be fractional)
-        originalPrice: product.price, // Price per packet
+        originalPrice: product.price, // E-Preis (price per piece)
         adjustedPrice: null,
         taxRate,
         taxAmount: tax,

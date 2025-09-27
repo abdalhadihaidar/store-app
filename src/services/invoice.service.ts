@@ -166,9 +166,9 @@ export class InvoiceService {
           packages: i.packages, // Number of packets (can be fractional)
           numberPerPackage: (i as any).product?.numberperpackage || 0,
           quantity: i.quantity, // Total pieces (calculated)
-          price: i.adjustedPrice ?? i.originalPrice, // Price per packet
+          price: i.adjustedPrice ?? i.originalPrice, // E-Preis (price per piece)
           adjustedPrice: i.adjustedPrice,
-          total: (i.adjustedPrice ?? i.originalPrice) * i.packages, // Packet-based total
+          total: (i.adjustedPrice ?? i.originalPrice) * i.quantity, // Piece-based total
           tax7: Math.abs(ratePercent - 7) < 0.01 ? i.taxAmount : 0,
           tax19: Math.abs(ratePercent - 19) < 0.01 ? i.taxAmount : 0,
         };

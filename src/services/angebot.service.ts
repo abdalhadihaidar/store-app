@@ -112,9 +112,9 @@ export class AngebotService {
       let totalVat = 0;
 
       for (const orderItem of order.items || []) {
-        const unitPrice = orderItem.adjustedPrice || orderItem.originalPrice; // Price per packet
-        const taxAmount = unitPrice * orderItem.packages * (orderItem.taxRate / 100); // Tax on packet-based price
-        const itemTotal = (unitPrice * orderItem.packages) + taxAmount; // Packet-based total
+        const unitPrice = orderItem.adjustedPrice || orderItem.originalPrice; // E-Preis (price per piece)
+        const taxAmount = unitPrice * orderItem.quantity * (orderItem.taxRate / 100); // Tax on piece-based price
+        const itemTotal = (unitPrice * orderItem.quantity) + taxAmount; // Piece-based total
 
         await AngebotItemModel.create({
           angebotId: angebot.id,
@@ -423,8 +423,8 @@ export class AngebotService {
         // Calculate quantity from packages
         const quantity = packages * (angebotItem.unitPerPackageSnapshot || 1);
         
-        const taxAmount = unitPrice * packages * (taxRate / 100); // Tax on packet-based price
-        const itemTotal = (unitPrice * packages) + taxAmount; // Packet-based total
+        const taxAmount = unitPrice * quantity * (taxRate / 100); // Tax on piece-based price
+        const itemTotal = (unitPrice * quantity) + taxAmount; // Piece-based total
 
         await angebotItem.update({
           quantity, // Update calculated quantity

@@ -9,7 +9,7 @@ export interface GermanBusinessFields {
   vpe: number;        // VPE = Verpackungseinheit (units per package)
   menge: number;      // Menge = number of packages (can be fractional: 0.5, 0.25, etc.)
   inhalt: number;     // Inhalt = total pieces (VPE × Menge)
-  ePreis: number;     // E-Preis = Einzelpreis (price per packet)
+  ePreis: number;     // E-Preis = Einzelpreis (price per piece)
   gPreis: number;     // G-Preis = Gesamtpreis (total price)
   einheit: 'Paket' | 'Stück'; // Einheit = unit type
 }
@@ -18,14 +18,14 @@ export interface ProductData {
   numberperpackage: number; // VPE
   package: number;          // Menge (can be fractional)
   quantity: number;         // Inhalt (calculated from package × VPE)
-  price: number;            // E-Preis (price per packet)
+  price: number;            // E-Preis (price per piece)
 }
 
 export interface OrderItemData {
   quantity: number;         // Inhalt (total pieces - calculated from packages × VPE)
   packages: number;         // Menge (number of packages, can be fractional)
-  originalPrice: number;    // E-Preis (price per packet)
-  adjustedPrice?: number;   // E-Preis (adjusted price per packet)
+  originalPrice: number;    // E-Preis (price per piece)
+  adjustedPrice?: number;   // E-Preis (adjusted price per piece)
   unitPerPackageSnapshot: number; // VPE snapshot
 }
 
@@ -37,8 +37,8 @@ export function calculateGermanBusinessFields(product: ProductData): GermanBusin
   const menge = product.package;
   // Calculate inhalt from menge and vpe to ensure consistency
   const inhalt = menge * vpe;
-  const ePreis = product.price; // Price per packet
-  const gPreis = ePreis * menge; // Total price = price per packet × number of packets
+  const ePreis = product.price; // Price per piece
+  const gPreis = ePreis * inhalt; // Total price = price per piece × total pieces
   const einheit = 'Paket'; // Always use packets as primary unit
 
   return {
@@ -58,8 +58,8 @@ export function calculateGermanBusinessFieldsFromOrderItem(item: OrderItemData):
   const vpe = item.unitPerPackageSnapshot || 1;
   const menge = item.packages;
   const inhalt = item.quantity; // This should be calculated as menge × vpe
-  const ePreis = item.adjustedPrice || item.originalPrice; // Price per packet
-  const gPreis = ePreis * menge; // Total price = price per packet × number of packets
+  const ePreis = item.adjustedPrice || item.originalPrice; // Price per piece
+  const gPreis = ePreis * inhalt; // Total price = price per piece × total pieces
   const einheit = 'Paket'; // Always use packets as primary unit
 
   return {
@@ -81,11 +81,11 @@ export function calculateInhalt(menge: number, vpe: number, einheit: 'Paket' | '
 }
 
 /**
- * Calculate G-Preis (total price) from E-Preis and Menge (packet-based)
+ * Calculate G-Preis (total price) from E-Preis and Inhalt (piece-based)
  */
-export function calculateGPreis(ePreis: number, menge: number): number {
-  // ePreis is now price per packet, so total = price per packet × number of packets
-  return roundTo2Decimals(ePreis * menge);
+export function calculateGPreis(ePreis: number, inhalt: number): number {
+  // ePreis is now price per piece, so total = price per piece × total pieces
+  return roundTo2Decimals(ePreis * inhalt);
 }
 
 /**
@@ -191,10 +191,10 @@ export function validateGermanBusinessData(data: Partial<GermanBusinessFields>):
     }
   }
 
-  if (data.ePreis !== undefined && data.menge !== undefined && data.gPreis !== undefined) {
-    const expectedGPreis = data.ePreis * data.menge; // Price per packet × number of packets
+  if (data.ePreis !== undefined && data.inhalt !== undefined && data.gPreis !== undefined) {
+    const expectedGPreis = data.ePreis * data.inhalt; // Price per piece × total pieces
     if (Math.abs(data.gPreis - expectedGPreis) > 0.01) {
-      errors.push(`G-Preis (${data.gPreis}) should equal E-Preis (${data.ePreis}) × Menge (${data.menge}) = ${expectedGPreis}`);
+      errors.push(`G-Preis (${data.gPreis}) should equal E-Preis (${data.ePreis}) × Inhalt (${data.inhalt}) = ${expectedGPreis}`);
     }
   }
 

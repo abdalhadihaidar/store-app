@@ -139,7 +139,7 @@ export class CreditNoteService {
     
     (order.returns || []).forEach(ret => {
       const relatedItem = (order.items || []).find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
-      const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // Price per packet
+      const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // E-Preis (price per piece)
       const taxRate = relatedItem?.taxRate || 0;
       
       // Calculate return quantity in packets
@@ -171,7 +171,7 @@ export class CreditNoteService {
       returns: (order.returns || []).map(ret => {
         const relatedItem = (order.items || []).find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
         const name = (relatedItem as any)?.product?.name || relatedItem?.productId || ret.orderItemId;
-        const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // Price per packet
+        const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0; // E-Preis (price per piece)
         const taxRate = relatedItem?.taxRate || 0;
         
         // Calculate return quantity in packets
@@ -187,7 +187,7 @@ export class CreditNoteService {
           packages: returnPackages, // Return quantity in packets
           numberPerPackage: relatedItem?.unitPerPackageSnapshot || 0,
           quantity: ret.quantity, // Total pieces returned
-          price: price, // Price per packet
+          price: price, // E-Preis (price per piece)
           total: total,
           tax7: tax7,
           tax19: tax19,
