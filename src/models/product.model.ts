@@ -4,7 +4,7 @@ import sequelize from '../config/database';
 interface ProductAttributes {
   id: number;
   name: string;
-  price: number; // Price per packet
+  price: number; // E-Preis (price per piece)
   categoryId: number;
   package: number; // Number of packets (can be fractional)
   numberperpackage: number; // VPE - units per package
@@ -17,7 +17,7 @@ interface ProductCreationAttributes extends Optional<ProductAttributes, 'id'> {}
 export class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
   public id!: number;
   public name!: string;
-  public price!: number; // Price per packet
+  public price!: number; // E-Preis (price per piece)
   public categoryId!: number;
   public package!: number; // Number of packets (can be fractional)
   public numberperpackage!: number; // VPE - units per package

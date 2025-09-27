@@ -121,7 +121,7 @@ export class AngebotService {
           productId: orderItem.productId,
           quantity: orderItem.quantity, // Total pieces (calculated)
           packages: orderItem.packages, // Number of packets (can be fractional)
-          unitPrice, // Price per packet
+          unitPrice, // E-Preis (price per piece)
           taxRate: orderItem.taxRate,
           taxAmount,
           totalPrice: itemTotal,
@@ -417,7 +417,7 @@ export class AngebotService {
 
         // Recalculate totals (packet-based)
         const packages = updates.packages !== undefined ? updates.packages : angebotItem.packages;
-        const unitPrice = updates.unitPrice || angebotItem.unitPrice; // Price per packet
+        const unitPrice = updates.unitPrice || angebotItem.unitPrice; // E-Preis (price per piece)
         const taxRate = updates.taxRate || angebotItem.taxRate;
         
         // Calculate quantity from packages

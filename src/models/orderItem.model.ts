@@ -7,8 +7,8 @@ export class OrderItem extends Model {
   public productId!: number;
   public quantity!: number; // Total pieces (calculated from packages × VPE)
   public packages!: number; // Number of packages (can be fractional)
-  public originalPrice!: number; // Price per packet
-  public adjustedPrice!: number | null; // Adjusted price per packet
+  public originalPrice!: number; // E-Preis (price per piece)
+  public adjustedPrice!: number | null; // E-Preis (adjusted price per piece)
   public taxRate!: number; // Tax percentage
   public taxAmount!: number; // Calculated tax
   public unitPerPackageSnapshot!: number; // VPE snapshot
@@ -23,8 +23,8 @@ OrderItem.init(
     orderId: { type: DataTypes.INTEGER, allowNull: false },
     productId: { type: DataTypes.INTEGER, allowNull: false },
     quantity: { type: DataTypes.FLOAT, allowNull: false }, // Total pieces (calculated)
-    originalPrice: { type: DataTypes.FLOAT, allowNull: false }, // Price per packet
-    adjustedPrice: { type: DataTypes.FLOAT, allowNull: true }, // Adjusted price per packet
+    originalPrice: { type: DataTypes.FLOAT, allowNull: false }, // E-Preis (price per piece)
+    adjustedPrice: { type: DataTypes.FLOAT, allowNull: true }, // E-Preis (adjusted price per piece)
     packages: {
       type: DataTypes.FLOAT, // Allow fractional packages
       allowNull: false,
