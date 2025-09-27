@@ -13,11 +13,14 @@
       color: #333;
       margin: 0;
       padding: 0;
+      min-height: 100vh;
+      position: relative;
     }
     
     .invoice { 
       padding-top: 5px; 
       margin-top: 5px; 
+      padding-bottom: 200px; /* Space for footer */
     }
     
     .container { 
@@ -191,13 +194,19 @@
     }
     
     footer { 
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       width: 100%; 
-      border-top: 2px solid black; 
+      background: white;
+      border-top: 2px solid #ae1308; 
       font-weight: bold; 
       font-size: 11px; 
-      bottom: 0; 
-      position: relative; 
-      margin-top: 0.5rem;
+      padding: 1rem 15px;
+      margin: 0;
+      z-index: 1000;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     }
     
     footer .flex { 
@@ -239,12 +248,23 @@
     
     @media print {
       body { font-size: 12px; }
-      .invoice { padding-top: 0; margin-top: 0; }
+      .invoice { 
+        padding-top: 0; 
+        margin-top: 0; 
+        padding-bottom: 250px; /* More space for print footer */
+      }
       .mt-4 { margin-top: 0.5rem; }
       .mt-5 { margin-top: 1rem; }
       .my-5 { margin-top: 1rem; margin-bottom: 1rem; }
       .signature-line { min-height: 30px; margin-top: 5px; padding-top: 5px; }
-      footer { page-break-inside: avoid; margin-top: 0.3rem; }
+      footer { 
+        position: fixed !important;
+        bottom: 0 !important;
+        page-break-inside: avoid; 
+        margin: 0 !important;
+        padding: 0.5rem 15px !important;
+        font-size: 10px !important;
+      }
       table { page-break-inside: auto; margin-bottom: 3px; margin-top: 0.5rem; }
       tr { page-break-inside: avoid; page-break-after: auto; }
       thead { display: table-header-group; }
@@ -366,7 +386,7 @@
       <div class="col-4"></div>
     </div>
     
-    <!-- Bank Information - Always show for invoices -->
+    <!-- Bank Information - Only on last page -->
     <% if (typeof isLastPage === 'undefined' || isLastPage === true) { %>
     <div class="row flex my-5 justify-content bank-info">
       <div class="col-1"></div>

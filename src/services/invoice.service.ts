@@ -75,7 +75,7 @@ export class InvoiceService {
         invoiceNumber: invoice.number,
         orderId: order.id,
         invoiceDate: invoice.date.toLocaleDateString('de-DE'),
-        kundenNr: order.userId,
+        kundenNr: invoice.kundenNr || order.userId?.toString(),
         items: items.map((i: any) => {
           const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
           const baseItem = {
@@ -189,6 +189,7 @@ export class InvoiceService {
     const invoice = await Invoice.create({
       orderId: order.id,
       number: printData?.invoiceNumber || `INV-${Date.now()}`,
+      kundenNr: printData?.kundenNr || order.userId?.toString(),
       date: new Date(),
       totalNet: order.totalPrice,
       totalVat: order.totalTax,

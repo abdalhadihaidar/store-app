@@ -5,6 +5,7 @@ interface InvoiceAttributes {
   id: number;
   orderId: number;
   number: string; // external invoice number visible to customer
+  kundenNr: string | null; // customer number entered by user
   date: Date;
   totalNet: number;
   totalVat: number;
@@ -20,6 +21,7 @@ export class Invoice extends Model<InvoiceAttributes, InvoiceCreationAttributes>
   public id!: number;
   public orderId!: number;
   public number!: string;
+  public kundenNr!: string | null;
   public date!: Date;
   public totalNet!: number;
   public totalVat!: number;
@@ -34,6 +36,7 @@ Invoice.init(
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     orderId: { type: DataTypes.INTEGER, allowNull: false },
     number: { type: DataTypes.STRING, allowNull: false },
+    kundenNr: { type: DataTypes.STRING, allowNull: true },
     date: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     totalNet: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     totalVat: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
