@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rechnung</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html, body { 
+      font-family: Arial, sans-serif; 
+      font-size: 14px; 
+      line-height: 1.4; 
+      color: #333;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 100vh;
+      position: relative;
+      width: 210mm; /* A4 width */
+      max-width: 210mm;
+      margin: 0 auto !important;
+      overflow-x: hidden;
+    }
+    
+    .invoice { 
+      padding-top: 5px; 
+      margin-top: 5px; 
+      padding-bottom: 20px; /* Normal padding since footer flows naturally */
+      min-height: auto; /* Let content determine height */
+      position: relative;
+    }
+    
+    .container { 
+      max-width: 100%; 
+      margin: 0 auto; 
+      padding: 0 15px; 
+    }
+    
+    .row { 
+      display: flex; 
+      flex-wrap: wrap; 
+      margin: 0 -15px; 
+    }
+    
+    .col-9 { 
+      flex: 0 0 75%; 
+      max-width: 75%; 
+      padding: 0 15px; 
+    }
+    
+    .col-3 { 
+      flex: 0 0 25%; 
+      max-width: 25%; 
+      padding: 0 15px; 
+    }
+    
+    .col-4 { 
+      flex: 0 0 33.333333%; 
+      max-width: 33.333333%; 
+      padding: 0 15px; 
+    }
+    
+    .col-6 { 
+      flex: 0 0 50%; 
+      max-width: 50%; 
+      padding: 0 15px; 
+    }
+    
+    .col-1 { 
+      flex: 0 0 8.333333%; 
+      max-width: 8.333333%; 
+      padding: 0 15px; 
+    }
+    
+    .col-2 { 
+      flex: 0 0 16.666667%; 
+      max-width: 16.666667%; 
+      padding: 0 15px; 
+    }
+    
+    .col-5 { 
+      flex: 0 0 41.666667%; 
+      max-width: 41.666667%; 
+      padding: 0 15px; 
+    }
+    
+    .mt-4 { margin-top: 0.8rem; }
+    .mt-5 { margin-top: 1.5rem; }
+    .mb-3 { margin-bottom: 0.5rem; }
+    .my-5 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .p-2 { padding: 0.5rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+    
+    .text-left { text-align: left; color: black; font-weight: 600; }
+    .text-right { text-align: right; color: #019b98; font-weight: 600; font-size: 15px; }
+    .text-right-left { text-align: left; color: #019b98; font-weight: 600; font-size: 15px; line-height: 1.6; }
+    .text-center { text-align: center; }
+    
+    .address { 
+      color: #019b98; 
+      font-weight: bold; 
+      font-size: 15px; 
+      white-space: pre; 
+      text-decoration: underline; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      line-height: 1.6;
+    }
+    
+    .kk .text-left span { 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      line-height: 1.0;
+    }
+    
+    .text-right img { 
+      width: 110px; 
+      height: 100px; 
+      object-fit: contain; 
+      image-rendering: crisp-edges; 
+      padding-bottom: 10px; 
+    }
+    
+    .invoice-header { 
+      position: relative; 
+      padding-top: 5px; 
+      margin-top: 5px; 
+    }
+    
+    .Rechnung { 
+      color: white; 
+      border: 5px solid #019b98; 
+      background-color: #019b98; 
+      letter-spacing: 4px; 
+      font-weight: bold; 
+      border-radius: 15px; 
+      width: 50%; 
+      padding: 0px 12px; 
+      text-align: center; 
+      z-index: 1000; 
+      position: absolute; 
+      top: -20px; 
+      left: 0;
+    }
+    
+    .rechnung-row { 
+      border: 3px solid #019b98; 
+      background-color: white; 
+      border-radius: 15px;  
+      
+    }
+    
+    .rechnung-row p { 
+      margin-bottom: 0px; 
+      line-height: 1.0;
+    }
+    
+    .rechnung-row strong { 
+      color: #019b98; 
+    }
+    
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 5px; 
+      margin-top: 1rem;
+    }
+    
+    table thead .firsttr th { 
+      background-color: #f2f2f2; 
+      border-top: 2px solid black; 
+      font-size: small; 
+      padding: 8px; 
+      text-align: center; 
+    }
+    
+    table thead .sectr th { 
+      border-bottom: 2px solid black; 
+      background-color: #f2f2f2; 
+      padding: 8px; 
+      text-align: center; 
+      line-height: 0.5; 
+      font-size: 10px; 
+    }
+    
+    table th, table td { 
+      padding: 1px 2px; 
+      text-align: center; 
+      border-bottom: 0.5px solid #ddd; 
+      vertical-align: middle;
+    }
+    
+    table td { 
+      font-size: smaller; 
+    }
+    
+    table tbody tr:last-child td { 
+      border-bottom: none; 
+    }
+    
+    footer { 
+      position: static !important;
+      width: 100% !important;
+      background: white;
+      border-top: 2px solid #ae1308; 
+      font-weight: bold; 
+      font-size: 11px; 
+      padding: 1rem 15px;
+      margin: 0 !important;
+      max-height: 80mm; /* Increased height for calculation summary */
+    }
+    
+    footer .flex { 
+      display: flex; 
+      justify-content: space-around; 
+    }
+    
+    /* Ensure footer flows naturally with content */
+    @media screen {
+      footer {
+        position: static !important;
+        width: 100% !important;
+      }
+    }
+    
+    footer .justify-content-around { 
+      justify-content: space-around; 
+    }
+    
+    .terms-text {
+      font-size: 11px;
+      font-weight: normal;
+      margin-bottom: 0;
+      line-height: 1.4;
+    }
+    
+    .summary-label {
+      font-size: 11px;
+      font-weight: normal;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+    
+    .summary-value {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 2px;
+      line-height: 1.3;
+      text-align: right;
+    }
+    
+    .signature-line { 
+      border-top: 2px solid black; 
+      min-height: 35px; 
+      margin-top: 8px; 
+      padding-top: 8px; 
+      font-size: 11px;
+    }
+    
+    .signature-text {
+      font-size: 11px;
+      font-weight: normal;
+      line-height: 1.3;
+    }
+    
+    .bank-info { 
+      border-top: 3px solid #ae1308; 
+      margin-top: 20px; 
+      padding-top: 12px;
+      color: #ae1308; /* Red color for bank details */
+      font-weight: bold;
+      font-size: 11px;
+    }
+    
+    .bank-info span { 
+      color: #ae1308; 
+      font-weight: bold;
+    }
+    
+    .bank-detail { 
+      color: #ae1308; 
+      font-weight: bold;
+      margin-bottom: 4px;
+      line-height: 1.4;
+      font-size: 11px;
+    }
+    
+    .total-section { 
+      border-top: 3px solid #ae1308; 
+      padding-top: 10px; 
+      margin-top: 1rem; 
+    }
+    
+    .total-amount { 
+      font-weight: bold; 
+      font-size: 13px; 
+      color: black; 
+    }
+    
+    @media print {
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      body { 
+        font-size: 12px; 
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+      }
+      .invoice { 
+        padding-top: 0; 
+        margin-top: 0; 
+        padding-bottom: 10px; /* Normal padding for print */
+        min-height: auto !important;
+      }
+      .mt-4 { margin-top: 0.5rem; }
+      .mt-5 { margin-top: 1rem; }
+      .my-5 { margin-top: 1rem; margin-bottom: 1rem; }
+      .signature-line { 
+        min-height: 30px; 
+        margin-top: 5px; 
+        padding-top: 5px; 
+        font-size: 10px;
+      }
+      .signature-text {
+        font-size: 10px !important;
+      }
+      .terms-text {
+        font-size: 10px !important;
+      }
+      .summary-label {
+        font-size: 10px !important;
+      }
+      .summary-value {
+        font-size: 10px !important;
+      }
+      footer { 
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        page-break-inside: avoid; 
+        margin: 0 !important;
+        padding: 0.5rem 15px !important;
+        font-size: 10px !important;
+        max-height: 80mm !important;
+      }
+      table { 
+        page-break-inside: auto; 
+        margin-bottom: 3px; 
+        margin-top: 0.5rem;
+        font-size: 11px;
+      }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      thead { display: table-header-group; }
+      tfoot { display: table-footer-group; }
+      .total-amount { font-size: 12px; }
+      .bank-info { 
+        font-size: 10px !important;
+        margin-top: 15px !important;
+        padding-top: 10px !important;
+      }
+      .bank-detail { 
+        margin-bottom: 3px !important;
+        line-height: 1.3 !important;
+        font-size: 10px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice">
+    <div class="container mt-4 kk">
+      <div class="row">
+        <div class="col-9 text-left">
+          <h6 class="address">Brother Investment Group Horburger str.97 04205 Leipzig-Deutschland</h6>
+          <span>Town Markt<br/></span>
+          <span>Eutritzscher Straße 11<br/></span>
+          <span>Leipzig<br/></span>
+          <span>04105<br/></span>
+        </div>
+        <div class="col-3 text-right">
+          <img src="Capture.png" alt="Logo" />
+          <div class="text-right-left">
+            <span>Horburger str.97</span><br/>
+            <span>04205 Leipzig</span><br/>
+            <span>Steuer-ID: 232/200/25047</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="invoice-header">
+        <h3 class="Rechnung">RECHNUNG :</h3>
+        <div class="rechnung-border">
+          <div class="row rechnung-row">
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Bestellung vom:</strong><br/>2025-09-02</p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Rechnungsnr:</strong><br/>BIG202507003</p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Rechnungsdatum:</strong><br/>2025-09-02</p>
+            </div>
+            <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
+              <p><strong>Kunden-Nr.</strong><br/>10600</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="mt-4" style="margin-bottom: 50px;">
+        <thead>
+          <tr class="firsttr">
+            <th style="width: 8%;">Artikel-Nr</th>
+            <th style="width: 25%;">Artikel</th>
+            <th style="width: 8%;">Anzahl pro Paket</th>
+            <th style="width: 8%;">Menge</th>
+            <th style="width: 10%;">Netto-Einzelpreis</th>
+            <th style="width: 10%;">Brutto-Gesamtpreis</th>
+            <th style="width: 8%;">7%</th>
+            <th style="width: 8%;">19%</th>
+            <th style="width: 15%;">enthaltene MwSt</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td>54</td>
+              <td>Pan Mais Mehl 1kg Weis</td>
+              <td>10</td>
+              <td>20</td>
+              <td>2.99€</td>
+              <td>59.80€</td>
+              <td>4.19€</td>
+              <td>0.00€</td>
+              <td>4.19€</td>
+            </tr>
+          
+            <tr>
+              <td>172</td>
+              <td>Dari Cous Cous Medium 1kg</td>
+              <td>12</td>
+              <td>12</td>
+              <td>2.89€</td>
+              <td>34.68€</td>
+              <td>2.43€</td>
+              <td>0.00€</td>
+              <td>2.43€</td>
+            </tr>
+          
+            <tr>
+              <td>16</td>
+              <td>Meloui Bladi 80g</td>
+              <td>24</td>
+              <td>48</td>
+              <td>1.99€</td>
+              <td>95.52€</td>
+              <td>6.69€</td>
+              <td>0.00€</td>
+              <td>6.69€</td>
+            </tr>
+          
+            <tr>
+              <td>15</td>
+              <td>Msaman Bladi 80g</td>
+              <td>24</td>
+              <td>48</td>
+              <td>1.99€</td>
+              <td>95.52€</td>
+              <td>6.69€</td>
+              <td>0.00€</td>
+              <td>6.69€</td>
+            </tr>
+          
+            <tr>
+              <td>213</td>
+              <td>Maruja Schoko Roth 150</td>
+              <td>20</td>
+              <td>20</td>
+              <td>1.29€</td>
+              <td>25.80€</td>
+              <td>1.81€</td>
+              <td>0.00€</td>
+              <td>1.81€</td>
+            </tr>
+          
+            <tr>
+              <td>20</td>
+              <td>Datteln Taibat Algerien 1kg</td>
+              <td>12</td>
+              <td>24</td>
+              <td>4.59€</td>
+              <td>110.16€</td>
+              <td>7.71€</td>
+              <td>0.00€</td>
+              <td>7.71€</td>
+            </tr>
+          
+            <tr>
+              <td>21</td>
+              <td>Datteln Taibat Algerien 1kg</td>
+              <td>12</td>
+              <td>24</td>
+              <td>3.50€</td>
+              <td>84.00€</td>
+              <td>5.88€</td>
+              <td>0.00€</td>
+              <td>5.88€</td>
+            </tr>
+          
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <footer>
+    <!-- Financial Summary - Every Page -->
+    <div class="row align-items-center mt-3">
+      <div class="col-6">
+        <p class="terms-text">Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+      </div>
+      <div class="col-4">
+        <p class="summary-label">Netto-Gesamtbestellsumme:</p>
+        <p class="summary-label">zuzüglich 7% Mehrwertsteuer:</p>
+        <p class="summary-label">zuzüglich 19% Mehrwertsteuer:</p>
+      </div>
+      <div class="col-2">
+        <p class="summary-value">505.48€</p>
+        <p class="summary-value">35.38€</p>
+        <p class="summary-value">0.00€</p>
+      </div>
+    </div>
+    
+    <div class="row align-items-center">
+      <div class="col-6"></div>
+      <div class="col-4 total-section">
+        <h3 class="total-amount">Rechnungsbetrag:</h3>
+      </div>
+      <div class="col-2 total-section">
+        <h3 class="total-amount">540.86€</h3>
+      </div>
+    </div>
+    
+    <!-- Signatures - Every Page -->
+    <div class="row mt-4">
+      <div class="col-6 signature-line">
+        <span class="signature-text">Unterschrift Kunde / Artikel erhalten:</span>
+      </div>
+      <div class="col-6 signature-line">
+        <span class="signature-text">Unterschrift Verkäufer / Artikel geliefert:</span>
+      </div>
+    </div>
+    
+    <!-- Bank Information - Only on last page (or single page) -->
+    
+    
+    <div class="row bank-info mt-4">
+      <div class="col-6">
+        <p class="bank-detail"><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
+        <p class="bank-detail"><strong>BIC:</strong> WELADE8LXXX</p>
+        <p class="bank-detail"><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
+        <p class="bank-detail"><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig</p>
+        <p class="bank-detail"><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
+      </div>
+      <div class="col-6">
+        <!-- Empty column for proper alignment -->
+      </div>
+    </div>
+    
+  </footer>
+</body>
+</html>

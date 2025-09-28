@@ -3,7 +3,6 @@ import Order from '../models/order.model';
 import User from '../models/user.model';
 import Store from '../models/store.model';
 import { generateInvoicePdf, generatePaginatedPdf } from '../utils/pdf.util';
-import { generateMultiPageInvoice } from '../utils/simple-pagination.util';
 import PDFMerger from 'pdf-merger-js';
 import { OrderService } from './order.service';
 import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
@@ -313,23 +312,93 @@ export class InvoiceService {
       console.log('🔧 Items count:', templateData.items.length);
       console.log('🔧 Items per page:', itemsPerPage);
 
-      // Use the new simple multi-page generation
-      console.log('🔧 Using simple multi-page generation...');
+      // Force multi-page generation - don't fall back to single page
+      console.log('🔧 FORCING multi-page generation - no fallback to single page');
+      
+      if (totalPages === 1) {
+        console.log('🔧 Single page invoice - generating with bank details');
+        const singlePageData = {
+          ...templateData,
+          isLastPage: true,
+          currentPage: 1,
+          totalPages: 1
+        };
+        return await generateInvoicePdf(order, singlePageData);
+      }
+      
+      // Multi-page generation
+      console.log('🔧 Multi-page invoice - generating pages separately');
       const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
       
-      await generateMultiPageInvoice(templatePath, templateData, filePath, itemsPerPage);
+      // Generate each page separately
+      const tempFiles: string[] = [];
+      const browser = await require('puppeteer').launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
       
-      // Verify the generated file
-      if (!fs.existsSync(filePath)) {
-        throw new Error('PDF file was not created');
+      try {
+        const page = await browser.newPage();
+        
+        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+          const startIndex = pageNum * itemsPerPage;
+          const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
+          const pageItems = templateData.items.slice(startIndex, endIndex);
+          const isLastPage = pageNum === totalPages - 1;
+          
+          console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
+          
+          const pageData = {
+            ...templateData,
+            items: pageItems,
+            isLastPage,
+            currentPage: pageNum + 1,
+            totalPages
+          };
+          
+          // Generate HTML and PDF for this page
+          const html = await require('ejs').renderFile(templatePath, pageData);
+          await page.setContent(html, { waitUntil: 'networkidle0' });
+          
+          const tempFileName = `temp_page_${pageNum + 1}_${order.id}_${Date.now()}.pdf`;
+          const tempFilePath = path.join(uploadsDir, tempFileName);
+          tempFiles.push(tempFilePath);
+          
+          await page.pdf({
+            path: tempFilePath,
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
+          });
+          
+          console.log(`✅ Page ${pageNum + 1} generated: ${tempFilePath}`);
+        }
+        
+        // Merge PDFs
+        console.log('🔧 Merging PDF pages...');
+        const merger = new PDFMerger();
+        for (const tempFile of tempFiles) {
+          await merger.add(tempFile);
+        }
+        await merger.save(filePath);
+        
+        console.log('✅ Multi-page PDF merged successfully:', filePath);
+        
+      } finally {
+        await browser.close();
+        
+        // Clean up temp files
+        tempFiles.forEach(tempFile => {
+          try {
+            if (fs.existsSync(tempFile)) {
+              fs.unlinkSync(tempFile);
+            }
+          } catch (cleanupError) {
+            // Ignore cleanup errors
+          }
+        });
       }
       
-      const stats = fs.statSync(filePath);
-      if (stats.size === 0) {
-        throw new Error('Generated PDF file is empty');
-      }
-      
-      console.log('✅ Multi-page PDF generated successfully:', { size: stats.size, path: filePath });
       return { filePath };
 
     } catch (error: any) {
@@ -340,23 +409,8 @@ export class InvoiceService {
         name: error?.name || 'Unknown error type'
       });
       
-      // fallback - create single page PDF with all items
-      console.log('🔄 Falling back to single page PDF generation...');
-      
-      try {
-        const fallbackData = {
-          ...templateData,
-          isLastPage: true,
-          currentPage: 1,
-          totalPages: 1
-        };
-        
-        console.log('🔧 Fallback: Single page with all items and bank details');
-        return await generateInvoicePdf(order, fallbackData);
-      } catch (fallbackError: any) {
-        console.error('❌ Fallback PDF generation also failed:', fallbackError);
-        throw new Error(`PDF generation failed: ${error.message}. Fallback also failed: ${fallbackError.message}`);
-      }
+      // NO FALLBACK - throw the error so we can see what's wrong
+      throw new Error(`PDF generation failed: ${error.message}`);
     }
   }
 }
