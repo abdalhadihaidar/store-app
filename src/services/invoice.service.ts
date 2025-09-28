@@ -319,15 +319,15 @@ export class InvoiceService {
       
       if (totalPages === 1) {
         console.log('🔧 Single page invoice - generating with bank details');
-        const singlePageData = {
-          ...templateData,
-          isLastPage: true,
-          currentPage: 1,
-          totalPages: 1
+        const singlePageData = { 
+          ...templateData, 
+          isLastPage: true, 
+          currentPage: 1, 
+          totalPages: 1 
         };
         
         try {
-          return await generateInvoicePdf(order, singlePageData);
+        return await generateInvoicePdf(order, singlePageData);
         } catch (pdfError: any) {
           console.error('❌ Single page PDF generation failed:', pdfError.message);
           console.log('🔄 Falling back to HTML generation for single page...');
@@ -410,12 +410,20 @@ export class InvoiceService {
         }
       }
       
-      // Multi-page generation with Puppeteer fallback
-      console.log('🔧 Multi-page invoice - generating pages separately');
+      // Multi-page generation with proper CSS page breaks
+      console.log('🔧 Multi-page invoice - generating single HTML with CSS page breaks');
       
       try {
-        // Try PDF generation first
-        const tempFiles: string[] = [];
+        // Generate single HTML with all items and proper page breaks
+        const allItemsData = {
+          ...templateData,
+          items: templateData.items, // All items
+          isLastPage: true, // Bank details on last page
+          currentPage: 1,
+          totalPages: totalPages,
+          itemsPerPage: itemsPerPage // Pass itemsPerPage to template
+        };
+        
         const browser = await require('puppeteer').launch({
           headless: 'new',
           args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -424,63 +432,24 @@ export class InvoiceService {
         try {
           const page = await browser.newPage();
           
-          for (let pageNum = 0; pageNum < totalPages; pageNum++) {
-            const startIndex = pageNum * itemsPerPage;
-            const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
-            const pageItems = templateData.items.slice(startIndex, endIndex);
-            const isLastPage = pageNum === totalPages - 1;
-            
-            console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
-            
-            const pageData = {
-              ...templateData,
-              items: pageItems,
-              isLastPage,
-              currentPage: pageNum + 1,
-              totalPages
-            };
-            
-            // Generate HTML and PDF for this page
-            const html = await require('ejs').renderFile(templatePath, pageData);
-            await page.setContent(html, { waitUntil: 'networkidle0' });
-            
-            const tempFileName = `temp_page_${pageNum + 1}_${order.id}_${Date.now()}.pdf`;
-            const tempFilePath = path.join(uploadsDir, tempFileName);
-            tempFiles.push(tempFilePath);
-            
-            await page.pdf({
-              path: tempFilePath,
-              format: 'A4',
-              printBackground: true,
-              margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
-            });
-            
-            console.log(`✅ Page ${pageNum + 1} generated: ${tempFilePath}`);
-          }
+          // Generate HTML with all items
+          const html = await require('ejs').renderFile(templatePath, allItemsData);
+          await page.setContent(html, { waitUntil: 'networkidle0' });
           
-          // Merge PDFs
-          console.log('🔧 Merging PDF pages...');
-          const merger = new PDFMerger();
-          for (const tempFile of tempFiles) {
-            await merger.add(tempFile);
-          }
-          await merger.save(filePath);
+          // Generate PDF with proper page handling
+          await page.pdf({
+            path: filePath,
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' },
+            preferCSSPageSize: true, // Use CSS page size
+            displayHeaderFooter: false
+          });
           
-          console.log('✅ Multi-page PDF merged successfully:', filePath);
+          console.log('✅ Multi-page PDF generated with CSS page breaks:', filePath);
           
         } finally {
           await browser.close();
-          
-          // Clean up temp files
-          tempFiles.forEach(tempFile => {
-            try {
-              if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-              }
-            } catch (cleanupError) {
-              // Ignore cleanup errors
-            }
-          });
         }
         
       } catch (puppeteerError: any) {
@@ -498,7 +467,7 @@ export class InvoiceService {
           const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
-          
+
           const pageData = {
             ...templateData,
             items: pageItems,
@@ -506,7 +475,7 @@ export class InvoiceService {
             currentPage: pageNum + 1,
             totalPages
           };
-          
+
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
           fullHtml += pageHtml;
           
@@ -587,7 +556,7 @@ export class InvoiceService {
         // Return HTML file path instead of PDF
         return { filePath: htmlFilePath };
       }
-      
+
       return { filePath };
 
     } catch (error: any) {
