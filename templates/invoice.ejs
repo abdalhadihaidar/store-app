@@ -416,7 +416,6 @@
     <!-- Bank Information - Only on last page (or single page) -->
     <% 
       const totalPages = Math.ceil(items.length / 21);
-      const currentPage = typeof currentPage !== 'undefined' ? currentPage : 1;
       const isLastPage = currentPage === totalPages;
     %>
     <% if (isLastPage) { %>
