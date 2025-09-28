@@ -195,6 +195,12 @@ export class InvoiceService {
     };
 
     // Use paginated PDF generation for proper page handling
+    console.log('🔧 Invoice service - calling generatePaginatedInvoicePdf with:', {
+      itemsCount: templateData.items.length,
+      itemsPerPage: ITEMS_PER_PAGE,
+      totalNet: templateData.totalNet,
+      totalGross: templateData.totalGross
+    });
     const { filePath } = await this.generatePaginatedInvoicePdf(order, templateData, ITEMS_PER_PAGE);
 
     // Compute totals (already on order)
@@ -295,9 +301,11 @@ export class InvoiceService {
       const totalPages = Math.max(1, Math.ceil(templateData.items.length / itemsPerPage));
       
       console.log('🔧 Total pages calculated:', totalPages);
+      console.log('🔧 Items count:', templateData.items.length);
+      console.log('🔧 Items per page:', itemsPerPage);
       
-      // For single page, use regular PDF generation with bank details
-      if (totalPages === 1) {
+      // For single page (≤18 items), use regular PDF generation with bank details
+      if (templateData.items.length <= itemsPerPage) {
         const singlePageData = {
           ...templateData,
           isLastPage: true,
@@ -305,18 +313,33 @@ export class InvoiceService {
           totalPages: 1
         };
         
-        console.log('🔧 Single page invoice, using regular PDF generation...');
+        console.log('🔧 Single page invoice (≤18 items), using regular PDF generation...');
         return await generateInvoicePdf(order, singlePageData);
       }
       
-      // For multiple pages, use the proper paginated PDF generation
-      console.log('🔧 Multiple pages detected, using proper paginated PDF generation...');
+      // For multiple pages (>18 items), use the proper paginated PDF generation
+      console.log('🔧 Multiple pages detected (>18 items), using proper paginated PDF generation...');
       
-      // Use the generatePaginatedPdf function which handles proper page splitting
-      await generatePaginatedPdf(templatePath, templateData, filePath, itemsPerPage);
-      
-      console.log('✅ Paginated invoice PDF generated successfully:', filePath);
-      return { filePath };
+      try {
+        // Use the generatePaginatedPdf function which handles proper page splitting
+        await generatePaginatedPdf(templatePath, templateData, filePath, itemsPerPage);
+        
+        console.log('✅ Paginated invoice PDF generated successfully:', filePath);
+        return { filePath };
+      } catch (paginatedError) {
+        console.error('❌ Paginated PDF generation failed:', paginatedError);
+        console.log('🔄 Falling back to regular PDF generation with all items...');
+        
+        // Fallback: generate single PDF with all items but no bank details
+        const fallbackData = {
+          ...templateData,
+          isLastPage: false, // Don't show bank details
+          currentPage: 1,
+          totalPages: totalPages
+        };
+        
+        return await generateInvoicePdf(order, fallbackData);
+      }
       
     } catch (error: any) {
       console.error('❌ Error generating paginated invoice PDF:', error);
