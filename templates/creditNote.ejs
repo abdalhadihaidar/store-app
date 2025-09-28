@@ -23,7 +23,7 @@
     .invoice { 
       padding-top: 5px; 
       margin-top: 5px; 
-      padding-bottom: 60mm; /* A4-appropriate footer space */
+      padding-bottom: 90mm; /* Increased space for calculation summary footer */
       min-height: 297mm; /* A4 height */
       position: relative;
     }
@@ -214,7 +214,7 @@
       margin: 0;
       z-index: 1000;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      max-height: 50mm; /* Limit footer height */
+      max-height: 80mm; /* Increased height for calculation summary */
     }
     
     footer .flex { 
@@ -373,36 +373,37 @@
         </tbody>
       </table>
 
-      <!-- Financial Summary - Inside main content -->
-      <div class="row mt-5 align-items-center" style="margin-bottom: 30px;">
-        <div class="col-6 mt-2 mb-3">
-          <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
-        </div>
-        <div class="col-4 mt-2 mb-3">
-          <p>Netto-Gesamtbestellsumme:</p>
-          <p>zuzüglich 7% Mehrwertsteuer:</p>
-          <p>zuzüglich 19% Mehrwertsteuer:</p>
-        </div>
-        <div class="col-2">
-          <p><%= (totalNet || 0).toFixed(2) %>€</p>
-          <p><%= (vat7 || 0).toFixed(2) %>€</p>
-          <p><%= (vat19 || 0).toFixed(2) %>€</p>
-        </div>
-      </div>
-      
-      <div class="row align-items-center">
-        <div class="col-6"></div>
-        <div class="col-4 total-section mt-4">
-          <h3 class="mt-4 pt-2 total-amount">Rückerstatteter Betrag:</h3>
-        </div>
-        <div class="col-2 total-section mt-4">
-          <h3 class="mt-4 pt-2 total-amount"><%= (totalGross || 0).toFixed(2) %>€</h3>
-        </div>
-      </div>
     </div>
   </div>
 
   <footer>
+    <!-- Financial Summary - Every Page -->
+    <div class="row mt-5 align-items-center">
+      <div class="col-6 mt-2 mb-3">
+        <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+      </div>
+      <div class="col-4 mt-2 mb-3">
+        <p>Netto-Gesamtbestellsumme:</p>
+        <p>zuzüglich 7% Mehrwertsteuer:</p>
+        <p>zuzüglich 19% Mehrwertsteuer:</p>
+      </div>
+      <div class="col-2">
+        <p><%= (totalNet || 0).toFixed(2) %>€</p>
+        <p><%= (vat7 || 0).toFixed(2) %>€</p>
+        <p><%= (vat19 || 0).toFixed(2) %>€</p>
+      </div>
+    </div>
+    
+    <div class="row align-items-center">
+      <div class="col-6"></div>
+      <div class="col-4 total-section mt-4">
+        <h3 class="mt-4 pt-2 total-amount">Rückerstatteter Betrag:</h3>
+      </div>
+      <div class="col-2 total-section mt-4">
+        <h3 class="mt-4 pt-2 total-amount"><%= (totalGross || 0).toFixed(2) %>€</h3>
+      </div>
+    </div>
+    
     <!-- Signatures - Every Page -->
     <div class="row flex justify-content-around mt-5">
       <div class="col-4 signature-line">

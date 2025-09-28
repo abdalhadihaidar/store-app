@@ -23,7 +23,7 @@
     .invoice { 
       padding-top: 5px; 
       margin-top: 5px; 
-      padding-bottom: 60mm; /* A4-appropriate footer space */
+      padding-bottom: 90mm; /* Increased space for calculation summary footer */
       min-height: 297mm; /* A4 height */
       position: relative;
     }
@@ -213,7 +213,7 @@
       margin: 0;
       z-index: 1000;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      max-height: 50mm; /* Limit footer height */
+      max-height: 80mm; /* Increased height for calculation summary */
     }
     
     footer .flex { 
@@ -299,6 +299,20 @@
       .total-amount { font-size: 12px; }
     }
   </style>
+  <script>
+    // Calculate pages based on 21 records per page
+    function calculatePages() {
+      const items = <%= JSON.stringify(items) %>;
+      const recordsPerPage = 21;
+      const totalPages = Math.ceil(items.length / recordsPerPage);
+      return totalPages;
+    }
+    
+    // Set current page info
+    const totalPages = calculatePages();
+    const currentPage = <%= typeof currentPage !== 'undefined' ? currentPage : 1 %>;
+    const isLastPage = currentPage === totalPages;
+  </script>
 </head>
 <body>
   <div class="invoice">
@@ -372,36 +386,37 @@
         </tbody>
       </table>
 
-      <!-- Financial Summary - Inside main content -->
-      <div class="row align-items-center mt-4" style="margin-bottom: 30px;">
-        <div class="col-6 mt-2 mb-3">
-          <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
-        </div>
-        <div class="col-4 mt-2 mb-3">
-          <p>Netto-Gesamtbestellsumme:</p>
-          <p>zuzüglich 7% Mehrwertsteuer:</p>
-          <p>zuzüglich 19% Mehrwertsteuer:</p>
-        </div>
-        <div class="col-2">
-          <p><%= totalNet.toFixed(2) %>€</p>
-          <p><%= vat7.toFixed(2) %>€</p>
-          <p><%= vat19.toFixed(2) %>€</p>
-        </div>
-      </div>
-      
-      <div class="row align-items-center">
-        <div class="col-6"></div>
-        <div class="col-4 total-section mt-2">
-          <h3 class="mt-2 pt-2 total-amount">Rechnungsbetrag:</h3>
-        </div>
-        <div class="col-2 total-section mt-2">
-          <h3 class="mt-2 pt-2 total-amount"><%= totalGross.toFixed(2) %>€</h3>
-        </div>
-      </div>
     </div>
   </div>
 
   <footer>
+    <!-- Financial Summary - Every Page -->
+    <div class="row align-items-center mt-2">
+      <div class="col-6 mt-2 mb-3">
+        <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+      </div>
+      <div class="col-4 mt-2 mb-3">
+        <p>Netto-Gesamtbestellsumme:</p>
+        <p>zuzüglich 7% Mehrwertsteuer:</p>
+        <p>zuzüglich 19% Mehrwertsteuer:</p>
+      </div>
+      <div class="col-2">
+        <p><%= totalNet.toFixed(2) %>€</p>
+        <p><%= vat7.toFixed(2) %>€</p>
+        <p><%= vat19.toFixed(2) %>€</p>
+      </div>
+    </div>
+    
+    <div class="row align-items-center">
+      <div class="col-6"></div>
+      <div class="col-4 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount">Rechnungsbetrag:</h3>
+      </div>
+      <div class="col-2 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount"><%= totalGross.toFixed(2) %>€</h3>
+      </div>
+    </div>
+    
     <!-- Signatures - Every Page -->
     <div class="row flex justify-content-around mt-2">
       <div class="col-4 signature-line">
@@ -414,26 +429,29 @@
     </div>
     
     <!-- Bank Information - Only on last page -->
-    <% if (typeof isLastPage === 'undefined' || isLastPage === true) { %>
-    <div class="row flex my-5 justify-content bank-info">
-      <div class="col-1"></div>
-      <div class="col-5 mb-3 mt-3">
-        <span>IBAN:</span><br/>
-        <span>BIC:</span><br/>
-        <span>BANK:</span><br/>
-        <span>BANK-Anschrift:</span><br/>
-        <span>Verwendungszweck:</span>
-      </div>
-      <div class="col-5 mb-3 mt-3">
-        <span>DE44 8605 5592 1090 3534 28</span><br/>
-        <span>WELADE8LXXX</span><br/>
-        <span>Stadt- und kreissparkasse leipzig</span><br/>
-        <span>Humboldtstraße 25, 04008 Leipzig 7</span><br/>
-        <span>Geben Sie bitte die Rechnungsnummer an!</span>
-      </div>
-      <div class="col-1"></div>
-    </div>
-    <% } %>
+    <script>
+      if (isLastPage) {
+        document.write(`
+          <div class="row flex my-5 justify-content bank-info">
+            <div class="col-1"></div>
+            <div class="col-10">
+              <div class="row">
+                <div class="col-6">
+                  <p><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
+                  <p><strong>BIC:</strong> WELADE8LXXX</p>
+                  <p><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
+                </div>
+                <div class="col-6">
+                  <p><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig 7</p>
+                  <p><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-1"></div>
+          </div>
+        `);
+      }
+    </script>
   </footer>
 </body>
 </html>
