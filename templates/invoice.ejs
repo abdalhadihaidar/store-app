@@ -416,7 +416,8 @@
     <!-- Bank Information - Only on last page (or single page) -->
     <% 
       const totalPages = Math.ceil(items.length / 21);
-      const isLastPage = currentPage === totalPages;
+      const pageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
+      const isLastPage = pageNumber === totalPages;
     %>
     <% if (isLastPage) { %>
     <div class="row flex my-5 justify-content bank-info">
