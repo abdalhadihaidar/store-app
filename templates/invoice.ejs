@@ -469,11 +469,11 @@
       - Items per page: 21 (calculated based on A4 page size)
     -->
     <% 
-      const totalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 21);
-      const pageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
-      const isLastPage = typeof isLastPage !== 'undefined' ? isLastPage : (pageNumber === totalPages);
+      const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 21);
+      const currentPageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
+      const isLastPageFlag = typeof isLastPage !== 'undefined' ? isLastPage : (currentPageNumber === calculatedTotalPages);
     %>
-    <% if (isLastPage) { %>
+    <% if (isLastPageFlag) { %>
     <div class="row bank-info mt-3">
       <div class="col-6">
         <p><strong>IBAN:</strong></p>
