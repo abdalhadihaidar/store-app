@@ -315,6 +315,8 @@ export class InvoiceService {
       // Force multi-page generation - don't fall back to single page
       console.log('🔧 FORCING multi-page generation - no fallback to single page');
       
+      const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
+      
       if (totalPages === 1) {
         console.log('🔧 Single page invoice - generating with bank details');
         const singlePageData = {
@@ -323,30 +325,179 @@ export class InvoiceService {
           currentPage: 1,
           totalPages: 1
         };
-        return await generateInvoicePdf(order, singlePageData);
+        
+        try {
+          return await generateInvoicePdf(order, singlePageData);
+        } catch (pdfError: any) {
+          console.error('❌ Single page PDF generation failed:', pdfError.message);
+          console.log('🔄 Falling back to HTML generation for single page...');
+          
+          // Fallback: Generate HTML file instead of PDF
+          const htmlFileName = `invoice_${order.id}_${Date.now()}.html`;
+          const htmlFilePath = path.join(uploadsDir, htmlFileName);
+          
+          const html = await require('ejs').renderFile(templatePath, singlePageData);
+          
+          // Add PDF conversion script to HTML
+          const enhancedHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice ${singlePageData.invoiceNumber}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .pdf-controls { 
+            position: fixed; top: 10px; right: 10px; 
+            background: #007bff; color: white; padding: 10px; 
+            border-radius: 5px; z-index: 1000; 
+        }
+        .pdf-controls button { 
+            background: white; color: #007bff; border: none; 
+            padding: 8px 16px; margin: 0 5px; border-radius: 3px; 
+            cursor: pointer; font-weight: bold; 
+        }
+        @media print { .pdf-controls { display: none; } }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="pdf-controls">
+        <span>📄 Invoice Ready</span>
+        <button onclick="convertToPdf()">📥 Download PDF</button>
+        <button onclick="window.print()">🖨️ Print</button>
+    </div>
+    ${html}
+    <script>
+        async function convertToPdf() {
+            try {
+                const element = document.body;
+                const canvas = await html2canvas(element, { scale: 2 });
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const filename = 'invoice_${singlePageData.invoiceNumber}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf';
+                pdf.save(filename);
+            } catch (error) {
+                alert('PDF conversion failed. Please use the print function instead.');
+            }
+        }
+    </script>
+</body>
+</html>`;
+          
+          fs.writeFileSync(htmlFilePath, enhancedHtml);
+          console.log('✅ Single page HTML invoice generated with PDF conversion:', htmlFilePath);
+          
+          return { filePath: htmlFilePath };
+        }
       }
       
-      // Multi-page generation
+      // Multi-page generation with Puppeteer fallback
       console.log('🔧 Multi-page invoice - generating pages separately');
-      const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
-      
-      // Generate each page separately
-      const tempFiles: string[] = [];
-      const browser = await require('puppeteer').launch({
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
       
       try {
-        const page = await browser.newPage();
+        // Try PDF generation first
+        const tempFiles: string[] = [];
+        const browser = await require('puppeteer').launch({
+          headless: 'new',
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
         
+        try {
+          const page = await browser.newPage();
+          
+          for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+            const startIndex = pageNum * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
+            const pageItems = templateData.items.slice(startIndex, endIndex);
+            const isLastPage = pageNum === totalPages - 1;
+            
+            console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
+            
+            const pageData = {
+              ...templateData,
+              items: pageItems,
+              isLastPage,
+              currentPage: pageNum + 1,
+              totalPages
+            };
+            
+            // Generate HTML and PDF for this page
+            const html = await require('ejs').renderFile(templatePath, pageData);
+            await page.setContent(html, { waitUntil: 'networkidle0' });
+            
+            const tempFileName = `temp_page_${pageNum + 1}_${order.id}_${Date.now()}.pdf`;
+            const tempFilePath = path.join(uploadsDir, tempFileName);
+            tempFiles.push(tempFilePath);
+            
+            await page.pdf({
+              path: tempFilePath,
+              format: 'A4',
+              printBackground: true,
+              margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
+            });
+            
+            console.log(`✅ Page ${pageNum + 1} generated: ${tempFilePath}`);
+          }
+          
+          // Merge PDFs
+          console.log('🔧 Merging PDF pages...');
+          const merger = new PDFMerger();
+          for (const tempFile of tempFiles) {
+            await merger.add(tempFile);
+          }
+          await merger.save(filePath);
+          
+          console.log('✅ Multi-page PDF merged successfully:', filePath);
+          
+        } finally {
+          await browser.close();
+          
+          // Clean up temp files
+          tempFiles.forEach(tempFile => {
+            try {
+              if (fs.existsSync(tempFile)) {
+                fs.unlinkSync(tempFile);
+              }
+            } catch (cleanupError) {
+              // Ignore cleanup errors
+            }
+          });
+        }
+        
+      } catch (puppeteerError: any) {
+        console.error('❌ Puppeteer PDF generation failed:', puppeteerError.message);
+        console.log('🔄 Falling back to HTML generation...');
+        
+        // Fallback: Generate HTML file instead of PDF
+        const htmlFileName = `invoice_${order.id}_${Date.now()}.html`;
+        const htmlFilePath = path.join(uploadsDir, htmlFileName);
+        
+        // Generate HTML for all pages
+        let fullHtml = '';
         for (let pageNum = 0; pageNum < totalPages; pageNum++) {
           const startIndex = pageNum * itemsPerPage;
           const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
-          
-          console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
           
           const pageData = {
             ...templateData,
@@ -356,47 +507,85 @@ export class InvoiceService {
             totalPages
           };
           
-          // Generate HTML and PDF for this page
-          const html = await require('ejs').renderFile(templatePath, pageData);
-          await page.setContent(html, { waitUntil: 'networkidle0' });
+          const pageHtml = await require('ejs').renderFile(templatePath, pageData);
+          fullHtml += pageHtml;
           
-          const tempFileName = `temp_page_${pageNum + 1}_${order.id}_${Date.now()}.pdf`;
-          const tempFilePath = path.join(uploadsDir, tempFileName);
-          tempFiles.push(tempFilePath);
-          
-          await page.pdf({
-            path: tempFilePath,
-            format: 'A4',
-            printBackground: true,
-            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
-          });
-          
-          console.log(`✅ Page ${pageNum + 1} generated: ${tempFilePath}`);
-        }
-        
-        // Merge PDFs
-        console.log('🔧 Merging PDF pages...');
-        const merger = new PDFMerger();
-        for (const tempFile of tempFiles) {
-          await merger.add(tempFile);
-        }
-        await merger.save(filePath);
-        
-        console.log('✅ Multi-page PDF merged successfully:', filePath);
-        
-      } finally {
-        await browser.close();
-        
-        // Clean up temp files
-        tempFiles.forEach(tempFile => {
-          try {
-            if (fs.existsSync(tempFile)) {
-              fs.unlinkSync(tempFile);
-            }
-          } catch (cleanupError) {
-            // Ignore cleanup errors
+          // Add page break for multi-page
+          if (pageNum < totalPages - 1) {
+            fullHtml += '<div style="page-break-before: always;"></div>';
           }
-        });
+        }
+        
+        // Add PDF conversion script to HTML
+        const enhancedHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice ${templateData.invoiceNumber}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .pdf-controls { 
+            position: fixed; top: 10px; right: 10px; 
+            background: #007bff; color: white; padding: 10px; 
+            border-radius: 5px; z-index: 1000; 
+        }
+        .pdf-controls button { 
+            background: white; color: #007bff; border: none; 
+            padding: 8px 16px; margin: 0 5px; border-radius: 3px; 
+            cursor: pointer; font-weight: bold; 
+        }
+        @media print { .pdf-controls { display: none; } }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="pdf-controls">
+        <span>📄 Invoice Ready</span>
+        <button onclick="convertToPdf()">📥 Download PDF</button>
+        <button onclick="window.print()">🖨️ Print</button>
+    </div>
+    ${fullHtml}
+    <script>
+        async function convertToPdf() {
+            try {
+                const element = document.body;
+                const canvas = await html2canvas(element, { scale: 2 });
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const filename = 'invoice_${templateData.invoiceNumber}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf';
+                pdf.save(filename);
+            } catch (error) {
+                alert('PDF conversion failed. Please use the print function instead.');
+            }
+        }
+    </script>
+</body>
+</html>`;
+        
+        fs.writeFileSync(htmlFilePath, enhancedHtml);
+        console.log('✅ HTML invoice generated with PDF conversion:', htmlFilePath);
+        
+        // Return HTML file path instead of PDF
+        return { filePath: htmlFilePath };
       }
       
       return { filePath };
