@@ -429,19 +429,39 @@ export class InvoiceService {
         name: error?.name || 'Unknown error type'
       });
       
-      // fallback - create a simple single-page PDF with all items
-      console.log('🔄 Falling back to regular PDF generation with all items...');
+      // fallback - create paginated PDF using a simpler approach
+      console.log('🔄 Falling back to simple paginated PDF generation...');
       
       try {
-        const fallbackData = {
-          ...templateData,
-          isLastPage: true, // Show bank details in fallback
-          currentPage: 1,
-          totalPages: 1
-        };
+        const totalPages = Math.max(1, Math.ceil(templateData.items.length / itemsPerPage));
+        console.log(`🔧 Fallback: Generating ${totalPages} pages with ${templateData.items.length} items`);
         
-        console.log('🔧 Fallback: Generating single-page PDF with all items and bank details');
-        return await generateInvoicePdf(order, fallbackData);
+        if (totalPages === 1) {
+          // Single page fallback
+          const fallbackData = {
+            ...templateData,
+            isLastPage: true,
+            currentPage: 1,
+            totalPages: 1
+          };
+          
+          console.log('🔧 Fallback: Single page with bank details');
+          return await generateInvoicePdf(order, fallbackData);
+        } else {
+          // Multi-page fallback - generate first page only with NO bank details
+          const itemsForFirstPage = Math.min(itemsPerPage, templateData.items.length);
+          
+          const fallbackData = {
+            ...templateData,
+            items: templateData.items.slice(0, itemsForFirstPage), // Show only first page items
+            isLastPage: false, // NO bank details on first page
+            currentPage: 1,
+            totalPages: totalPages
+          };
+          
+          console.log(`🔧 Fallback: First page only (${itemsForFirstPage} items) with NO bank details`);
+          return await generateInvoicePdf(order, fallbackData);
+        }
       } catch (fallbackError: any) {
         console.error('❌ Fallback PDF generation also failed:', fallbackError);
         throw new Error(`PDF generation failed: ${error.message}. Fallback also failed: ${fallbackError.message}`);
