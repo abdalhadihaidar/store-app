@@ -230,16 +230,19 @@
     
     .signature-line { 
       border-top: 2px solid black; 
-      min-height: 40px; 
-      margin-top: 8px; 
-      padding-top: 8px; 
+      min-height: 30px; 
+      margin-top: 5px; 
+      padding-top: 5px; 
+      font-size: 11px;
     }
     
     .bank-info { 
       border-top: 3px solid #ae1308; 
-      margin-top: 1rem; 
+      margin-top: 15px; 
+      padding-top: 10px;
       color: #ae1308; /* Red color for bank details */
       font-weight: bold;
+      font-size: 11px;
     }
     
     .bank-info span { 
@@ -250,6 +253,8 @@
     .bank-info p { 
       color: #ae1308; 
       font-weight: bold;
+      margin-bottom: 3px;
+      line-height: 1.3;
     }
     
     .total-section { 
@@ -284,7 +289,12 @@
       .mt-4 { margin-top: 0.5rem; }
       .mt-5 { margin-top: 1rem; }
       .my-5 { margin-top: 1rem; margin-bottom: 1rem; }
-      .signature-line { min-height: 20px; margin-top: 3px; padding-top: 3px; }
+      .signature-line { 
+        min-height: 25px; 
+        margin-top: 3px; 
+        padding-top: 3px; 
+        font-size: 10px;
+      }
       footer { 
         position: static !important;
         width: 100% !important;
@@ -305,6 +315,15 @@
       thead { display: table-header-group; }
       tfoot { display: table-footer-group; }
       .total-amount { font-size: 12px; }
+      .bank-info { 
+        font-size: 10px !important;
+        margin-top: 10px !important;
+        padding-top: 8px !important;
+      }
+      .bank-info p { 
+        margin-bottom: 2px !important;
+        line-height: 1.2 !important;
+      }
     }
   </style>
 </head>
@@ -412,14 +431,13 @@
     </div>
     
     <!-- Signatures - Every Page -->
-    <div class="row flex justify-content-around mt-2">
-      <div class="col-4 signature-line">
+    <div class="row mt-3">
+      <div class="col-6 signature-line">
         <span>Unterschrift Kunde / Artikel erhalten:</span>
       </div>
-      <div class="col-4 signature-line">
+      <div class="col-6 signature-line">
         <span>Unterschrift Verkäufer / Artikel geliefert:</span>
       </div>
-      <div class="col-4"></div>
     </div>
     
     <!-- Bank Information - Only on last page (or single page) -->
@@ -429,22 +447,17 @@
       const isLastPage = pageNumber === totalPages;
     %>
     <% if (isLastPage) { %>
-    <div class="row flex my-5 justify-content bank-info">
-      <div class="col-1"></div>
-      <div class="col-10">
-        <div class="row">
-          <div class="col-6">
-            <p><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
-            <p><strong>BIC:</strong> WELADE8LXXX</p>
-            <p><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
-          </div>
-          <div class="col-6">
-            <p><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig 7</p>
-            <p><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
-          </div>
-        </div>
+    <div class="row bank-info mt-3">
+      <div class="col-6">
+        <p><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
+        <p><strong>BIC:</strong> WELADE8LXXX</p>
+        <p><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
+        <p><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig</p>
+        <p><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
       </div>
-      <div class="col-1"></div>
+      <div class="col-6">
+        <!-- Empty column for proper alignment -->
+      </div>
     </div>
     <% } %>
   </footer>
