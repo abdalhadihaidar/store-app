@@ -221,6 +221,9 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
     
     const items = templateData.items || templateData.returns || [];
     const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
+    
+    console.log(`🔧 Processing ${items.length} items across ${totalPages} pages (${itemsPerPage} items per page)`);
+    
     // 👉 Fast-path: if everything fits on one page, render once and skip costly PDF merge logic
     if (totalPages === 1) {
       try {
@@ -288,7 +291,10 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
             right: '15mm',
             bottom: '20mm',
             left: '15mm'
-          }
+          },
+          // Add page break handling
+          preferCSSPageSize: true,
+          displayHeaderFooter: false
         });
         
         console.log('🔧 PDF buffer generated, size:', pdfBuffer.length);
