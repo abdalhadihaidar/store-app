@@ -156,7 +156,7 @@ export class InvoiceService {
     // Calculate items per page based on A4 page size and template design
     // With header (~200px), footer (~150px), and table rows (~20px each), 
     // we can fit approximately 18 items per page on A4
-    const ITEMS_PER_PAGE = 18;
+    const ITEMS_PER_PAGE = 10;
     
     const processedItems = (order.items || []).map(i => {
       const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
@@ -280,7 +280,7 @@ export class InvoiceService {
   /**
    * Generate paginated invoice PDF with proper bank details placement
    */
-  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 18) {
+  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 10) {
     try {
       console.log('🔧 Starting paginated invoice PDF generation...');
       console.log('🔧 Items count:', templateData.items.length);
@@ -309,7 +309,7 @@ export class InvoiceService {
         const singlePageData = {
           ...templateData,
           isLastPage: true,
-          currentPage: 1,
+          currentPage: 0,
           totalPages: 1
         };
         
@@ -334,7 +334,7 @@ export class InvoiceService {
         const fallbackData = {
           ...templateData,
           isLastPage: false, // Don't show bank details
-          currentPage: 1,
+          currentPage: 0,
           totalPages: totalPages
         };
         
