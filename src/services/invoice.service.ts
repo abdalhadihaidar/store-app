@@ -331,7 +331,7 @@ export class InvoiceService {
           const isLastPage = pageNum === totalPages - 1;
           
           console.log(`🔧 Preparing page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
-          
+
           const pageData = {
             ...templateData,
             items: pageItems,
@@ -339,14 +339,14 @@ export class InvoiceService {
             currentPage: pageNum + 1,
             totalPages
           };
-          
+
           // Generate HTML for this page
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
           fullHtml += pageHtml;
           
           // Add page break between pages (except for the last page)
           if (pageNum < totalPages - 1) {
-            fullHtml += '<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>';
+            fullHtml += '</div></div><div class="a4-page"><div class="invoice">';
           }
         }
         
@@ -364,7 +364,9 @@ export class InvoiceService {
             path: filePath,
             format: 'A4',
             printBackground: true,
-            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
+            margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+            preferCSSPageSize: true,
+            displayHeaderFooter: false
           });
           
           console.log('✅ Single PDF with page breaks generated successfully:', filePath);
@@ -402,7 +404,7 @@ export class InvoiceService {
           
           // Add page break for multi-page
           if (pageNum < totalPages - 1) {
-            fullHtml += '<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>';
+            fullHtml += '</div></div><div class="a4-page"><div class="invoice">';
           }
         }
         

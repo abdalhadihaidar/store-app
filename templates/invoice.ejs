@@ -16,9 +16,21 @@
       min-height: 100vh;
       position: relative;
       width: 100%;
-      max-width: 210mm;
+      max-width: 210mm; /* A4 width */
       margin: 0 auto;
       overflow-x: hidden;
+    }
+    
+    /* A4 page dimensions */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm; /* A4 height */
+      max-height: 297mm;
+      margin: 0 auto;
+      padding: 15mm;
+      box-sizing: border-box;
+      background: white;
+      position: relative;
     }
     
     .invoice { 
@@ -277,26 +289,41 @@
     @media print {
       @page {
         size: A4;
-        margin: 10mm;
+        margin: 0;
       }
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-      body { 
+      html, body { 
         font-size: 12px; 
-        width: 100%;
+        width: 210mm;
+        height: 297mm;
         margin: 0;
         padding: 0;
+        overflow: hidden;
+      }
+      .a4-page {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 15mm;
+        box-sizing: border-box;
+        page-break-after: always;
+      }
+      .a4-page:last-child {
+        page-break-after: avoid;
       }
       .invoice { 
-        padding: 5px;
+        padding: 0;
         margin: 0;
         max-width: none;
         width: 100%;
+        height: 100%;
       }
       .container {
-        padding: 0 10px;
+        padding: 0;
+        width: 100%;
       }
       .mt-4 { margin-top: 0.5rem; }
       .mt-5 { margin-top: 1rem; }
@@ -368,7 +395,8 @@
   </style>
 </head>
 <body>
-  <div class="invoice">
+  <div class="a4-page">
+    <div class="invoice">
     <div class="container mt-4 kk">
       <div class="row">
         <div class="col-9 text-left">
@@ -511,5 +539,7 @@
     </div>
     <% } %>
   </footer>
+    </div>
+  </div>
 </body>
 </html>
