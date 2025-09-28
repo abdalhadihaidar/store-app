@@ -327,18 +327,6 @@
         page-break-inside: avoid; 
         page-break-after: auto; 
       }
-      /* Ensure table rows don't break across pages */
-      tbody tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-      }
-      /* Page break divs */
-      .page-break {
-        page-break-before: always;
-        height: 0;
-        margin: 0;
-        padding: 0;
-      }
       thead { 
         display: table-header-group; 
         page-break-inside: avoid;
@@ -435,7 +423,7 @@
           </tr>
         </thead>
         <tbody>
-          <% items.forEach(function(item, index){ %>
+          <% items.forEach(function(item){ %>
             <tr>
               <td><%= item.id %></td>
               <td><%= item.name %></td>
@@ -447,9 +435,6 @@
               <td><%= (item.tax19 || 0).toFixed(2) %>€</td>
               <td><%= ((item.tax7 || 0) + (item.tax19 || 0)).toFixed(2) %>€</td>
             </tr>
-            <% if (index > 0 && (index + 1) % 18 === 0 && index < items.length - 1) { %>
-              <tr><td colspan="9" style="height: 0; page-break-before: always;"></td></tr>
-            <% } %>
           <% }); %>
         </tbody>
       </table>

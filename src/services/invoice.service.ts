@@ -317,113 +317,40 @@ export class InvoiceService {
       
       const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
       
-      if (totalPages === 1) {
-        console.log('🔧 Single page invoice - generating with bank details');
-        const singlePageData = { 
-          ...templateData, 
-          isLastPage: true, 
-          currentPage: 1, 
-          totalPages: 1 
-        };
-        
-        try {
-        return await generateInvoicePdf(order, singlePageData);
-        } catch (pdfError: any) {
-          console.error('❌ Single page PDF generation failed:', pdfError.message);
-          console.log('🔄 Falling back to HTML generation for single page...');
-          
-          // Fallback: Generate HTML file instead of PDF
-          const htmlFileName = `invoice_${order.id}_${Date.now()}.html`;
-          const htmlFilePath = path.join(uploadsDir, htmlFileName);
-          
-          const html = await require('ejs').renderFile(templatePath, singlePageData);
-          
-          // Add PDF conversion script to HTML
-          const enhancedHtml = `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice ${singlePageData.invoiceNumber}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .pdf-controls { 
-            position: fixed; top: 10px; right: 10px; 
-            background: #007bff; color: white; padding: 10px; 
-            border-radius: 5px; z-index: 1000; 
-        }
-        .pdf-controls button { 
-            background: white; color: #007bff; border: none; 
-            padding: 8px 16px; margin: 0 5px; border-radius: 3px; 
-            cursor: pointer; font-weight: bold; 
-        }
-        @media print { .pdf-controls { display: none; } }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-</head>
-<body>
-    <div class="pdf-controls">
-        <span>📄 Invoice Ready</span>
-        <button onclick="convertToPdf()">📥 Download PDF</button>
-        <button onclick="window.print()">🖨️ Print</button>
-    </div>
-    ${html}
-    <script>
-        async function convertToPdf() {
-            try {
-                const element = document.body;
-                const canvas = await html2canvas(element, { scale: 2 });
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                const imgWidth = 210;
-                const pageHeight = 295;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                const filename = 'invoice_${singlePageData.invoiceNumber}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf';
-                pdf.save(filename);
-            } catch (error) {
-                alert('PDF conversion failed. Please use the print function instead.');
-            }
-        }
-    </script>
-</body>
-</html>`;
-          
-          fs.writeFileSync(htmlFilePath, enhancedHtml);
-          console.log('✅ Single page HTML invoice generated with PDF conversion:', htmlFilePath);
-          
-          return { filePath: htmlFilePath };
-        }
-      }
-      
-      // Multi-page generation with proper CSS page breaks
-      console.log('🔧 Multi-page invoice - generating single HTML with CSS page breaks');
+      // Generate single PDF with proper page breaks
+      console.log('🔧 Generating single PDF with proper page breaks');
       
       try {
-        // Generate single HTML with all items and proper page breaks
-        const allItemsData = {
-          ...templateData,
-          items: templateData.items, // All items
-          isLastPage: true, // Bank details on last page
-          currentPage: 1,
-          totalPages: totalPages,
-          itemsPerPage: itemsPerPage // Pass itemsPerPage to template
-        };
+        // Generate HTML with all pages and proper page breaks
+        let fullHtml = '';
         
+        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+          const startIndex = pageNum * itemsPerPage;
+          const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
+          const pageItems = templateData.items.slice(startIndex, endIndex);
+          const isLastPage = pageNum === totalPages - 1;
+          
+          console.log(`🔧 Preparing page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
+          
+          const pageData = {
+            ...templateData,
+            items: pageItems,
+            isLastPage,
+            currentPage: pageNum + 1,
+            totalPages
+          };
+          
+          // Generate HTML for this page
+          const pageHtml = await require('ejs').renderFile(templatePath, pageData);
+          fullHtml += pageHtml;
+          
+          // Add page break between pages (except for the last page)
+          if (pageNum < totalPages - 1) {
+            fullHtml += '<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>';
+          }
+        }
+        
+        // Generate PDF from the combined HTML
         const browser = await require('puppeteer').launch({
           headless: 'new',
           args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -431,22 +358,16 @@ export class InvoiceService {
         
         try {
           const page = await browser.newPage();
+          await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
           
-          // Generate HTML with all items
-          const html = await require('ejs').renderFile(templatePath, allItemsData);
-          await page.setContent(html, { waitUntil: 'networkidle0' });
-          
-          // Generate PDF with proper page handling
           await page.pdf({
             path: filePath,
             format: 'A4',
             printBackground: true,
-            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' },
-            preferCSSPageSize: true, // Use CSS page size
-            displayHeaderFooter: false
+            margin: { top: '15mm', right: '10mm', bottom: '15mm', left: '10mm' }
           });
           
-          console.log('✅ Multi-page PDF generated with CSS page breaks:', filePath);
+          console.log('✅ Single PDF with page breaks generated successfully:', filePath);
           
         } finally {
           await browser.close();
@@ -460,14 +381,14 @@ export class InvoiceService {
         const htmlFileName = `invoice_${order.id}_${Date.now()}.html`;
         const htmlFilePath = path.join(uploadsDir, htmlFileName);
         
-        // Generate HTML for all pages
+        // Generate HTML for all pages with proper page breaks
         let fullHtml = '';
         for (let pageNum = 0; pageNum < totalPages; pageNum++) {
           const startIndex = pageNum * itemsPerPage;
           const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
-
+          
           const pageData = {
             ...templateData,
             items: pageItems,
@@ -475,13 +396,13 @@ export class InvoiceService {
             currentPage: pageNum + 1,
             totalPages
           };
-
+          
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
           fullHtml += pageHtml;
           
           // Add page break for multi-page
           if (pageNum < totalPages - 1) {
-            fullHtml += '<div style="page-break-before: always;"></div>';
+            fullHtml += '<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>';
           }
         }
         
