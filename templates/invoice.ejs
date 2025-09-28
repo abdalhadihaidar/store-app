@@ -462,10 +462,16 @@
     </div>
     
     <!-- Bank Information - Only on last page (or single page) -->
+    <!-- 
+      Pagination Logic:
+      - Every page: Header + Table + Footer (calculations + signatures)
+      - Only last page: All of the above + Bank details
+      - Items per page: 21 (calculated based on A4 page size)
+    -->
     <% 
-      const totalPages = Math.ceil(items.length / 21);
+      const totalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 21);
       const pageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
-      const isLastPage = pageNumber === totalPages;
+      const isLastPage = typeof isLastPage !== 'undefined' ? isLastPage : (pageNumber === totalPages);
     %>
     <% if (isLastPage) { %>
     <div class="row bank-info mt-3">
