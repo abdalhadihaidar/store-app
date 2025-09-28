@@ -222,7 +222,7 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
     const items = templateData.items || templateData.returns || [];
     const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
     // 👉 Fast-path: if everything fits on one page, render once and skip costly PDF merge logic
-    if (items.length <= itemsPerPage) {
+    if (totalPages === 1) {
       try {
         const singleHtml = await ejs.renderFile(templatePath, {
           ...templateData,

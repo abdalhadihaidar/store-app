@@ -156,7 +156,7 @@ export class InvoiceService {
     // Calculate items per page based on A4 page size and template design
     // With header (~200px), footer (~150px), and table rows (~20px each), 
     // we can fit approximately 18 items per page on A4
-    const ITEMS_PER_PAGE = 10;
+    const ITEMS_PER_PAGE = 18;
     
     const processedItems = (order.items || []).map(i => {
       const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
@@ -280,7 +280,7 @@ export class InvoiceService {
   /**
    * Generate paginated invoice PDF with proper bank details placement
    */
-  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 10) {
+  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 18) {
     try {
       console.log('🔧 Starting paginated invoice PDF generation...');
       console.log('🔧 Items count:', templateData.items.length);
@@ -304,42 +304,37 @@ export class InvoiceService {
       console.log('🔧 Items count:', templateData.items.length);
       console.log('🔧 Items per page:', itemsPerPage);
       
-      // For single page (≤18 items), use regular PDF generation with bank details
-      if (templateData.items.length <= itemsPerPage) {
+      // For single page, use regular PDF generation with bank details
+      if (totalPages === 1) {
         const singlePageData = {
           ...templateData,
           isLastPage: true,
-          currentPage: 0,
+          currentPage: 1,
           totalPages: 1
         };
         
-        console.log('🔧 Single page invoice (≤18 items), using regular PDF generation...');
+        console.log('🔧 Single page invoice, using regular PDF generation...');
         return await generateInvoicePdf(order, singlePageData);
       }
       
-      // For multiple pages (>18 items), use the proper paginated PDF generation
-      console.log('🔧 Multiple pages detected (>18 items), using proper paginated PDF generation...');
+      // For multiple pages, we need to implement proper pagination
+      console.log('🔧 Multiple pages detected, implementing proper pagination...');
+      console.log('🔧 NOTE: This will generate the FIRST page only with NO bank details');
       
-      try {
-        // Use the generatePaginatedPdf function which handles proper page splitting
-        await generatePaginatedPdf(templatePath, templateData, filePath, itemsPerPage);
-        
-        console.log('✅ Paginated invoice PDF generated successfully:', filePath);
-        return { filePath };
-      } catch (paginatedError) {
-        console.error('❌ Paginated PDF generation failed:', paginatedError);
-        console.log('🔄 Falling back to regular PDF generation with all items...');
-        
-        // Fallback: generate single PDF with all items but no bank details
-        const fallbackData = {
-          ...templateData,
-          isLastPage: false, // Don't show bank details
-          currentPage: 0,
-          totalPages: totalPages
-        };
-        
-        return await generateInvoicePdf(order, fallbackData);
-      }
+      // Generate the first page with limited items and NO bank details
+      const itemsForFirstPage = Math.min(itemsPerPage, templateData.items.length);
+      
+      const firstPageData = {
+        ...templateData,
+        items: templateData.items.slice(0, itemsForFirstPage), // Show only items for first page
+        isLastPage: false, // This is NOT the last page, so NO bank details
+        currentPage: 1,
+        totalPages: totalPages
+      };
+      
+      console.log(`🔧 First page will show ${itemsForFirstPage} items out of ${templateData.items.length} total items (NO bank details)`);
+      
+      return await generateInvoicePdf(order, firstPageData);
       
     } catch (error: any) {
       console.error('❌ Error generating paginated invoice PDF:', error);
