@@ -3,6 +3,7 @@ import Order from '../models/order.model';
 import User from '../models/user.model';
 import Store from '../models/store.model';
 import { generateInvoicePdf, generatePaginatedPdf } from '../utils/pdf.util';
+import { generateMultiPageInvoice } from '../utils/simple-pagination.util';
 import PDFMerger from 'pdf-merger-js';
 import { OrderService } from './order.service';
 import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
@@ -312,19 +313,11 @@ export class InvoiceService {
       console.log('🔧 Items count:', templateData.items.length);
       console.log('🔧 Items per page:', itemsPerPage);
 
-      // Use the improved generatePaginatedPdf utility function
-      console.log('🔧 Using improved paginated PDF generation...');
+      // Use the new simple multi-page generation
+      console.log('🔧 Using simple multi-page generation...');
       const templatePath = path.resolve(__dirname, '../../templates/invoice.ejs');
       
-      // Prepare template data with proper pagination info
-      const paginatedTemplateData = {
-        ...templateData,
-        totalPages,
-        currentPage: 1,
-        isLastPage: totalPages === 1
-      };
-
-      await generatePaginatedPdf(templatePath, paginatedTemplateData, filePath, itemsPerPage);
+      await generateMultiPageInvoice(templatePath, templateData, filePath, itemsPerPage);
       
       // Verify the generated file
       if (!fs.existsSync(filePath)) {
@@ -336,7 +329,7 @@ export class InvoiceService {
         throw new Error('Generated PDF file is empty');
       }
       
-      console.log('✅ Paginated PDF generated successfully:', { size: stats.size, path: filePath });
+      console.log('✅ Multi-page PDF generated successfully:', { size: stats.size, path: filePath });
       return { filePath };
 
     } catch (error: any) {
