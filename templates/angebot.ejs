@@ -201,10 +201,9 @@
     footer { 
       position: fixed;
       bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 210mm; /* A4 width */
-      max-width: 210mm;
+      left: 0;
+      right: 0;
+      width: 100%;
       background: white;
       border-top: 2px solid #ae1308; 
       font-weight: bold; 
@@ -422,8 +421,13 @@
       <div class="col-4"></div>
     </div>
     
-    <!-- Validity Information - Only on last page -->
-    <% if (typeof isLastPage === 'undefined' || isLastPage === true) { %>
+    <!-- Validity Information - Only on last page (or single page) -->
+    <% 
+      const totalPages = Math.ceil(items.length / 21);
+      const currentPage = typeof currentPage !== 'undefined' ? currentPage : 1;
+      const isLastPage = currentPage === totalPages;
+    %>
+    <% if (isLastPage) { %>
     <div class="row flex my-5 justify-content bank-info">
       <div class="col-1"></div>
       <div class="col-5 mb-3 mt-3">

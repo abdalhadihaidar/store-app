@@ -201,10 +201,9 @@
     footer { 
       position: fixed;
       bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 210mm; /* A4 width */
-      max-width: 210mm;
+      left: 0;
+      right: 0;
+      width: 100%;
       background: white;
       border-top: 2px solid #ae1308; 
       font-weight: bold; 
@@ -278,14 +277,14 @@
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
-        transform: none !important;
+        right: 0 !important;
         width: 100% !important;
         max-width: none !important;
         page-break-inside: avoid; 
         margin: 0 !important;
         padding: 0.5rem 15px !important;
         font-size: 10px !important;
-        max-height: 30mm !important;
+        max-height: 80mm !important;
       }
       table { 
         page-break-inside: auto; 
@@ -428,30 +427,31 @@
       <div class="col-4"></div>
     </div>
     
-    <!-- Bank Information - Only on last page -->
-    <script>
-      if (isLastPage) {
-        document.write(`
-          <div class="row flex my-5 justify-content bank-info">
-            <div class="col-1"></div>
-            <div class="col-10">
-              <div class="row">
-                <div class="col-6">
-                  <p><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
-                  <p><strong>BIC:</strong> WELADE8LXXX</p>
-                  <p><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
-                </div>
-                <div class="col-6">
-                  <p><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig 7</p>
-                  <p><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-1"></div>
+    <!-- Bank Information - Only on last page (or single page) -->
+    <% 
+      const totalPages = Math.ceil(items.length / 21);
+      const currentPage = typeof currentPage !== 'undefined' ? currentPage : 1;
+      const isLastPage = currentPage === totalPages;
+    %>
+    <% if (isLastPage) { %>
+    <div class="row flex my-5 justify-content bank-info">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="row">
+          <div class="col-6">
+            <p><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
+            <p><strong>BIC:</strong> WELADE8LXXX</p>
+            <p><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
           </div>
-        `);
-      }
-    </script>
+          <div class="col-6">
+            <p><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig 7</p>
+            <p><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-1"></div>
+    </div>
+    <% } %>
   </footer>
 </body>
 </html>
