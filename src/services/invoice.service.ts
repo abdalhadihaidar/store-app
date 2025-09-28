@@ -2,7 +2,7 @@ import Invoice from '../models/invoice.model';
 import Order from '../models/order.model';
 import User from '../models/user.model';
 import Store from '../models/store.model';
-import { generateInvoicePdf } from '../utils/pdf.util';
+import { generateInvoicePdf, generatePaginatedPdf } from '../utils/pdf.util';
 import { OrderService } from './order.service';
 import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
@@ -67,7 +67,7 @@ export class InvoiceService {
       }, 0);
 
       // Calculate items per page (same as create method)
-      const ITEMS_PER_PAGE = 21;
+      const ITEMS_PER_PAGE = 18;
       
       const processedItems = items.map((i: any) => {
         const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
@@ -155,8 +155,8 @@ export class InvoiceService {
 
     // Calculate items per page based on A4 page size and template design
     // With header (~200px), footer (~150px), and table rows (~20px each), 
-    // we can fit approximately 21 items per page on A4
-    const ITEMS_PER_PAGE = 21;
+    // we can fit approximately 18 items per page on A4
+    const ITEMS_PER_PAGE = 18;
     
     const processedItems = (order.items || []).map(i => {
       const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
@@ -274,7 +274,7 @@ export class InvoiceService {
   /**
    * Generate paginated invoice PDF with proper bank details placement
    */
-  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 21) {
+  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 18) {
     try {
       console.log('🔧 Starting paginated invoice PDF generation...');
       console.log('🔧 Items count:', templateData.items.length);
@@ -294,7 +294,9 @@ export class InvoiceService {
       // Calculate total pages and determine if we need pagination
       const totalPages = Math.max(1, Math.ceil(templateData.items.length / itemsPerPage));
       
-      // For single page, use regular PDF generation
+      console.log('🔧 Total pages calculated:', totalPages);
+      
+      // For single page, use regular PDF generation with bank details
       if (totalPages === 1) {
         const singlePageData = {
           ...templateData,
@@ -307,17 +309,14 @@ export class InvoiceService {
         return await generateInvoicePdf(order, singlePageData);
       }
       
-      // For multiple pages, we need to implement pagination logic
-      // For now, fallback to regular PDF generation but with proper isLastPage flag
-      console.log('🔧 Multiple pages detected, using regular PDF generation with proper pagination...');
-      const paginatedData = {
-        ...templateData,
-        isLastPage: true, // This will be handled by the template logic
-        currentPage: 1,
-        totalPages: totalPages
-      };
+      // For multiple pages, use the proper paginated PDF generation
+      console.log('🔧 Multiple pages detected, using proper paginated PDF generation...');
       
-      return await generateInvoicePdf(order, paginatedData);
+      // Use the generatePaginatedPdf function which handles proper page splitting
+      await generatePaginatedPdf(templatePath, templateData, filePath, itemsPerPage);
+      
+      console.log('✅ Paginated invoice PDF generated successfully:', filePath);
+      return { filePath };
       
     } catch (error: any) {
       console.error('❌ Error generating paginated invoice PDF:', error);

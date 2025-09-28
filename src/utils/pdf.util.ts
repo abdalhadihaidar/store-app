@@ -204,7 +204,7 @@ async function generatePdfDirect(templatePath: string, templateData: any, outPat
   }
 }
 
-async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 10) {
+export async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 10) {
   console.log('🔧 Starting generatePaginatedPdf...');
   console.log('🔧 Template path:', templatePath);
   console.log('🔧 Output path:', outPath);

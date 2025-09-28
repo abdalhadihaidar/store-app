@@ -466,10 +466,10 @@
       Pagination Logic:
       - Every page: Header + Table + Footer (calculations + signatures)
       - Only last page: All of the above + Bank details
-      - Items per page: 21 (calculated based on A4 page size)
+      - Items per page: 18 (calculated based on A4 page size)
     -->
     <% 
-      const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 21);
+      const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 18);
       const currentPageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
       const isLastPageFlag = typeof isLastPage !== 'undefined' ? isLastPage : (currentPageNumber === calculatedTotalPages);
     %>
