@@ -3,6 +3,7 @@ import Order from '../models/order.model';
 import User from '../models/user.model';
 import Store from '../models/store.model';
 import { generateInvoicePdf, generatePaginatedPdf } from '../utils/pdf.util';
+import PDFMerger from 'pdf-merger-js';
 import { OrderService } from './order.service';
 import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
@@ -280,65 +281,101 @@ export class InvoiceService {
   /**
    * Generate paginated invoice PDF with proper bank details placement
    */
-  private static async generatePaginatedInvoicePdf(order: Order, templateData: any, itemsPerPage: number = 18) {
+  private static async generatePaginatedInvoicePdf(
+    order: Order,
+    templateData: any,
+    itemsPerPage: number = 18
+  ) {
     try {
       console.log('🔧 Starting paginated invoice PDF generation...');
-      console.log('🔧 Items count:', templateData.items.length);
-      console.log('🔧 Items per page:', itemsPerPage);
-      
+
       const uploadsDir = require('path').resolve(__dirname, '../../uploads/invoices');
-      const ensureDir = (dir: string) => { 
-        if (!require('fs').existsSync(dir)) require('fs').mkdirSync(dir, { recursive: true }); 
-      };
-      ensureDir(uploadsDir);
-      
+      const fs = require('fs');
+      const path = require('path');
+
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
       const fileName = `invoice_${order.id}_${Date.now()}.pdf`;
-      const filePath = require('path').join(uploadsDir, fileName);
-      
-      const templatePath = require('path').resolve(__dirname, '../../templates/invoice.ejs');
-      
-      // Calculate total pages and determine if we need pagination
+      const filePath = path.join(uploadsDir, fileName);
+
       const totalPages = Math.max(1, Math.ceil(templateData.items.length / itemsPerPage));
-      
-      console.log('🔧 Total pages calculated:', totalPages);
+      console.log('🔧 Total pages:', totalPages);
       console.log('🔧 Items count:', templateData.items.length);
       console.log('🔧 Items per page:', itemsPerPage);
-      
-      // For single page, use regular PDF generation with bank details
+
       if (totalPages === 1) {
-        const singlePageData = {
-          ...templateData,
-          isLastPage: true,
-          currentPage: 1,
-          totalPages: 1
+        // Single page invoice, easy
+        const singlePageData = { 
+          ...templateData, 
+          isLastPage: true, 
+          currentPage: 1, 
+          totalPages: 1 
         };
-        
         console.log('🔧 Single page invoice, using regular PDF generation...');
         return await generateInvoicePdf(order, singlePageData);
       }
-      
-      // For multiple pages, we need to implement proper pagination
-      console.log('🔧 Multiple pages detected, implementing proper pagination...');
-      console.log('🔧 NOTE: This will generate the FIRST page only with NO bank details');
-      
-      // Generate the first page with limited items and NO bank details
-      const itemsForFirstPage = Math.min(itemsPerPage, templateData.items.length);
-      
-      const firstPageData = {
-        ...templateData,
-        items: templateData.items.slice(0, itemsForFirstPage), // Show only items for first page
-        isLastPage: false, // This is NOT the last page, so NO bank details
-        currentPage: 1,
-        totalPages: totalPages
-      };
-      
-      console.log(`🔧 First page will show ${itemsForFirstPage} items out of ${templateData.items.length} total items (NO bank details)`);
-      
-      return await generateInvoicePdf(order, firstPageData);
-      
+
+      // Multiple pages
+      console.log('🔧 Multi-page invoice detected. Splitting items...');
+
+      const merger = new PDFMerger();
+      const tempFiles: string[] = [];
+
+      for (let page = 0; page < totalPages; page++) {
+        const start = page * itemsPerPage;
+        const end = start + itemsPerPage;
+
+        const pageItems = templateData.items.slice(start, end);
+        const isLastPage = page === totalPages - 1;
+
+        console.log(`🔧 Page ${page + 1}/${totalPages}: items ${start + 1}-${Math.min(end, templateData.items.length)}, isLastPage: ${isLastPage}`);
+
+        const pageData = {
+          ...templateData,
+          items: pageItems,
+          isLastPage,
+          currentPage: page + 1,
+          totalPages
+        };
+
+        // Generate temporary file for this page
+        const tempFileName = `temp_page_${page + 1}_${order.id}_${Date.now()}.pdf`;
+        const tempFilePath = path.join(uploadsDir, tempFileName);
+        tempFiles.push(tempFilePath);
+
+        const pageResult = await generateInvoicePdf(order, pageData);
+        
+        if (pageResult?.filePath) {
+          // Copy the generated file to temp location
+          fs.copyFileSync(pageResult.filePath, tempFilePath);
+          await merger.add(tempFilePath);
+          console.log(`✅ Page ${page + 1} added to merger`);
+        } else {
+          console.error(`❌ Failed to generate page ${page + 1}`);
+        }
+      }
+
+      // Merge into final file
+      console.log('🔧 Merging all pages into final PDF...');
+      await merger.save(filePath);
+      console.log('✅ Multi-page PDF merged successfully:', filePath);
+
+      // Clean up temporary files
+      tempFiles.forEach(tempFile => {
+        try {
+          if (fs.existsSync(tempFile)) {
+            fs.unlinkSync(tempFile);
+            console.log('🗑️ Cleaned up temp file:', tempFile);
+          }
+        } catch (cleanupError) {
+          console.warn('⚠️ Could not clean up temp file:', tempFile, cleanupError);
+        }
+      });
+
+      return { filePath };
     } catch (error: any) {
       console.error('❌ Error generating paginated invoice PDF:', error);
-      // Fallback to regular PDF generation
+      // fallback
       console.log('🔄 Falling back to regular PDF generation...');
       return await generateInvoicePdf(order, templateData);
     }
