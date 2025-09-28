@@ -484,6 +484,7 @@ export async function generateAngebotPdf(angebot: any, order: any, items: any[])
       },
       order,
       items,
+      currentPage: 1, // Default to page 1
       isLastPage: true // Always show validity information for angebots
     };
 
@@ -697,7 +698,9 @@ async function createHtmlFallback(angebot: any, order: any, items: any[]): Promi
         totalGross
       },
       order,
-      items
+      items,
+      currentPage: 1, // Default to page 1
+      isLastPage: true // Always show validity information for angebots
     };
 
     // Generate HTML instead of PDF with enhanced styling for PDF conversion

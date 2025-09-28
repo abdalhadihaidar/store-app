@@ -298,20 +298,6 @@
       .total-amount { font-size: 12px; }
     }
   </style>
-  <script>
-    // Calculate pages based on 21 records per page
-    function calculatePages() {
-      const items = <%= JSON.stringify(items) %>;
-      const recordsPerPage = 21;
-      const totalPages = Math.ceil(items.length / recordsPerPage);
-      return totalPages;
-    }
-    
-    // Set current page info
-    const totalPages = calculatePages();
-    const currentPage = <%= typeof currentPage !== 'undefined' ? currentPage : 1 %>;
-    const isLastPage = currentPage === totalPages;
-  </script>
 </head>
 <body>
   <div class="invoice">

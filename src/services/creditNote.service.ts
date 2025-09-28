@@ -78,6 +78,7 @@ export class CreditNoteService {
         orderId: order.id,
         creditDate: creditNote.date.toLocaleDateString('de-DE'),
         kundenNr: order.userId,
+        currentPage: 1, // Default to page 1
         items: returns.map((ret: any) => {
           const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
           const price = relatedItem ? relatedItem.adjustedPrice ?? relatedItem.originalPrice : 0;
@@ -168,6 +169,7 @@ export class CreditNoteService {
       orderId: order.id,
       creditDate: new Date().toLocaleDateString('de-DE'),
       kundenNr: order.userId,
+      currentPage: 1, // Default to page 1
       returns: (order.returns || []).map(ret => {
         const relatedItem = (order.items || []).find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
         const name = (relatedItem as any)?.product?.name || relatedItem?.productId || ret.orderItemId;

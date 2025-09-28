@@ -76,6 +76,7 @@ export class InvoiceService {
         orderId: order.id,
         invoiceDate: invoice.date.toLocaleDateString('de-DE'),
         kundenNr: invoice.kundenNr || order.userId?.toString(),
+        currentPage: 1, // Default to page 1
         items: items.map((i: any) => {
           const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
           const baseItem = {
@@ -158,6 +159,7 @@ export class InvoiceService {
       orderId: order.id,
       invoiceDate: printData?.invoiceDate || new Date().toLocaleDateString('de-DE'),
       kundenNr: printData?.kundenNr || order.userId,
+      currentPage: 1, // Default to page 1
       items: (order.items || []).map(i => {
         const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
         const baseItem = {
