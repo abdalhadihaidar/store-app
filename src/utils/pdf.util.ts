@@ -24,10 +24,10 @@ async function renderHtmlToPdf(html: string, outPath: string) {
       format: 'A4', 
       printBackground: true,
       margin: {
-        top: '10mm',
-        right: '10mm',
-        bottom: '10mm',
-        left: '10mm'
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm'
       }
     });
   } finally {
@@ -79,10 +79,10 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
         format: 'A4',
         printBackground: true,
         margin: {
-          top: '10mm',
-          right: '10mm',
-          bottom: '10mm',
-          left: '10mm'
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
         }
       });
       
@@ -146,10 +146,10 @@ async function generatePdfDirect(templatePath: string, templateData: any, outPat
       const options = {
         format: 'A4',
         margin: {
-          top: '10mm',
-          right: '10mm',
-          bottom: '10mm',
-          left: '10mm'
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
         },
         printBackground: true,
         displayHeaderFooter: false
@@ -170,10 +170,10 @@ async function generatePdfDirect(templatePath: string, templateData: any, outPat
       
       const stream = wkhtmltopdf(html, {
         pageSize: 'A4',
-        marginTop: '10mm',
-        marginRight: '10mm',
-        marginBottom: '10mm',
-        marginLeft: '10mm'
+        marginTop: '20mm',
+        marginRight: '15mm',
+        marginBottom: '20mm',
+        marginLeft: '15mm'
       });
       
       const writeStream = fs.createWriteStream(outPath);
@@ -238,10 +238,10 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
           format: 'A4',
           printBackground: true,
           margin: {
-            top: '10mm',
-            right: '10mm',
-            bottom: '10mm',
-            left: '10mm',
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
           },
         });
 
@@ -284,10 +284,10 @@ async function generatePaginatedPdf(templatePath: string, templateData: any, out
           format: 'A4', 
           printBackground: true,
           margin: {
-            top: '10mm',
-            right: '10mm',
-            bottom: '10mm',
-            left: '10mm'
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm'
           }
         });
         
