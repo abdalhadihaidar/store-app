@@ -228,46 +228,18 @@
       justify-content: space-around; 
     }
     
-    .terms-text {
-      font-size: 11px;
-      font-weight: normal;
-      margin-bottom: 0;
-      line-height: 1.4;
-    }
-    
-    .summary-label {
-      font-size: 11px;
-      font-weight: normal;
-      margin-bottom: 2px;
-      line-height: 1.3;
-    }
-    
-    .summary-value {
-      font-size: 11px;
-      font-weight: bold;
-      margin-bottom: 2px;
-      line-height: 1.3;
-      text-align: right;
-    }
-    
     .signature-line { 
       border-top: 2px solid black; 
-      min-height: 35px; 
-      margin-top: 8px; 
-      padding-top: 8px; 
+      min-height: 30px; 
+      margin-top: 5px; 
+      padding-top: 5px; 
       font-size: 11px;
-    }
-    
-    .signature-text {
-      font-size: 11px;
-      font-weight: normal;
-      line-height: 1.3;
     }
     
     .bank-info { 
       border-top: 3px solid #ae1308; 
-      margin-top: 20px; 
-      padding-top: 12px;
+      margin-top: 15px; 
+      padding-top: 10px;
       color: #ae1308; /* Red color for bank details */
       font-weight: bold;
       font-size: 11px;
@@ -278,12 +250,22 @@
       font-weight: bold;
     }
     
-    .bank-detail { 
+    .bank-info p { 
       color: #ae1308; 
       font-weight: bold;
-      margin-bottom: 4px;
-      line-height: 1.4;
-      font-size: 11px;
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+    
+    .bank-info .col-6:first-child p {
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+    
+    .bank-info .col-6:last-child p {
+      margin-bottom: 3px;
+      line-height: 1.3;
+      font-weight: normal;
     }
     
     .total-section { 
@@ -319,22 +301,10 @@
       .mt-5 { margin-top: 1rem; }
       .my-5 { margin-top: 1rem; margin-bottom: 1rem; }
       .signature-line { 
-        min-height: 30px; 
-        margin-top: 5px; 
-        padding-top: 5px; 
+        min-height: 25px; 
+        margin-top: 3px; 
+        padding-top: 3px; 
         font-size: 10px;
-      }
-      .signature-text {
-        font-size: 10px !important;
-      }
-      .terms-text {
-        font-size: 10px !important;
-      }
-      .summary-label {
-        font-size: 10px !important;
-      }
-      .summary-value {
-        font-size: 10px !important;
       }
       footer { 
         position: static !important;
@@ -358,13 +328,22 @@
       .total-amount { font-size: 12px; }
       .bank-info { 
         font-size: 10px !important;
-        margin-top: 15px !important;
-        padding-top: 10px !important;
+        margin-top: 10px !important;
+        padding-top: 8px !important;
       }
-      .bank-detail { 
-        margin-bottom: 3px !important;
-        line-height: 1.3 !important;
-        font-size: 10px !important;
+      .bank-info p { 
+        margin-bottom: 2px !important;
+        line-height: 1.2 !important;
+      }
+      .bank-info .col-6:first-child p {
+        margin-bottom: 2px !important;
+        line-height: 1.2 !important;
+        font-weight: bold !important;
+      }
+      .bank-info .col-6:last-child p {
+        margin-bottom: 2px !important;
+        line-height: 1.2 !important;
+        font-weight: normal !important;
       }
     }
   </style>
@@ -446,39 +425,39 @@
 
   <footer>
     <!-- Financial Summary - Every Page -->
-    <div class="row align-items-center mt-3">
-      <div class="col-6">
-        <p class="terms-text">Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
+    <div class="row align-items-center mt-2">
+      <div class="col-6 mt-2 mb-3">
+        <p>Es gelten stets die Allgemeinen Geschäftsbedingungen :</p>
       </div>
-      <div class="col-4">
-        <p class="summary-label">Netto-Gesamtbestellsumme:</p>
-        <p class="summary-label">zuzüglich 7% Mehrwertsteuer:</p>
-        <p class="summary-label">zuzüglich 19% Mehrwertsteuer:</p>
+      <div class="col-4 mt-2 mb-3">
+        <p>Netto-Gesamtbestellsumme:</p>
+        <p>zuzüglich 7% Mehrwertsteuer:</p>
+        <p>zuzüglich 19% Mehrwertsteuer:</p>
       </div>
       <div class="col-2">
-        <p class="summary-value"><%= totalNet.toFixed(2) %>€</p>
-        <p class="summary-value"><%= vat7.toFixed(2) %>€</p>
-        <p class="summary-value"><%= vat19.toFixed(2) %>€</p>
+        <p><%= totalNet.toFixed(2) %>€</p>
+        <p><%= vat7.toFixed(2) %>€</p>
+        <p><%= vat19.toFixed(2) %>€</p>
       </div>
     </div>
     
     <div class="row align-items-center">
       <div class="col-6"></div>
-      <div class="col-4 total-section">
-        <h3 class="total-amount">Rechnungsbetrag:</h3>
+      <div class="col-4 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount">Rechnungsbetrag:</h3>
       </div>
-      <div class="col-2 total-section">
-        <h3 class="total-amount"><%= totalGross.toFixed(2) %>€</h3>
+      <div class="col-2 total-section mt-2">
+        <h3 class="mt-2 pt-2 total-amount"><%= totalGross.toFixed(2) %>€</h3>
       </div>
     </div>
     
     <!-- Signatures - Every Page -->
-    <div class="row mt-4">
+    <div class="row mt-3">
       <div class="col-6 signature-line">
-        <span class="signature-text">Unterschrift Kunde / Artikel erhalten:</span>
+        <span>Unterschrift Kunde / Artikel erhalten:</span>
       </div>
       <div class="col-6 signature-line">
-        <span class="signature-text">Unterschrift Verkäufer / Artikel geliefert:</span>
+        <span>Unterschrift Verkäufer / Artikel geliefert:</span>
       </div>
     </div>
     
@@ -489,16 +468,20 @@
       const isLastPage = pageNumber === totalPages;
     %>
     <% if (isLastPage) { %>
-    <div class="row bank-info mt-4">
+    <div class="row bank-info mt-3">
       <div class="col-6">
-        <p class="bank-detail"><strong>IBAN:</strong> DE44 8605 5592 1090 3534 28</p>
-        <p class="bank-detail"><strong>BIC:</strong> WELADE8LXXX</p>
-        <p class="bank-detail"><strong>BANK:</strong> Stadt- und kreissparkasse leipzig</p>
-        <p class="bank-detail"><strong>BANK-Anschrift:</strong> Humboldtstraße 25, 04008 Leipzig</p>
-        <p class="bank-detail"><strong>Verwendungszweck:</strong> Geben Sie bitte die Rechnungsnummer an!</p>
+        <p><strong>IBAN:</strong></p>
+        <p><strong>BIC:</strong></p>
+        <p><strong>BANK:</strong></p>
+        <p><strong>BANK-Anschrift:</strong></p>
+        <p><strong>Verwendungszweck:</strong></p>
       </div>
       <div class="col-6">
-        <!-- Empty column for proper alignment -->
+        <p>DE44 8605 5592 1090 3534 28</p>
+        <p>WELADE8LXXX</p>
+        <p>Stadt- und kreissparkasse leipzig</p>
+        <p>Humboldtstraße 25, 04008 Leipzig</p>
+        <p>Geben Sie bitte die Rechnungsnummer an!</p>
       </div>
     </div>
     <% } %>
