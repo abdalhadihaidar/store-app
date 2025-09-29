@@ -407,7 +407,11 @@
           <span><%= storePostalCode %><br/></span>
         </div>
         <div class="col-3 text-right">
-          <img src="Capture.png" alt="Logo" />
+          <% if (logoBase64) { %>
+            <img src="data:image/png;base64,<%= logoBase64 %>" alt="Logo" style="max-width: 100px; height: auto;" />
+          <% } else { %>
+            <div style="width: 100px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 12px;">Logo</div>
+          <% } %>
           <div class="text-right-left">
             <span>Horburger str.97</span><br/>
             <span>04205 Leipzig</span><br/>

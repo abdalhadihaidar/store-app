@@ -178,6 +178,15 @@ export class InvoiceService {
       return addGermanFieldsToOrderItem(baseItem);
     });
 
+    // Load logo base64 data
+    let logoBase64 = '';
+    try {
+      const logoPath = require('path').join(__dirname, '../../templates/logo-base64.txt');
+      logoBase64 = require('fs').readFileSync(logoPath, 'utf8').trim();
+    } catch (error: any) {
+      console.warn('⚠️ Could not load logo base64 data:', error?.message || 'Unknown error');
+    }
+
     const templateData = {
       storeName: order.store?.name,
       userName: printData?.userName || order.user?.name,
@@ -193,6 +202,7 @@ export class InvoiceService {
       vat7: vat7Sum,
       vat19: vat19Sum,
       totalGross: order.totalPrice + order.totalTax,
+      logoBase64: logoBase64,
     };
 
     // Use paginated PDF generation for proper page handling
@@ -351,10 +361,8 @@ export class InvoiceService {
         }
         
         // Generate PDF from the combined HTML
-        const browser = await require('puppeteer').launch({
-          headless: 'new',
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+        const { launchPuppeteer } = require('./puppeteer.config');
+        const browser = await launchPuppeteer();
         
         try {
           const page = await browser.newPage();
