@@ -518,13 +518,17 @@
       - Every page: Header + Table + Footer (calculations + signatures)
       - Only last page: All of the above + Bank details
       - Items per page: 18 (calculated based on A4 page size)
+      - Each page is a complete invoice with its own summary and signature
     -->
     <% 
       const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 18);
       const currentPageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
       const isLastPageFlag = typeof isLastPage !== 'undefined' ? isLastPage : (currentPageNumber === calculatedTotalPages);
+      
+      // For multiple invoices, each should be complete with bank details
+      const showBankDetails = isLastPageFlag || (typeof totalPages !== 'undefined' && totalPages === 1);
     %>
-    <% if (isLastPageFlag) { %>
+    <% if (showBankDetails) { %>
     <div class="row bank-info mt-3">
       <div class="col-6">
         <p><strong>IBAN:</strong></p>

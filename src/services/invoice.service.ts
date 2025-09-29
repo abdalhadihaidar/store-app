@@ -289,7 +289,86 @@ export class InvoiceService {
   }
 
   /**
+   * Generate multiple invoices as separate A4 pages
+   * Each invoice gets its own complete page with summary and signature
+   */
+  private static async generateMultipleInvoicesPdf(
+    invoices: Array<{ order: Order; templateData: any }>,
+    outPath: string
+  ) {
+    try {
+      console.log('🔧 Starting multiple invoices PDF generation...');
+      console.log('🔧 Number of invoices:', invoices.length);
+
+      const { launchPuppeteer } = require('./puppeteer.config');
+      const browser = await launchPuppeteer();
+      
+      try {
+        const page = await browser.newPage();
+        const pdfPages: Buffer[] = [];
+        
+        // Generate each invoice as a separate A4 page
+        for (let i = 0; i < invoices.length; i++) {
+          const { order, templateData } = invoices[i];
+          
+          console.log(`🔧 Generating invoice ${i + 1}/${invoices.length} for order ${order.id}`);
+
+          const pageData = {
+            ...templateData,
+            items: templateData.items,
+            isLastPage: true, // Each invoice is complete on its own page
+            currentPage: 1,
+            totalPages: 1
+          };
+
+          // Generate HTML for this invoice
+          const templatePath = require('path').resolve(__dirname, '../../templates/invoice.ejs');
+          const pageHtml = await require('ejs').renderFile(templatePath, pageData);
+          
+          // Set content and generate PDF for this invoice
+          await page.setContent(pageHtml, { waitUntil: 'networkidle0' });
+          
+          const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+            preferCSSPageSize: true,
+            displayHeaderFooter: false
+          });
+          
+          pdfPages.push(pdfBuffer);
+          console.log(`✅ Invoice ${i + 1} generated, size: ${pdfBuffer.length} bytes`);
+        }
+        
+        // Merge all invoice pages into a single PDF
+        console.log('🔧 Merging invoice pages...');
+        const { PDFDocument } = await import('pdf-lib');
+        const finalPdf = await PDFDocument.create();
+        
+        for (const pdfBuffer of pdfPages) {
+          const pdf = await PDFDocument.load(pdfBuffer);
+          const pages = await finalPdf.copyPages(pdf, pdf.getPageIndices());
+          pages.forEach((page) => finalPdf.addPage(page));
+        }
+        
+        const finalPdfBytes = await finalPdf.save();
+        require('fs').writeFileSync(outPath, finalPdfBytes);
+        
+        console.log('✅ Multiple invoices PDF generated successfully:', outPath);
+        
+      } finally {
+        await browser.close();
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error generating multiple invoices PDF:', error);
+      throw new Error(`Multiple invoices PDF generation failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Generate paginated invoice PDF with proper A4 page breaks and no blue labels
+   * Each page is a complete invoice with summary and signature
    */
   private static async generatePaginatedInvoicePdf(
     order: Order,
@@ -335,7 +414,7 @@ export class InvoiceService {
           const page = await browser.newPage();
           const pdfPages: Buffer[] = [];
           
-          // Generate each page separately
+          // Generate each page separately - each page is a complete invoice
           for (let pageNum = 0; pageNum < totalPages; pageNum++) {
             const startIndex = pageNum * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
@@ -344,12 +423,23 @@ export class InvoiceService {
             
             console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
 
+            // Calculate totals for this page only
+            const pageTotalNet = pageItems.reduce((sum, item) => sum + item.total, 0);
+            const pageVat7 = pageItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+            const pageVat19 = pageItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+            const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
+
             const pageData = {
               ...templateData,
               items: pageItems,
               isLastPage,
               currentPage: pageNum + 1,
-              totalPages
+              totalPages,
+              // Override totals for this page
+              totalNet: pageTotalNet,
+              vat7: pageVat7,
+              vat19: pageVat19,
+              totalGross: pageTotalGross
             };
 
             // Generate HTML for this page only
@@ -406,12 +496,23 @@ export class InvoiceService {
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
           
+          // Calculate totals for this page only
+          const pageTotalNet = pageItems.reduce((sum, item) => sum + item.total, 0);
+          const pageVat7 = pageItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+          const pageVat19 = pageItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+          const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
+          
           const pageData = {
             ...templateData,
             items: pageItems,
             isLastPage,
             currentPage: pageNum + 1,
-            totalPages
+            totalPages,
+            // Override totals for this page
+            totalNet: pageTotalNet,
+            vat7: pageVat7,
+            vat19: pageVat19,
+            totalGross: pageTotalGross
           };
           
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
