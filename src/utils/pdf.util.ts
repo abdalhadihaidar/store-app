@@ -24,14 +24,11 @@ async function renderHtmlToPdf(html: string, outPath: string) {
       format: 'A4', 
       printBackground: true,
       margin: {
-        top: '0mm',
-        right: '0mm',
-        bottom: '0mm',
-        left: '0mm'
-      },
-      preferCSSPageSize: true,
-      displayHeaderFooter: false,
-      scale: 1.0
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm'
+      }
     });
   } finally {
     await browser.close();
@@ -82,14 +79,11 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
         format: 'A4',
         printBackground: true,
         margin: {
-          top: '0mm',
-          right: '0mm',
-          bottom: '0mm',
-          left: '0mm'
-        },
-        preferCSSPageSize: true,
-        displayHeaderFooter: false,
-        scale: 1.0
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
+        }
       });
       
       console.log('✅ PDF buffer generated, size:', pdfBuffer.length);
@@ -247,14 +241,11 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
           format: 'A4',
           printBackground: true,
           margin: {
-            top: '0mm',
-            right: '0mm',
-            bottom: '0mm',
-            left: '0mm',
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
           },
-          preferCSSPageSize: true,
-          displayHeaderFooter: false,
-          scale: 1.0
         });
 
         fs.writeFileSync(outPath, pdfBuffer);
@@ -296,17 +287,14 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
           format: 'A4', 
           printBackground: true,
           margin: {
-            top: '0mm',
-            right: '0mm',
-            bottom: '0mm',
-            left: '0mm'
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm'
           },
           // Add page break handling
           preferCSSPageSize: true,
-          displayHeaderFooter: false,
-          // Ensure proper page breaks
-          pageRanges: '1-',
-          scale: 1.0
+          displayHeaderFooter: false
         });
         
         console.log('🔧 PDF buffer generated, size:', pdfBuffer.length);
@@ -806,6 +794,13 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
+        /* Ensure controls are hidden in print/PDF */
+        @media print {
+            .pdf-controls {
+                display: none !important;
+            }
+        }
+        
         .pdf-controls button {
             background: white;
             color: #007bff;
@@ -868,6 +863,10 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
         async function convertToPdf() {
             try {
                 console.log('🔧 Starting PDF conversion...');
+                
+                // Hide controls before conversion
+                const controls = document.querySelector('.pdf-controls');
+                if (controls) controls.style.display = 'none';
                 
                 // Show loading state
                 const button = event.target;
@@ -932,6 +931,9 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
                 button.innerHTML = originalText;
                 button.disabled = false;
                 
+                // Show controls again
+                if (controls) controls.style.display = 'block';
+                
                 // Show success message
                 showMessage('✅ PDF downloaded successfully!', 'success');
                 
@@ -942,6 +944,10 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
                 const button = event.target;
                 button.innerHTML = '📥 Download PDF';
                 button.disabled = false;
+                
+                // Show controls again
+                const controls = document.querySelector('.pdf-controls');
+                if (controls) controls.style.display = 'block';
                 
                 // Show error message
                 showMessage('❌ PDF conversion failed. Please try again.', 'error');
