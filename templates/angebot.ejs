@@ -15,24 +15,47 @@
       padding: 0 !important;
       min-height: 100vh;
       position: relative;
-      width: 210mm; /* A4 width */
-      max-width: 210mm;
+      width: 100%;
+      max-width: 210mm; /* A4 width */
       margin: 0 auto !important;
       overflow-x: hidden;
     }
     
-    .angebot { 
-      padding-top: 5px; 
-      margin-top: 5px; 
-      padding-bottom: 90mm; /* Increased space for calculation summary footer */
+    /* A4 page dimensions - PDF optimized */
+    .a4-page {
+      width: 210mm;
       min-height: 297mm; /* A4 height */
+      max-height: 297mm;
+      margin: 0 auto;
+      padding: 20mm 15mm 15mm 15mm; /* Top, Right, Bottom, Left - proper A4 margins */
+      box-sizing: border-box;
+      background: white;
       position: relative;
+      page-break-after: always;
+      page-break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .a4-page:last-child {
+      page-break-after: avoid;
+    }
+    
+    .angebot { 
+      padding: 0; 
+      margin: 0; 
+      min-height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
     
     .container { 
       max-width: 100%; 
       margin: 0 auto; 
-      padding: 0 15px; 
+      padding: 0; 
+      flex: 1;
     }
     
     .row { 
@@ -200,20 +223,18 @@
     }
     
     footer { 
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
+      position: relative;
+      width: 100%;
       background: white;
       border-top: 2px solid #ae1308; 
       font-weight: bold; 
       font-size: 11px; 
-      padding: 1rem 15px;
-      margin: 0 !important;
-      z-index: 9999;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      max-height: 80mm; /* Increased height for calculation summary */
+      padding: 1rem 0;
+      margin: 0;
+      min-height: 50mm; /* Minimum height for calculation summary */
+      page-break-inside: avoid; /* Prevent footer from breaking across pages */
+      margin-top: auto; /* Push footer to bottom of page */
+      flex-shrink: 0; /* Prevent footer from shrinking */
     }
     
     footer .flex { 
@@ -221,17 +242,7 @@
       justify-content: space-around; 
     }
     
-    /* Ensure footer is always at bottom of viewport */
-    @media screen {
-      footer {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        z-index: 9999 !important;
-      }
-    }
+    /* Remove fixed positioning for better A4 alignment */
     
     footer .justify-content-around { 
       justify-content: space-around; 
@@ -276,52 +287,113 @@
     @media print {
       @page {
         size: A4;
-        margin: 15mm;
+        margin: 0;
       }
-      body { 
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      html, body { 
         font-size: 12px; 
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .a4-page {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 20mm 15mm 15mm 15mm; /* Proper A4 print margins */
+        box-sizing: border-box;
+        page-break-after: always;
+        page-break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+      }
+      .a4-page:last-child {
+        page-break-after: avoid;
       }
       .angebot { 
-        padding-top: 0; 
-        margin-top: 0; 
-        padding-bottom: 40mm; /* A4-appropriate print footer space */
-        min-height: auto !important;
+        padding: 0;
+        margin: 0;
+        max-width: none;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .container {
+        padding: 0;
+        width: 100%;
+        flex: 1;
       }
       .mt-4 { margin-top: 0.5rem; }
       .mt-5 { margin-top: 1rem; }
       .my-5 { margin-top: 1rem; margin-bottom: 1rem; }
-      .signature-line { min-height: 20px; margin-top: 3px; padding-top: 3px; }
+      .signature-line { 
+        min-height: 20px; 
+        margin-top: 3px; 
+        padding-top: 3px; 
+        font-size: 10px;
+      }
       footer { 
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        width: 100% !important;
-        max-width: none !important;
+        position: relative;
+        width: 100%;
         page-break-inside: avoid; 
-        margin: 0 !important;
-        padding: 0.5rem 15px !important;
-        font-size: 10px !important;
-        max-height: 30mm !important;
+        margin: 0;
+        padding: 0.5rem 0;
+        font-size: 10px;
+        border-top: 2px solid #ae1308;
+        margin-top: auto;
+        min-height: 40mm;
+        flex-shrink: 0;
       }
       table { 
         page-break-inside: auto; 
-        margin-bottom: 3px; 
+        margin-bottom: 5px; 
         margin-top: 0.5rem;
-        font-size: 11px;
+        font-size: 10px;
+        width: 100%;
       }
-      tr { page-break-inside: avoid; page-break-after: auto; }
-      thead { display: table-header-group; }
-      tfoot { display: table-footer-group; }
+      tr { 
+        page-break-inside: avoid; 
+        page-break-after: auto; 
+      }
+      thead { 
+        display: table-header-group; 
+        page-break-inside: avoid;
+        page-break-after: avoid;
+      }
+      tfoot { 
+        display: table-footer-group; 
+      }
+      .angebot-header {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+      }
+      .angebot-row {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+      }
       .total-amount { font-size: 12px; }
+      .bank-info { 
+        font-size: 9px;
+        margin-top: 10px;
+        padding-top: 8px;
+        page-break-inside: avoid;
+      }
+      .bank-info p { 
+        margin-bottom: 2px;
+        line-height: 1.2;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="angebot">
+  <div class="a4-page">
+    <div class="angebot">
     <div class="container mt-4 kk">
       <div class="row">
         <div class="col-9 text-left">
@@ -469,5 +541,7 @@
     </div>
     <% } %>
   </footer>
+    </div>
+  </div>
 </body>
 </html>

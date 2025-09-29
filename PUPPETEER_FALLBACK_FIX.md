@@ -92,3 +92,4 @@ try {
 - Works with existing Puppeteer configuration
 - Graceful degradation when Chrome is not available
 - Maintains all existing functionality
+

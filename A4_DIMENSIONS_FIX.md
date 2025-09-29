@@ -158,3 +158,4 @@ await page.pdf({
 4. **Test with different item counts** (1 page, 2 pages, 3+ pages)
 
 The A4 dimensions issue should now be resolved! 🎉
+

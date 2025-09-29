@@ -114,3 +114,4 @@ const pageData = {
 4. **Test with different item counts** (1 page, 2 pages, 3+ pages)
 
 The pagination issue should now be resolved! 🎉
+
