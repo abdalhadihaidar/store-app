@@ -27,7 +27,7 @@
       min-height: 297mm; /* A4 height */
       max-height: 297mm;
       margin: 0 auto;
-      padding: 20mm 15mm 15mm 15mm; /* Top, Right, Bottom, Left - proper A4 margins */
+      padding: 15mm 12mm 12mm 12mm; /* Reduced margins for better content utilization */
       box-sizing: border-box;
       background: white;
       position: relative;
@@ -35,6 +35,7 @@
       page-break-inside: avoid;
       display: flex;
       flex-direction: column;
+      overflow: hidden; /* Prevent content overflow */
     }
     
     .a4-page:last-child {
@@ -56,6 +57,7 @@
       margin: 0 auto; 
       padding: 0; 
       flex: 1;
+      overflow: hidden; /* Prevent content overflow */
     }
     
     .row { 
@@ -189,6 +191,7 @@
       border-collapse: collapse; 
       margin-bottom: 8px; 
       margin-top: 0.8rem;
+      table-layout: fixed; /* Fixed layout for consistent column widths */
     }
     
     table thead .firsttr th { 
@@ -209,10 +212,12 @@
     }
     
     table th, table td { 
-      padding: 6px 8px; 
+      padding: 2px 4px; 
       text-align: center; 
-      border-bottom: 1px solid #ddd; 
+      border-bottom: 0.5px solid #ddd; 
       vertical-align: middle;
+      word-wrap: break-word; /* Prevent text overflow */
+      overflow: hidden;
     }
     
     table td { 
@@ -230,9 +235,10 @@
       border-top: 2px solid #ae1308; 
       font-weight: bold; 
       font-size: 11px; 
-      padding: 1rem 0;
+      padding: 0.8rem 0;
       margin: 0;
-      min-height: 50mm; /* Minimum height for calculation summary */
+      min-height: 45mm; /* Reduced height for better space utilization */
+      max-height: 50mm; /* Maximum height to prevent overflow */
       page-break-inside: avoid; /* Prevent footer from breaking across pages */
       margin-top: auto; /* Push footer to bottom of page */
       flex-shrink: 0; /* Prevent footer from shrinking */
@@ -306,12 +312,13 @@
         width: 210mm;
         height: 297mm;
         margin: 0;
-        padding: 20mm 15mm 15mm 15mm; /* Proper A4 print margins */
+        padding: 15mm 12mm 12mm 12mm; /* Consistent with screen margins */
         box-sizing: border-box;
         page-break-after: always;
         page-break-inside: avoid;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
       .a4-page:last-child {
         page-break-after: avoid;
@@ -344,19 +351,21 @@
         width: 100%;
         page-break-inside: avoid; 
         margin: 0;
-        padding: 0.5rem 0;
-        font-size: 10px;
+        padding: 0.4rem 0;
+        font-size: 9px;
         border-top: 2px solid #ae1308;
         margin-top: auto;
-        min-height: 40mm;
+        min-height: 35mm;
+        max-height: 40mm;
         flex-shrink: 0;
       }
       table { 
-        page-break-inside: auto; 
+        page-break-inside: avoid; /* Prevent table from breaking across pages */
         margin-bottom: 5px; 
         margin-top: 0.5rem;
-        font-size: 10px;
+        font-size: 9px;
         width: 100%;
+        table-layout: fixed;
       }
       tr { 
         page-break-inside: avoid; 
@@ -509,7 +518,8 @@
     
     <!-- Bank Information - Only on last page (or single page) -->
     <% 
-      const totalPages = Math.ceil(returns.length / 21);
+      // Consistent pagination: 20 items per page for better A4 utilization
+      const totalPages = Math.ceil(returns.length / 20);
       const pageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
       const isLastPage = pageNumber === totalPages;
     %>
