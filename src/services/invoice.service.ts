@@ -331,7 +331,7 @@ export class InvoiceService {
       console.log('🔧 Generating single PDF with proper page breaks');
       
       try {
-        // Generate HTML with all pages and proper page breaks
+        // Generate HTML with proper page breaks for each A4 page
         let fullHtml = '';
         
         for (let pageNum = 0; pageNum < totalPages; pageNum++) {
@@ -352,13 +352,35 @@ export class InvoiceService {
 
           // Generate HTML for this page
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
-          fullHtml += pageHtml;
           
-          // Add page break between pages (except for the last page)
-          if (pageNum < totalPages - 1) {
-            fullHtml += '</div></div><div class="a4-page"><div class="invoice">';
+          // Add proper page break structure for each page
+          if (pageNum === 0) {
+            // First page - start with opening structure
+            fullHtml += pageHtml;
+          } else {
+            // Subsequent pages - add page break and new page structure
+            fullHtml += `
+              </div>
+            </div>
+            <div class="a4-page">
+              <div class="invoice">
+            `;
+            // Extract just the content part (without the outer divs)
+            const contentMatch = pageHtml.match(/<div class="container mt-4 kk">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/);
+            if (contentMatch) {
+              fullHtml += contentMatch[1];
+            } else {
+              // Fallback: add the full page HTML
+              fullHtml += pageHtml;
+            }
           }
         }
+        
+        // Close the final page structure
+        fullHtml += `
+          </div>
+        </div>
+        `;
         
         // Generate PDF from the combined HTML
         const { launchPuppeteer } = require('./puppeteer.config');
@@ -374,7 +396,11 @@ export class InvoiceService {
             printBackground: true,
             margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
             preferCSSPageSize: true,
-            displayHeaderFooter: false
+            displayHeaderFooter: false,
+            // Ensure proper page breaks
+            pageRanges: '1-',
+            // Force each .a4-page to be a separate page
+            scale: 1.0
           });
           
           console.log('✅ Single PDF with page breaks generated successfully:', filePath);
@@ -408,13 +434,35 @@ export class InvoiceService {
           };
           
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
-          fullHtml += pageHtml;
           
-          // Add page break for multi-page
-          if (pageNum < totalPages - 1) {
-            fullHtml += '</div></div><div class="a4-page"><div class="invoice">';
+          // Add proper page break structure for each page
+          if (pageNum === 0) {
+            // First page - start with opening structure
+            fullHtml += pageHtml;
+          } else {
+            // Subsequent pages - add page break and new page structure
+            fullHtml += `
+              </div>
+            </div>
+            <div class="a4-page">
+              <div class="invoice">
+            `;
+            // Extract just the content part (without the outer divs)
+            const contentMatch = pageHtml.match(/<div class="container mt-4 kk">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/);
+            if (contentMatch) {
+              fullHtml += contentMatch[1];
+            } else {
+              // Fallback: add the full page HTML
+              fullHtml += pageHtml;
+            }
           }
         }
+        
+        // Close the final page structure
+        fullHtml += `
+          </div>
+        </div>
+        `;
         
         // Add PDF conversion script to HTML
         const enhancedHtml = `

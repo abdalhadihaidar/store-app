@@ -24,11 +24,14 @@ async function renderHtmlToPdf(html: string, outPath: string) {
       format: 'A4', 
       printBackground: true,
       margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
-      }
+        top: '0mm',
+        right: '0mm',
+        bottom: '0mm',
+        left: '0mm'
+      },
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
+      scale: 1.0
     });
   } finally {
     await browser.close();
@@ -79,11 +82,14 @@ async function generatePdfAlternative(templatePath: string, templateData: any, o
         format: 'A4',
         printBackground: true,
         margin: {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm'
-        }
+          top: '0mm',
+          right: '0mm',
+          bottom: '0mm',
+          left: '0mm'
+        },
+        preferCSSPageSize: true,
+        displayHeaderFooter: false,
+        scale: 1.0
       });
       
       console.log('✅ PDF buffer generated, size:', pdfBuffer.length);
@@ -241,11 +247,14 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
           format: 'A4',
           printBackground: true,
           margin: {
-            top: '20mm',
-            right: '15mm',
-            bottom: '20mm',
-            left: '15mm',
+            top: '0mm',
+            right: '0mm',
+            bottom: '0mm',
+            left: '0mm',
           },
+          preferCSSPageSize: true,
+          displayHeaderFooter: false,
+          scale: 1.0
         });
 
         fs.writeFileSync(outPath, pdfBuffer);
@@ -287,14 +296,17 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
           format: 'A4', 
           printBackground: true,
           margin: {
-            top: '20mm',
-            right: '15mm',
-            bottom: '20mm',
-            left: '15mm'
+            top: '0mm',
+            right: '0mm',
+            bottom: '0mm',
+            left: '0mm'
           },
           // Add page break handling
           preferCSSPageSize: true,
-          displayHeaderFooter: false
+          displayHeaderFooter: false,
+          // Ensure proper page breaks
+          pageRanges: '1-',
+          scale: 1.0
         });
         
         console.log('🔧 PDF buffer generated, size:', pdfBuffer.length);

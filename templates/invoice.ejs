@@ -31,6 +31,13 @@
       box-sizing: border-box;
       background: white;
       position: relative;
+      page-break-after: always; /* Force page break after each .a4-page */
+      page-break-inside: avoid; /* Prevent content from breaking inside the page */
+    }
+    
+    /* Ensure the last page doesn't have a page break after it */
+    .a4-page:last-child {
+      page-break-after: avoid;
     }
     
     .invoice { 
@@ -309,10 +316,14 @@
         margin: 0;
         padding: 15mm;
         box-sizing: border-box;
-        page-break-after: always;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        break-inside: avoid !important;
       }
       .a4-page:last-child {
-        page-break-after: avoid;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
       .invoice { 
         padding: 0;
