@@ -533,20 +533,37 @@ export class InvoiceService {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice ${templateData.invoiceNumber}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
         .pdf-controls { 
             position: fixed; top: 10px; right: 10px; 
             background: #007bff; color: white; padding: 10px; 
             border-radius: 5px; z-index: 1000; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         .pdf-controls button { 
             background: white; color: #007bff; border: none; 
             padding: 8px 16px; margin: 0 5px; border-radius: 3px; 
             cursor: pointer; font-weight: bold; 
         }
+        .pdf-controls button:hover {
+            background: #f8f9fa;
+        }
         @media print { 
             .pdf-controls { display: none !important; } 
-            body { padding: 0; }
+            body { padding: 0; background: white; }
+        }
+        /* Ensure proper page breaks for PDF */
+        .a4-page {
+            page-break-after: always;
+            page-break-inside: avoid;
+        }
+        .a4-page:last-child {
+            page-break-after: avoid;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -566,29 +583,30 @@ export class InvoiceService {
                 const controls = document.querySelector('.pdf-controls');
                 if (controls) controls.style.display = 'none';
                 
-                const element = document.body;
-                const canvas = await html2canvas(element, { 
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff'
-                });
+                // Get all A4 pages
+                const pages = document.querySelectorAll('.a4-page');
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                const imgWidth = 210;
-                const pageHeight = 295;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
                 
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
+                for (let i = 0; i < pages.length; i++) {
+                    const page = pages[i];
+                    const canvas = await html2canvas(page, { 
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: 794, // A4 width in pixels at 96 DPI
+                        height: 1123 // A4 height in pixels at 96 DPI
+                    });
+                    
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    const imgWidth = 210; // A4 width in mm
+                    const imgHeight = 297; // A4 height in mm
+                    
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
                 }
                 
                 const filename = 'invoice_${templateData.invoiceNumber}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf';
@@ -596,7 +614,10 @@ export class InvoiceService {
                 
                 // Show controls again
                 if (controls) controls.style.display = 'block';
+                
+                console.log('✅ PDF generated successfully with', pages.length, 'pages');
             } catch (error) {
+                console.error('❌ PDF conversion failed:', error);
                 alert('PDF conversion failed. Please use the print function instead.');
             }
         }

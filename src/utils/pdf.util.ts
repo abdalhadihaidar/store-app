@@ -781,6 +781,15 @@ function enhanceHtmlForPdfConversion(html: string, documentType: string, documen
             padding: 20px;
         }
         
+        /* Ensure proper page breaks for PDF */
+        .a4-page {
+            page-break-after: always;
+            page-break-inside: avoid;
+        }
+        .a4-page:last-child {
+            page-break-after: avoid;
+        }
+        
         /* Hide PDF conversion controls in final PDF */
         .pdf-controls {
             position: fixed;
