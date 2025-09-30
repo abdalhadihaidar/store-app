@@ -156,8 +156,8 @@ export class InvoiceService {
 
     // Calculate items per page based on A4 page size and template design
     // With header (~200px), footer (~150px), and table rows (~20px each), 
-    // we can fit approximately 18 items per page on A4
-    const ITEMS_PER_PAGE = 18;
+    // we can fit approximately 15 items per page on A4
+    const ITEMS_PER_PAGE = 15;
     
     const processedItems = (order.items || []).map(i => {
       const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
@@ -423,23 +423,18 @@ export class InvoiceService {
             
             console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
 
-            // Calculate totals for this page only
-            const pageTotalNet = pageItems.reduce((sum, item) => sum + item.total, 0);
-            const pageVat7 = pageItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
-            const pageVat19 = pageItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
-            const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
-
+            // Use entire order totals, not page-specific totals
             const pageData = {
               ...templateData,
               items: pageItems,
               isLastPage,
               currentPage: pageNum + 1,
               totalPages,
-              // Override totals for this page
-              totalNet: pageTotalNet,
-              vat7: pageVat7,
-              vat19: pageVat19,
-              totalGross: pageTotalGross
+              // Keep original order totals for all pages
+              totalNet: templateData.totalNet,
+              vat7: templateData.vat7,
+              vat19: templateData.vat19,
+              totalGross: templateData.totalGross
             };
 
             // Generate HTML for this page only

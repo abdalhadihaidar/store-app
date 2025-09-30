@@ -476,14 +476,15 @@
         <thead>
           <tr class="firsttr">
             <th style="width: 8%;">Artikel-Nr</th>
-            <th style="width: 25%;">Artikel</th>
+            <th style="width: 20%;">Artikel</th>
+            <th style="width: 8%;">Packet</th>
             <th style="width: 8%;">Anzahl pro Paket</th>
             <th style="width: 8%;">Menge</th>
             <th style="width: 10%;">Netto-Einzelpreis</th>
             <th style="width: 10%;">Brutto-Gesamtpreis</th>
             <th style="width: 8%;">7%</th>
             <th style="width: 8%;">19%</th>
-            <th style="width: 15%;">enthaltene MwSt</th>
+            <th style="width: 12%;">enthaltene MwSt</th>
           </tr>
         </thead>
         <tbody>
@@ -491,6 +492,7 @@
             <tr>
               <td><%= item.id %></td>
               <td><%= item.name %></td>
+              <td><%= item.packages || 0 %></td>
               <td><%= item.numberPerPackage %></td>
               <td><%= item.quantity %></td>
               <td><%= item.adjustedPrice ? item.adjustedPrice.toFixed(2) : item.price.toFixed(2) %>€</td>

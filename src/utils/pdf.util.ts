@@ -204,7 +204,7 @@ async function generatePdfDirect(templatePath: string, templateData: any, outPat
   }
 }
 
-export async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 10) {
+export async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 15) {
   console.log('🔧 Starting generatePaginatedPdf...');
   console.log('🔧 Template path:', templatePath);
   console.log('🔧 Output path:', outPath);
@@ -384,6 +384,173 @@ export async function generateInvoicePdf(order: Order, templateData: any): Promi
   }
 }
 
+export async function generatePaginatedCreditNotePdf(order: Order, templateData: any, itemsPerPage: number = 20): Promise<PdfGenerationResult> {
+  try {
+    console.log('🔧 Starting paginated credit note PDF generation...');
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/credit_notes');
+    ensureDir(uploadsDir);
+    const fileName = `credit_note_${order.id}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // Validate input data
+    if (!templateData.returns || !Array.isArray(templateData.returns)) {
+      throw new Error('Invalid template data: returns array is missing or invalid');
+    }
+    
+    if (templateData.returns.length === 0) {
+      throw new Error('Cannot generate credit note: no returns found');
+    }
+
+    const totalPages = Math.max(1, Math.ceil(templateData.returns.length / itemsPerPage));
+    console.log('🔧 Total pages:', totalPages);
+    console.log('🔧 Returns count:', templateData.returns.length);
+    console.log('🔧 Items per page:', itemsPerPage);
+    
+    const templatePath = path.resolve(__dirname, '../../templates/creditNote.ejs');
+    
+    // Generate individual PDF pages and merge them
+    console.log('🔧 Generating individual PDF pages and merging...');
+    
+    try {
+      const browser = await launchPuppeteer();
+      
+      try {
+        const page = await browser.newPage();
+        const pdfPages: Buffer[] = [];
+        
+        // Generate each page separately - each page is a complete credit note
+        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+          const startIndex = pageNum * itemsPerPage;
+          const endIndex = Math.min(startIndex + itemsPerPage, templateData.returns.length);
+          const pageReturns = templateData.returns.slice(startIndex, endIndex);
+          const isLastPage = pageNum === totalPages - 1;
+          
+          console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (returns ${startIndex + 1}-${endIndex})`);
+
+          // Use entire order totals, not page-specific totals
+          const pageData = {
+            ...templateData,
+            returns: pageReturns,
+            // Keep original order totals for all pages
+            totalNet: templateData.totalNet,
+            vat7: templateData.vat7,
+            vat19: templateData.vat19,
+            totalGross: templateData.totalGross,
+            isLastPage,
+            currentPage: pageNum + 1,
+            totalPages
+          };
+
+          // Generate HTML for this page only
+          const pageHtml = await ejs.renderFile(templatePath, pageData) as string;
+          
+          // Set content and generate PDF for this page
+          await page.setContent(pageHtml, { waitUntil: 'networkidle0' });
+          
+          const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+            preferCSSPageSize: true,
+            displayHeaderFooter: false
+          });
+          
+          pdfPages.push(pdfBuffer);
+          console.log(`✅ Page ${pageNum + 1} generated, size: ${pdfBuffer.length} bytes`);
+        }
+        
+        // Merge all pages into a single PDF
+        console.log('🔧 Merging PDF pages...');
+        const { PDFDocument } = await import('pdf-lib');
+        const finalPdf = await PDFDocument.create();
+        
+        for (const pdfBuffer of pdfPages) {
+          const pdf = await PDFDocument.load(pdfBuffer);
+          const pages = await finalPdf.copyPages(pdf, pdf.getPageIndices());
+          pages.forEach((page) => finalPdf.addPage(page));
+        }
+        
+        const finalPdfBytes = await finalPdf.save();
+        fs.writeFileSync(filePath, finalPdfBytes);
+        
+        console.log('✅ Multi-page credit note PDF generated successfully:', filePath);
+        
+      } finally {
+        await browser.close();
+      }
+      
+    } catch (puppeteerError: any) {
+      console.error('❌ Puppeteer PDF generation failed:', puppeteerError.message);
+      console.log('🔄 Falling back to HTML generation...');
+      
+      // Fallback: Generate HTML file instead of PDF
+      const htmlFileName = `credit_note_${order.id}_${Date.now()}.html`;
+      const htmlFilePath = path.join(uploadsDir, htmlFileName);
+      
+      // Generate HTML for all pages with proper page breaks
+      let fullHtml = '';
+      let isFirstPage = true;
+      
+      for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+        const startIndex = pageNum * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, templateData.returns.length);
+        const pageReturns = templateData.returns.slice(startIndex, endIndex);
+        const isLastPage = pageNum === totalPages - 1;
+        
+        // Calculate totals for this page only
+        const pageTotalNet = pageReturns.reduce((sum, item) => sum + (item.total || 0), 0);
+        const pageVat7 = pageReturns.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+        const pageVat19 = pageReturns.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+        const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
+        
+        const pageData = {
+          ...templateData,
+          returns: pageReturns,
+          totalNet: pageTotalNet,
+          vat7: pageVat7,
+          vat19: pageVat19,
+          totalGross: pageTotalGross,
+          isLastPage,
+          currentPage: pageNum + 1,
+          totalPages
+        };
+        
+        const pageHtml = await ejs.renderFile(templatePath, pageData) as string;
+        
+        if (isFirstPage) {
+          // For the first page, use the complete HTML structure
+          fullHtml = pageHtml;
+          isFirstPage = false;
+        } else {
+          // For subsequent pages, extract only the content between <body> and </body>
+          const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+          if (bodyMatch) {
+            const bodyContent = bodyMatch[1];
+            // Remove the closing tags from the previous page and add the new page content
+            fullHtml = fullHtml.replace(/<\/body>[\s\S]*$/, '') + bodyContent + '</body></html>';
+          }
+        }
+      }
+      
+      // Add PDF conversion script to HTML
+      const enhancedHtml = enhanceHtmlForPdfConversion(fullHtml, 'credit_note', order.id.toString());
+      
+      fs.writeFileSync(htmlFilePath, enhancedHtml);
+      console.log('✅ HTML credit note generated with PDF conversion:', htmlFilePath);
+      
+      // Return HTML file path instead of PDF
+      return { filePath: htmlFilePath };
+    }
+
+    return { filePath };
+
+  } catch (error: any) {
+    console.error('❌ Error generating paginated credit note PDF:', error);
+    throw error;
+  }
+}
+
 export async function generateCreditNotePdf(order: Order, templateData: any): Promise<PdfGenerationResult> {
   try {
     const uploadsDir = path.resolve(__dirname, '../../uploads/credit_notes');
@@ -425,6 +592,187 @@ export async function generateCreditNotePdf(order: Order, templateData: any): Pr
     }
   } catch (error: any) {
     console.error('❌ Error in generateCreditNotePdf:', error);
+    throw error;
+  }
+}
+
+export async function generatePaginatedAngebotPdf(angebot: any, order: any, items: any[], itemsPerPage: number = 15): Promise<PdfGenerationResult> {
+  try {
+    console.log('🔧 Starting paginated angebot PDF generation...');
+    
+    const uploadsDir = path.resolve(__dirname, '../../uploads/angebots');
+    ensureDir(uploadsDir);
+    const fileName = `angebot_${angebot.id}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // Validate input data
+    if (!items || !Array.isArray(items)) {
+      throw new Error('Invalid items data: items array is missing or invalid');
+    }
+    
+    if (items.length === 0) {
+      throw new Error('Cannot generate angebot: no items found');
+    }
+
+    const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
+    console.log('🔧 Total pages:', totalPages);
+    console.log('🔧 Items count:', items.length);
+    console.log('🔧 Items per page:', itemsPerPage);
+    
+    const templatePath = path.resolve(__dirname, '../../templates/angebot.ejs');
+    
+    // Generate individual PDF pages and merge them
+    console.log('🔧 Generating individual PDF pages and merging...');
+    
+    try {
+      const browser = await launchPuppeteer();
+      
+      try {
+        const page = await browser.newPage();
+        const pdfPages: Buffer[] = [];
+        
+        // Generate each page separately - each page is a complete angebot
+        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+          const startIndex = pageNum * itemsPerPage;
+          const endIndex = Math.min(startIndex + itemsPerPage, items.length);
+          const pageItems = items.slice(startIndex, endIndex);
+          const isLastPage = pageNum === totalPages - 1;
+          
+          console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
+
+          // Use entire order totals, not page-specific totals
+          const pageData = {
+            angebot: {
+              ...angebot,
+              // Keep original order totals for all pages
+              totalNet: angebot.totalNet,
+              tax7Amount: angebot.tax7Amount,
+              tax19Amount: angebot.tax19Amount,
+              totalGross: angebot.totalGross
+            },
+            order,
+            items: pageItems,
+            isLastPage,
+            currentPage: pageNum + 1,
+            totalPages
+          };
+
+          // Generate HTML for this page only
+          const pageHtml = await ejs.renderFile(templatePath, pageData) as string;
+          
+          // Set content and generate PDF for this page
+          await page.setContent(pageHtml, { waitUntil: 'networkidle0' });
+          
+          const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+            preferCSSPageSize: true,
+            displayHeaderFooter: false
+          });
+          
+          pdfPages.push(pdfBuffer);
+          console.log(`✅ Page ${pageNum + 1} generated, size: ${pdfBuffer.length} bytes`);
+        }
+        
+        // Merge all pages into a single PDF
+        console.log('🔧 Merging PDF pages...');
+        const { PDFDocument } = await import('pdf-lib');
+        const finalPdf = await PDFDocument.create();
+        
+        for (const pdfBuffer of pdfPages) {
+          const pdf = await PDFDocument.load(pdfBuffer);
+          const pages = await finalPdf.copyPages(pdf, pdf.getPageIndices());
+          pages.forEach((page) => finalPdf.addPage(page));
+        }
+        
+        const finalPdfBytes = await finalPdf.save();
+        fs.writeFileSync(filePath, finalPdfBytes);
+        
+        console.log('✅ Multi-page angebot PDF generated successfully:', filePath);
+        
+      } finally {
+        await browser.close();
+      }
+      
+    } catch (puppeteerError: any) {
+      console.error('❌ Puppeteer PDF generation failed:', puppeteerError.message);
+      console.log('🔄 Falling back to HTML generation...');
+      
+      // Fallback: Generate HTML file instead of PDF
+      const htmlFileName = `angebot_${angebot.id}_${Date.now()}.html`;
+      const htmlFilePath = path.join(uploadsDir, htmlFileName);
+      
+      // Generate HTML for all pages with proper page breaks
+      let fullHtml = '';
+      let isFirstPage = true;
+      
+      for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+        const startIndex = pageNum * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, items.length);
+        const pageItems = items.slice(startIndex, endIndex);
+        const isLastPage = pageNum === totalPages - 1;
+        
+        // Calculate totals for this page only
+        const pageTotalNet = pageItems.reduce((sum, item) => sum + ((item.adjustedPrice || item.originalPrice) * item.quantity), 0);
+        const pageVat7 = pageItems.reduce((sum, item) => {
+          const taxRate = item.taxRate || 19;
+          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+          return taxRate === 7 ? sum + (itemTotal * 0.07) : sum;
+        }, 0);
+        const pageVat19 = pageItems.reduce((sum, item) => {
+          const taxRate = item.taxRate || 19;
+          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+          return taxRate === 19 ? sum + (itemTotal * 0.19) : sum;
+        }, 0);
+        const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
+        
+        const pageData = {
+          angebot: {
+            ...angebot,
+            totalNet: pageTotalNet,
+            tax7Amount: pageVat7,
+            tax19Amount: pageVat19,
+            totalGross: pageTotalGross
+          },
+          order,
+          items: pageItems,
+          isLastPage,
+          currentPage: pageNum + 1,
+          totalPages
+        };
+        
+        const pageHtml = await ejs.renderFile(templatePath, pageData) as string;
+        
+        if (isFirstPage) {
+          // For the first page, use the complete HTML structure
+          fullHtml = pageHtml;
+          isFirstPage = false;
+        } else {
+          // For subsequent pages, extract only the content between <body> and </body>
+          const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+          if (bodyMatch) {
+            const bodyContent = bodyMatch[1];
+            // Remove the closing tags from the previous page and add the new page content
+            fullHtml = fullHtml.replace(/<\/body>[\s\S]*$/, '') + bodyContent + '</body></html>';
+          }
+        }
+      }
+      
+      // Add PDF conversion script to HTML
+      const enhancedHtml = enhanceHtmlForPdfConversion(fullHtml, 'angebot', angebot.id.toString());
+      
+      fs.writeFileSync(htmlFilePath, enhancedHtml);
+      console.log('✅ HTML angebot generated with PDF conversion:', htmlFilePath);
+      
+      // Return HTML file path instead of PDF
+      return { filePath: htmlFilePath };
+    }
+
+    return { filePath };
+
+  } catch (error: any) {
+    console.error('❌ Error generating paginated angebot PDF:', error);
     throw error;
   }
 }

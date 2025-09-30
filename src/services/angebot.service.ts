@@ -7,7 +7,7 @@ import OrderItem from '../models/orderItem.model';
 import Product from '../models/product.model';
 import { User } from '../models/user.model';
 import Store from '../models/store.model';
-import { generateAngebotPdf } from '../utils/pdf.util';
+import { generateAngebotPdf, generatePaginatedAngebotPdf } from '../utils/pdf.util';
 import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 
 export class AngebotService {
@@ -152,7 +152,29 @@ export class AngebotService {
         console.log('📄 Order data:', JSON.stringify(order, null, 2));
         console.log('📄 Items data:', JSON.stringify(order.items || [], null, 2));
         
-        const pdfResult = await generateAngebotPdf(angebot, order, order.items || []);
+        // Calculate items per page (same as invoice service)
+        const ITEMS_PER_PAGE = 20;
+        
+        // Process items to include packages calculation
+        const processedItems = (order.items || []).map(i => {
+          const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
+          const packages = Math.ceil(i.quantity / (i.unitPerPackageSnapshot || 1));
+          
+          return {
+            id: i.id,
+            name: i.orderProduct?.name || 'N/A',
+            productName: i.orderProduct?.name || 'N/A',
+            quantity: i.quantity,
+            unitPerPackageSnapshot: i.unitPerPackageSnapshot || 1,
+            packages: packages,
+            adjustedPrice: i.adjustedPrice,
+            originalPrice: i.originalPrice,
+            taxRate: ratePercent,
+            orderProduct: i.orderProduct
+          };
+        });
+        
+        const pdfResult = await generatePaginatedAngebotPdf(angebot, order, processedItems, ITEMS_PER_PAGE);
         console.log('✅ Angebot PDF generated:', pdfResult.filePath);
         
         // Update angebot with PDF path (without transaction)

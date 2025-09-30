@@ -2,7 +2,7 @@ import CreditNote from '../models/creditNote.model';
 import Order from '../models/order.model';
 import User from '../models/user.model';
 import Store from '../models/store.model';
-import { generateCreditNotePdf } from '../utils/pdf.util';
+import { generateCreditNotePdf, generatePaginatedCreditNotePdf } from '../utils/pdf.util';
 import { OrderService } from './order.service';
 
 export class CreditNoteService {
@@ -102,7 +102,27 @@ export class CreditNoteService {
         isLastPage: true // Always show bank details for credit notes
       };
       
-      const result = await generateCreditNotePdf(order, templateData);
+      // Calculate items per page (same as invoice service)
+      const ITEMS_PER_PAGE = 20;
+      
+      // Process returns to include packages calculation
+      const processedReturns = templateData.returns.map((ret: any) => {
+        const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
+        const packages = Math.ceil(ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1));
+        
+        return {
+          ...ret,
+          packages: packages,
+          numberPerPackage: relatedItem?.unitPerPackageSnapshot || 1
+        };
+      });
+      
+      const updatedTemplateData = {
+        ...templateData,
+        returns: processedReturns
+      };
+      
+      const result = await generatePaginatedCreditNotePdf(order, updatedTemplateData, ITEMS_PER_PAGE);
       
       if (result && result.filePath) {
         // Update the credit note with the new PDF path
@@ -204,7 +224,27 @@ export class CreditNoteService {
       isLastPage: true // Always show bank details for credit notes
     };
 
-    const { filePath } = await generateCreditNotePdf(order, templateData);
+    // Calculate items per page (same as invoice service)
+    const ITEMS_PER_PAGE = 20;
+    
+    // Process returns to include packages calculation
+    const processedReturns = templateData.returns.map((ret: any) => {
+      const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
+      const packages = Math.ceil(ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1));
+      
+      return {
+        ...ret,
+        packages: packages,
+        numberPerPackage: relatedItem?.unitPerPackageSnapshot || 1
+      };
+    });
+    
+    const updatedTemplateData = {
+      ...templateData,
+      returns: processedReturns
+    };
+
+    const { filePath } = await generatePaginatedCreditNotePdf(order, updatedTemplateData, ITEMS_PER_PAGE);
 
     const credit = await CreditNote.create({
       orderId: order.id,
