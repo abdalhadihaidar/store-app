@@ -204,7 +204,7 @@ async function generatePdfDirect(templatePath: string, templateData: any, outPat
   }
 }
 
-export async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 15) {
+export async function generatePaginatedPdf(templatePath: string, templateData: any, outPath: string, itemsPerPage: number = 13) {
   console.log('🔧 Starting generatePaginatedPdf...');
   console.log('🔧 Template path:', templatePath);
   console.log('🔧 Output path:', outPath);
@@ -596,7 +596,7 @@ export async function generateCreditNotePdf(order: Order, templateData: any): Pr
   }
 }
 
-export async function generatePaginatedAngebotPdf(angebot: any, order: any, items: any[], itemsPerPage: number = 15): Promise<PdfGenerationResult> {
+export async function generatePaginatedAngebotPdf(angebot: any, order: any, items: any[], itemsPerPage: number = 13): Promise<PdfGenerationResult> {
   try {
     console.log('🔧 Starting paginated angebot PDF generation...');
     
