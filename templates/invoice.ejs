@@ -549,17 +549,17 @@
       Pagination Logic:
       - Every page: Header + Table + Footer (calculations + signatures)
       - Only last page: All of the above + Bank details
-      - Items per page: 18 (calculated based on A4 page size)
+      - Items per page: 20 (calculated based on A4 page size)
       - Each page is a complete invoice with its own summary and signature
     -->
     <% 
-      // Consistent pagination: 20 items per page for better A4 utilization
-      const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : Math.ceil(items.length / 20);
+      // Use pagination data from service, don't calculate in template
       const currentPageNumber = typeof currentPage !== 'undefined' ? currentPage : 1;
+      const calculatedTotalPages = typeof totalPages !== 'undefined' ? totalPages : 1;
       const isLastPageFlag = typeof isLastPage !== 'undefined' ? isLastPage : (currentPageNumber === calculatedTotalPages);
       
-      // For multiple invoices, each should be complete with bank details
-      const showBankDetails = isLastPageFlag || (typeof totalPages !== 'undefined' && totalPages === 1);
+      // Show bank details only on the last page
+      const showBankDetails = isLastPageFlag;
     %>
     <% if (showBankDetails) { %>
     <div class="row bank-info mt-3">

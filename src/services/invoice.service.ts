@@ -490,6 +490,8 @@ export class InvoiceService {
         
         // Generate HTML for all pages with proper page breaks
         let fullHtml = '';
+        let isFirstPage = true;
+        
         for (let pageNum = 0; pageNum < totalPages; pageNum++) {
           const startIndex = pageNum * itemsPerPage;
           const endIndex = Math.min(startIndex + itemsPerPage, templateData.items.length);
@@ -516,11 +518,19 @@ export class InvoiceService {
           };
           
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
-          fullHtml += pageHtml;
           
-          // Add page break for multi-page
-          if (pageNum < totalPages - 1) {
-            fullHtml += '</div></div><div class="a4-page"><div class="invoice">';
+          if (isFirstPage) {
+            // For the first page, use the complete HTML structure
+            fullHtml = pageHtml;
+            isFirstPage = false;
+          } else {
+            // For subsequent pages, extract only the content between <body> and </body>
+            const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (bodyMatch) {
+              const bodyContent = bodyMatch[1];
+              // Remove the closing tags from the previous page and add the new page content
+              fullHtml = fullHtml.replace(/<\/body>[\s\S]*$/, '') + bodyContent + '</body></html>';
+            }
           }
         }
         
