@@ -106,7 +106,7 @@ export class CreditNoteService {
       const ITEMS_PER_PAGE = 20;
       
       // Process returns to include packages calculation
-      const processedReturns = templateData.returns.map((ret: any) => {
+      const processedReturns = templateData.items.map((ret: any) => {
         const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
         const packages = Math.ceil(ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1));
         
@@ -229,7 +229,7 @@ export class CreditNoteService {
     
     // Process returns to include packages calculation
     const processedReturns = templateData.returns.map((ret: any) => {
-      const relatedItem = items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
+      const relatedItem = order.items.find((i: any) => i.id === ret.orderItemId || i.productId === ret.orderItemId);
       const packages = Math.ceil(ret.quantity / (relatedItem?.unitPerPackageSnapshot || 1));
       
       return {
