@@ -271,7 +271,12 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
         returns: pageItems, // For credit notes
         isLastPage: isLastPage,
         currentPage: pageNum + 1,
-        totalPages: totalPages
+        totalPages: totalPages,
+        // Explicitly preserve original order totals for all pages
+        totalNet: templateData.totalNet,
+        vat7: templateData.vat7,
+        vat19: templateData.vat19,
+        totalGross: templateData.totalGross
       };
       
       console.log(`🔧 Page ${pageNum + 1}/${totalPages}, isLastPage: ${isLastPage}, items: ${pageItems.length}`);
@@ -713,27 +718,15 @@ export async function generatePaginatedAngebotPdf(angebot: any, order: any, item
         const pageItems = items.slice(startIndex, endIndex);
         const isLastPage = pageNum === totalPages - 1;
         
-        // Calculate totals for this page only
-        const pageTotalNet = pageItems.reduce((sum, item) => sum + ((item.adjustedPrice || item.originalPrice) * item.quantity), 0);
-        const pageVat7 = pageItems.reduce((sum, item) => {
-          const taxRate = item.taxRate || 19;
-          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
-          return taxRate === 7 ? sum + (itemTotal * 0.07) : sum;
-        }, 0);
-        const pageVat19 = pageItems.reduce((sum, item) => {
-          const taxRate = item.taxRate || 19;
-          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
-          return taxRate === 19 ? sum + (itemTotal * 0.19) : sum;
-        }, 0);
-        const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
-        
+        // Use entire order totals, not page-specific totals
         const pageData = {
           angebot: {
             ...angebot,
-            totalNet: pageTotalNet,
-            tax7Amount: pageVat7,
-            tax19Amount: pageVat19,
-            totalGross: pageTotalGross
+            // Keep original order totals for all pages
+            totalNet: angebot.totalNet,
+            tax7Amount: angebot.tax7Amount,
+            tax19Amount: angebot.tax19Amount,
+            totalGross: angebot.totalGross
           },
           order,
           items: pageItems,
