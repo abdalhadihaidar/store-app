@@ -493,23 +493,18 @@ export class InvoiceService {
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
           
-          // Calculate totals for this page only
-          const pageTotalNet = pageItems.reduce((sum, item) => sum + item.total, 0);
-          const pageVat7 = pageItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
-          const pageVat19 = pageItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
-          const pageTotalGross = pageTotalNet + pageVat7 + pageVat19;
-          
+          // Use entire order totals, not page-specific totals
           const pageData = {
             ...templateData,
             items: pageItems,
             isLastPage,
             currentPage: pageNum + 1,
             totalPages,
-            // Override totals for this page
-            totalNet: pageTotalNet,
-            vat7: pageVat7,
-            vat19: pageVat19,
-            totalGross: pageTotalGross
+            // Keep original order totals for all pages
+            totalNet: templateData.totalNet,
+            vat7: templateData.vat7,
+            vat19: templateData.vat19,
+            totalGross: templateData.totalGross
           };
           
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
