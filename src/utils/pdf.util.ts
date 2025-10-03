@@ -265,6 +265,13 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
       
       const isLastPage = pageNum === totalPages - 1;
       
+      // Calculate cumulative totals up to current page
+      const cumulativeItems = items.slice(0, endIndex);
+      const cumulativeTotalNet = cumulativeItems.reduce((sum, item) => sum + (item.total || 0), 0);
+      const cumulativeVat7 = cumulativeItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+      const cumulativeVat19 = cumulativeItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+      const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+      
       const pageData = {
         ...templateData,
         items: pageItems,
@@ -272,11 +279,11 @@ export async function generatePaginatedPdf(templatePath: string, templateData: a
         isLastPage: isLastPage,
         currentPage: pageNum + 1,
         totalPages: totalPages,
-        // Explicitly preserve original order totals for all pages
-        totalNet: templateData.totalNet,
-        vat7: templateData.vat7,
-        vat19: templateData.vat19,
-        totalGross: templateData.totalGross
+        // Use cumulative totals up to current page
+        totalNet: cumulativeTotalNet,
+        vat7: cumulativeVat7,
+        vat19: cumulativeVat19,
+        totalGross: cumulativeTotalGross
       };
       
       console.log(`🔧 Page ${pageNum + 1}/${totalPages}, isLastPage: ${isLastPage}, items: ${pageItems.length}`);
@@ -433,15 +440,21 @@ export async function generatePaginatedCreditNotePdf(order: Order, templateData:
           
           console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (returns ${startIndex + 1}-${endIndex})`);
 
-          // Use entire order totals, not page-specific totals
+          // Calculate cumulative totals up to current page
+          const cumulativeReturns = templateData.returns.slice(0, endIndex);
+          const cumulativeTotalNet = cumulativeReturns.reduce((sum, item) => sum + (item.total || 0), 0);
+          const cumulativeVat7 = cumulativeReturns.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+          const cumulativeVat19 = cumulativeReturns.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+          const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+          
           const pageData = {
             ...templateData,
             returns: pageReturns,
-            // Keep original order totals for all pages
-            totalNet: templateData.totalNet,
-            vat7: templateData.vat7,
-            vat19: templateData.vat19,
-            totalGross: templateData.totalGross,
+            // Use cumulative totals up to current page
+            totalNet: cumulativeTotalNet,
+            vat7: cumulativeVat7,
+            vat19: cumulativeVat19,
+            totalGross: cumulativeTotalGross,
             isLastPage,
             currentPage: pageNum + 1,
             totalPages
@@ -503,15 +516,21 @@ export async function generatePaginatedCreditNotePdf(order: Order, templateData:
         const pageReturns = templateData.returns.slice(startIndex, endIndex);
         const isLastPage = pageNum === totalPages - 1;
         
-        // Use entire order totals, not page-specific totals
+        // Calculate cumulative totals up to current page
+        const cumulativeReturns = templateData.returns.slice(0, endIndex);
+        const cumulativeTotalNet = cumulativeReturns.reduce((sum, item) => sum + (item.total || 0), 0);
+        const cumulativeVat7 = cumulativeReturns.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+        const cumulativeVat19 = cumulativeReturns.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+        const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+        
         const pageData = {
           ...templateData,
           returns: pageReturns,
-          // Keep original order totals for all pages
-          totalNet: templateData.totalNet,
-          vat7: templateData.vat7,
-          vat19: templateData.vat19,
-          totalGross: templateData.totalGross,
+          // Use cumulative totals up to current page
+          totalNet: cumulativeTotalNet,
+          vat7: cumulativeVat7,
+          vat19: cumulativeVat19,
+          totalGross: cumulativeTotalGross,
           isLastPage,
           currentPage: pageNum + 1,
           totalPages
@@ -714,15 +733,29 @@ export async function generatePaginatedAngebotPdf(angebot: any, order: any, item
         const pageItems = items.slice(startIndex, endIndex);
         const isLastPage = pageNum === totalPages - 1;
         
-        // Use entire order totals, not page-specific totals
+        // Calculate cumulative totals up to current page
+        const cumulativeItems = items.slice(0, endIndex);
+        const cumulativeTotalNet = cumulativeItems.reduce((sum, item) => sum + ((item.adjustedPrice || item.originalPrice) * item.quantity), 0);
+        const cumulativeVat7 = cumulativeItems.reduce((sum, item) => {
+          const taxRate = item.taxRate || 19;
+          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+          return taxRate === 7 ? sum + (itemTotal * 0.07) : sum;
+        }, 0);
+        const cumulativeVat19 = cumulativeItems.reduce((sum, item) => {
+          const taxRate = item.taxRate || 19;
+          const itemTotal = (item.adjustedPrice || item.originalPrice) * item.quantity;
+          return taxRate === 19 ? sum + (itemTotal * 0.19) : sum;
+        }, 0);
+        const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+        
         const pageData = {
           angebot: {
             ...angebot,
-            // Keep original order totals for all pages
-            totalNet: angebot.totalNet,
-            tax7Amount: angebot.tax7Amount,
-            tax19Amount: angebot.tax19Amount,
-            totalGross: angebot.totalGross
+            // Use cumulative totals up to current page
+            totalNet: cumulativeTotalNet,
+            tax7Amount: cumulativeVat7,
+            tax19Amount: cumulativeVat19,
+            totalGross: cumulativeTotalGross
           },
           order,
           items: pageItems,

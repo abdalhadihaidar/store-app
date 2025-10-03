@@ -423,18 +423,24 @@ export class InvoiceService {
             
             console.log(`🔧 Generating page ${pageNum + 1}/${totalPages} (items ${startIndex + 1}-${endIndex})`);
 
-            // Use entire order totals, not page-specific totals
+            // Calculate cumulative totals up to current page
+            const cumulativeItems = templateData.items.slice(0, endIndex);
+            const cumulativeTotalNet = cumulativeItems.reduce((sum, item) => sum + item.total, 0);
+            const cumulativeVat7 = cumulativeItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+            const cumulativeVat19 = cumulativeItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+            const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+            
             const pageData = {
               ...templateData,
               items: pageItems,
               isLastPage,
               currentPage: pageNum + 1,
               totalPages,
-              // Keep original order totals for all pages
-              totalNet: templateData.totalNet,
-              vat7: templateData.vat7,
-              vat19: templateData.vat19,
-              totalGross: templateData.totalGross
+              // Use cumulative totals up to current page
+              totalNet: cumulativeTotalNet,
+              vat7: cumulativeVat7,
+              vat19: cumulativeVat19,
+              totalGross: cumulativeTotalGross
             };
 
             // Generate HTML for this page only
@@ -493,18 +499,24 @@ export class InvoiceService {
           const pageItems = templateData.items.slice(startIndex, endIndex);
           const isLastPage = pageNum === totalPages - 1;
           
-          // Use entire order totals, not page-specific totals
+          // Calculate cumulative totals up to current page
+          const cumulativeItems = templateData.items.slice(0, endIndex);
+          const cumulativeTotalNet = cumulativeItems.reduce((sum, item) => sum + item.total, 0);
+          const cumulativeVat7 = cumulativeItems.reduce((sum, item) => sum + (item.tax7 || 0), 0);
+          const cumulativeVat19 = cumulativeItems.reduce((sum, item) => sum + (item.tax19 || 0), 0);
+          const cumulativeTotalGross = cumulativeTotalNet + cumulativeVat7 + cumulativeVat19;
+          
           const pageData = {
             ...templateData,
             items: pageItems,
             isLastPage,
             currentPage: pageNum + 1,
             totalPages,
-            // Keep original order totals for all pages
-            totalNet: templateData.totalNet,
-            vat7: templateData.vat7,
-            vat19: templateData.vat19,
-            totalGross: templateData.totalGross
+            // Use cumulative totals up to current page
+            totalNet: cumulativeTotalNet,
+            vat7: cumulativeVat7,
+            vat19: cumulativeVat19,
+            totalGross: cumulativeTotalGross
           };
           
           const pageHtml = await require('ejs').renderFile(templatePath, pageData);
