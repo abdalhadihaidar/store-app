@@ -103,7 +103,7 @@ export class CreditNoteService {
       };
       
       // Calculate items per page (same as invoice service)
-      const ITEMS_PER_PAGE = 18;
+      const ITEMS_PER_PAGE = 16;
       
       // Process returns to include packages calculation
       const processedReturns = templateData.items.map((ret: any) => {
@@ -225,7 +225,7 @@ export class CreditNoteService {
     };
 
     // Calculate items per page (same as invoice service)
-    const ITEMS_PER_PAGE = 18;
+    const ITEMS_PER_PAGE = 16;
     
     // Process returns to include packages calculation
     const processedReturns = templateData.returns.map((ret: any) => {

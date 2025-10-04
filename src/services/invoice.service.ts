@@ -156,8 +156,8 @@ export class InvoiceService {
 
     // Calculate items per page based on A4 page size and template design
     // With header (~200px), footer (~150px), and table rows (~20px each), 
-    // we can fit approximately 13 items per page on A4
-    const ITEMS_PER_PAGE = 13;
+    // we can fit approximately 11 items per page on A4
+    const ITEMS_PER_PAGE = 11;
     
     const processedItems = (order.items || []).map(i => {
       const ratePercent = i.taxRate < 1 ? i.taxRate * 100 : i.taxRate;
