@@ -221,7 +221,16 @@
     }
     
     table td { 
-      font-size: smaller; 
+      font-size: 11px; /* Increased from 'smaller' to 11px for better readability */
+    }
+    
+    /* Specific styling for article name column (2nd column) */
+    table td:nth-child(2) { 
+      text-align: left; 
+      padding-left: 6px; 
+      font-size: 12px; /* Slightly larger for article names */
+      font-weight: 500;
+      line-height: 1.2; /* Better line spacing for readability */
     }
     
     table tbody tr:last-child td { 
@@ -363,9 +372,18 @@
         page-break-inside: avoid; /* Prevent table from breaking across pages */
         margin-bottom: 5px; 
         margin-top: 0.5rem;
-        font-size: 9px;
+        font-size: 10px; /* Increased from 9px to 10px */
         width: 100%;
         table-layout: fixed;
+      }
+      
+      /* Specific styling for article name column in print mode */
+      table td:nth-child(2) {
+        text-align: left !important;
+        font-size: 11px !important; /* Larger font for article names in print */
+        font-weight: 500 !important;
+        line-height: 1.3 !important;
+        padding-left: 4px !important;
       }
       tr { 
         page-break-inside: avoid; 
