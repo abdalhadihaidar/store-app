@@ -49,14 +49,27 @@ export class StoreController {
   }
   static async getAllStores(req: Request, res: Response) {
     try {
-      const { page = 1, limit = 25, city, postalCode } = req.query;
+      const { page = 1, limit, city, postalCode } = req.query;
+      // If limit is not provided or is 0, get all stores (no pagination)
+      // Otherwise use the provided limit or default to 25
+      const limitValue = limit === undefined || limit === '0' || limit === '' 
+        ? 0 
+        : Number(limit) || 25;
+      const pageValue = Number(page) || 1;
+      
       const { count, rows } = await StoreService.getAllStores({
-        page: Number(page),
-        limit: Number(limit),
+        page: pageValue,
+        limit: limitValue,
         city: city?.toString(),
         postalCode: postalCode?.toString()
       });
-      res.json({ total: count, page: Number(page), size: Number(limit), data: rows });
+      
+      // If limit is 0, return all stores without pagination info
+      if (limitValue === 0) {
+        res.json({ total: count, data: rows });
+      } else {
+        res.json({ total: count, page: pageValue, size: limitValue, data: rows });
+      }
     } catch (error) {
       console.error('Error retrieving stores:', error);
       res.status(500).json({ 

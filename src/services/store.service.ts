@@ -38,17 +38,23 @@ export class StoreService {
         postalCode?: string;
       }) {
         const { page, limit, city, postalCode } = options;
-        const offset = (page - 1) * limit;
-      
-        return await Store.findAndCountAll({
+        // If limit is 0 or undefined, return all stores without pagination
+        const queryOptions: any = {
           where: {
             ...(city && { city }),
             ...(postalCode && { postalCode })
           },
-          limit,
-          offset,
           include: [{ model: User, as: 'user', attributes: ['name'] }]
-        });
+        };
+        
+        // Only apply pagination if limit is greater than 0
+        if (limit > 0) {
+          const offset = (page - 1) * limit;
+          queryOptions.limit = limit;
+          queryOptions.offset = offset;
+        }
+      
+        return await Store.findAndCountAll(queryOptions);
       }
 
   static async getStoreByUserId(userId: number) {
