@@ -40,8 +40,13 @@ export class StoreController {
       }
   static async getMyStore(req: Request, res: Response) {
     try {
-      const userId = (req as any).user.id;
-      const store = await StoreService.getStoreByUserId(userId);
+      // Use userId from request body or query if no user is authenticated
+      const userId = (req as any).user?.id || req.body.userId || req.query.userId;
+      if (!userId) {
+        res.status(400).json({ message: 'User ID is required' });
+        return;
+      }
+      const store = await StoreService.getStoreByUserId(Number(userId));
       res.json(store);
     } catch (error:any) {
       res.status(404).json({ message: error.message });

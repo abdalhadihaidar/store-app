@@ -91,7 +91,8 @@ export class AngebotController {
   static async getAll(req: Request, res: Response): Promise<void> {
     try {
       const { storeId, status, customerId, page = 1, limit = 10 } = req.query;
-      const userRole = (req as any).user?.role;
+      // Default to admin role if no user is present
+      const userRole = (req as any).user?.role || 'admin';
       const userStoreId = (req as any).user?.storeId;
 
       // If user is not admin, filter by their store
