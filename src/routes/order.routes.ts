@@ -24,7 +24,7 @@ const router = express.Router();
  *       200:
  *         description: List of orders retrieved successfully
  */
-router.get('/', authMiddleware(['admin', 'client']), OrderController.getAllOrders);
+router.get('/', /* authMiddleware(['admin', 'client']), */ OrderController.getAllOrders);
 
 
 /**
@@ -40,7 +40,7 @@ router.get('/', authMiddleware(['admin', 'client']), OrderController.getAllOrder
  *       200:
  *         description: List of returns retrieved successfully
  */
-router.get('/returns', authMiddleware(['admin']), OrderController.getAllReturns);
+router.get('/returns', /* authMiddleware(['admin']), */ OrderController.getAllReturns);
 
 /**
  * @swagger
@@ -61,7 +61,7 @@ router.get('/returns', authMiddleware(['admin']), OrderController.getAllReturns)
  *       200:
  *         description: Order details retrieved successfully
  */
-router.get('/:id', authMiddleware(['admin', 'client']), OrderController.getById);
+router.get('/:id', /* authMiddleware(['admin', 'client']), */ OrderController.getById);
 
 /**
  * @swagger
@@ -100,7 +100,7 @@ router.get('/:id', authMiddleware(['admin', 'client']), OrderController.getById)
  *       201:
  *         description: Return request created
  */
-router.post('/:id/returns', authMiddleware(['admin','client']), OrderController.createReturn);
+router.post('/:id/returns', /* authMiddleware(['admin','client']), */ OrderController.createReturn);
 
 /**
  * @swagger
@@ -121,7 +121,7 @@ router.post('/:id/returns', authMiddleware(['admin','client']), OrderController.
  *       200:
  *         description: Complete order details with price breakdown
  */
-router.get('/:id/details', authMiddleware(['admin', 'client']), OrderController.getOrderDetails);
+router.get('/:id/details', /* authMiddleware(['admin', 'client']), */ OrderController.getOrderDetails);
 
 /**
  * @swagger
@@ -142,7 +142,7 @@ router.get('/:id/details', authMiddleware(['admin', 'client']), OrderController.
  *       200:
  *         description: List of orders for the user
  */
-router.get('/user/:userId', authMiddleware(['admin', 'client']), OrderController.getOrdersByUserId);
+router.get('/user/:userId', /* authMiddleware(['admin', 'client']), */ OrderController.getOrdersByUserId);
 
 /**
  * @swagger
@@ -241,7 +241,7 @@ router.post('/', OrderController.createOrder);
  *       200:
  *         description: Order approved successfully (status updated to approved)
  */
-router.put('/:id/approve', authMiddleware(['admin','client']), OrderController.approveOrder);
+router.put('/:id/approve', /* authMiddleware(['admin','client']), */ OrderController.approveOrder);
 
 /**
  * @swagger
@@ -265,7 +265,7 @@ router.put('/:id/approve', authMiddleware(['admin','client']), OrderController.a
  *       200:
  *         description: Order marked as completed successfully
  */
-router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeOrder);
+router.put('/:id/complete', /* authMiddleware(['admin']), */ OrderController.completeOrder);
 
 /**
  * @swagger
@@ -298,7 +298,7 @@ router.put('/:id/complete', authMiddleware(['admin']), OrderController.completeO
  *       200:
  *         description: Order status updated successfully
  */
-router.put('/:id', authMiddleware(['admin','client']), OrderController.updateOrderStatus);
+router.put('/:id', /* authMiddleware(['admin','client']), */ OrderController.updateOrderStatus);
 
 /**
  * @swagger
@@ -334,7 +334,7 @@ router.put('/:id', authMiddleware(['admin','client']), OrderController.updateOrd
  *       201:
  *         description: Item added successfully
  */
-router.post('/:id/items', authMiddleware(['admin']), OrderController.addItemToOrder);
+router.post('/:id/items', /* authMiddleware(['admin']), */ OrderController.addItemToOrder);
 
 /**
  * @swagger
@@ -360,7 +360,7 @@ router.post('/:id/items', authMiddleware(['admin']), OrderController.addItemToOr
  *       204:
  *         description: Item removed successfully
  */
-router.delete('/:id/items/:itemId', authMiddleware(['admin']), OrderController.removeItemFromOrder);
+router.delete('/:id/items/:itemId', /* authMiddleware(['admin']), */ OrderController.removeItemFromOrder);
 
 /**
  * @swagger
@@ -380,7 +380,7 @@ router.delete('/:id/items/:itemId', authMiddleware(['admin']), OrderController.r
  *       200:
  *         description: List of orders available for angebot creation
  */
-router.get('/for-angebot', authMiddleware(['admin']), OrderController.getOrdersForAngebot);
+router.get('/for-angebot', /* authMiddleware(['admin']), */ OrderController.getOrdersForAngebot);
 
 /**
  * @swagger
@@ -419,7 +419,7 @@ router.get('/for-angebot', authMiddleware(['admin']), OrderController.getOrdersF
  *       200:
  *         description: Adjusted prices updated successfully
  */
-router.put('/:id/adjusted-prices', authMiddleware(['admin']), OrderController.updateAdjustedPrices);
+router.put('/:id/adjusted-prices', /* authMiddleware(['admin']), */ OrderController.updateAdjustedPrices);
 
 /**
  * @swagger
@@ -452,7 +452,7 @@ router.put('/:id/adjusted-prices', authMiddleware(['admin']), OrderController.up
  *       200:
  *         description: Angebot created successfully
  */
-router.post('/:id/create-angebot', authMiddleware(['admin']), OrderController.createAngebotFromOrder);
+router.post('/:id/create-angebot', /* authMiddleware(['admin']), */ OrderController.createAngebotFromOrder);
 
 /**
  * @swagger
@@ -473,7 +473,7 @@ router.post('/:id/create-angebot', authMiddleware(['admin']), OrderController.cr
  *       200:
  *         description: Order approved successfully
  */
-router.put('/:id/approve-from-angebot', authMiddleware(['admin']), OrderController.approveOrderFromAngebot);
+router.put('/:id/approve-from-angebot', /* authMiddleware(['admin']), */ OrderController.approveOrderFromAngebot);
 
 /**
  * @swagger
@@ -490,6 +490,6 @@ router.put('/:id/approve-from-angebot', authMiddleware(['admin']), OrderControll
  *       500:
  *         description: Database connection test failed
  */
-router.get('/debug/connection', authMiddleware(['admin']), OrderController.testDatabaseConnection);
+router.get('/debug/connection', /* authMiddleware(['admin']), */ OrderController.testDatabaseConnection);
 
 export default router;

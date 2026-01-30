@@ -23,7 +23,7 @@ const router = express.Router();
  *       200:
  *         description: List of users
  */
-router.get('/', authMiddleware(['admin']), UserController.getAllUsers);
+router.get('/', /* authMiddleware(['admin']), */ UserController.getAllUsers);
 
 /**
  * @swagger
@@ -37,7 +37,7 @@ router.get('/', authMiddleware(['admin']), UserController.getAllUsers);
  *       200:
  *         description: List of clients
  */
-router.get('/clients', authMiddleware(['admin']), UserController.getClients);
+router.get('/clients', /* authMiddleware(['admin']), */ UserController.getClients);
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ router.get('/clients', authMiddleware(['admin']), UserController.getClients);
  *       400:
  *         description: Validation error
  */
-router.post('/clients', authMiddleware(['admin']), UserController.createClient);
+router.post('/clients', /* authMiddleware(['admin']), */ UserController.createClient);
 
 /**
  * @swagger
@@ -93,7 +93,7 @@ router.post('/clients', authMiddleware(['admin']), UserController.createClient);
  *       200:
  *         description: User details
  */
-router.get('/:userId', authMiddleware(['admin']), UserController.getUserById);
+router.get('/:userId', /* authMiddleware(['admin']), */ UserController.getUserById);
 
 /**
  * @swagger
@@ -126,7 +126,7 @@ router.get('/:userId', authMiddleware(['admin']), UserController.getUserById);
  *       200:
  *         description: User updated successfully
  */
-router.put('/:userId', authMiddleware(['admin']), UserController.updateUser);
+router.put('/:userId', /* authMiddleware(['admin']), */ UserController.updateUser);
 
 /**
  * @swagger
@@ -146,6 +146,6 @@ router.put('/:userId', authMiddleware(['admin']), UserController.updateUser);
  *       204:
  *         description: User deleted successfully
  */
-router.delete('/:userId', authMiddleware(['admin']), UserController.deleteUser);
+router.delete('/:userId', /* authMiddleware(['admin']), */ UserController.deleteUser);
 
 export default router;

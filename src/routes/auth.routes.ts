@@ -80,7 +80,7 @@ router.post('/login', AuthController.login);
  *       401:
  *         description: Unauthorized
  */
-router.post('/register', authMiddleware(['admin']), AuthController.register);
+router.post('/register', /* authMiddleware(['admin']), */ AuthController.register);
 
 /**
  * @swagger

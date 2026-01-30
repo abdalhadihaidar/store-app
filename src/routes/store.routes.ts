@@ -75,7 +75,7 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.post('/', authMiddleware(['client', 'admin']), StoreController.createStore);
+router.post('/', /* authMiddleware(['client', 'admin']), */ StoreController.createStore);
 
 /**
  * @swagger
@@ -167,7 +167,7 @@ router.get('/search', StoreController.searchStores);
  *       401:
  *         description: Unauthorized
  */
-router.get('/my-store', authMiddleware(['client', 'admin']), StoreController.getMyStore);
+router.get('/my-store', /* authMiddleware(['client', 'admin']), */ StoreController.getMyStore);
 
 /**
  * @swagger
@@ -203,7 +203,7 @@ router.get('/my-store', authMiddleware(['client', 'admin']), StoreController.get
  *       404:
  *         description: Store not found
  */
-router.put('/:storeId', authMiddleware(['client', 'admin']), StoreController.updateStore);
+router.put('/:storeId', /* authMiddleware(['client', 'admin']), */ StoreController.updateStore);
 
 /**
  * @swagger
@@ -227,7 +227,7 @@ router.put('/:storeId', authMiddleware(['client', 'admin']), StoreController.upd
  *       404:
  *         description: Store not found
  */
-router.delete('/:storeId', authMiddleware(['admin']), StoreController.deleteStore);
+router.delete('/:storeId', /* authMiddleware(['admin']), */ StoreController.deleteStore);
 
 /**
  * @swagger
@@ -252,7 +252,7 @@ router.delete('/:storeId', authMiddleware(['admin']), StoreController.deleteStor
  *       404:
  *         description: Client not found
  */
-router.get('/client/:clientId', authMiddleware(['admin']), StoreController.getStoresByClient);
+router.get('/client/:clientId', /* authMiddleware(['admin']), */ StoreController.getStoresByClient);
 
 /**
  * @swagger
@@ -305,6 +305,6 @@ router.get('/client/:clientId', authMiddleware(['admin']), StoreController.getSt
  *       404:
  *         description: Client not found
  */
-router.post('/client/:clientId', authMiddleware(['admin']), StoreController.createStoreForClient);
+router.post('/client/:clientId', /* authMiddleware(['admin']), */ StoreController.createStoreForClient);
 
 export default router;

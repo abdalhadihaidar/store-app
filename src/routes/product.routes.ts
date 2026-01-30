@@ -96,7 +96,7 @@ router.get('/category/:categoryId', ProductController.getProductsByCategoryId);
  */
 router.post(
   '/',
-  authMiddleware(['admin']),
+  /* authMiddleware(['admin']), */
   ProductController.createProduct // ✅ Now type-safe
 );
 
@@ -129,7 +129,7 @@ router.post(
  *       200:
  *         description: Product updated successfully
  */
-router.put('/:id', authMiddleware(['admin']), ProductController.updateProduct);
+router.put('/:id', /* authMiddleware(['admin']), */ ProductController.updateProduct);
 
 /**
  * @swagger
@@ -149,7 +149,7 @@ router.put('/:id', authMiddleware(['admin']), ProductController.updateProduct);
  *       204:
  *         description: Product deleted successfully
  */
-router.delete('/:id', authMiddleware(["admin"]), ProductController.deleteProduct);
+router.delete('/:id', /* authMiddleware(["admin"]), */ ProductController.deleteProduct);
 
 /**
  * @swagger

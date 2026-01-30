@@ -102,7 +102,7 @@ const router = express.Router();
  *                 data:
  *                   $ref: '#/components/schemas/Angebot'
  */
-router.post('/', authMiddleware(['admin']), AngebotController.createFromOrder);
+router.post('/', /* authMiddleware(['admin']), */ AngebotController.createFromOrder);
 
 /**
  * @swagger
@@ -148,7 +148,7 @@ router.post('/', authMiddleware(['admin']), AngebotController.createFromOrder);
  *       201:
  *         description: Angebot created successfully
  */
-router.post('/direct', authMiddleware(['admin']), AngebotController.createDirect);
+router.post('/direct', /* authMiddleware(['admin']), */ AngebotController.createDirect);
 
 /**
  * @swagger
@@ -187,7 +187,7 @@ router.post('/direct', authMiddleware(['admin']), AngebotController.createDirect
  *       200:
  *         description: List of angebots retrieved successfully
  */
-router.get('/', authMiddleware(['admin', 'client']), AngebotController.getAll);
+router.get('/', /* authMiddleware(['admin', 'client']), */ AngebotController.getAll);
 
 /**
  * @swagger
@@ -210,7 +210,7 @@ router.get('/', authMiddleware(['admin', 'client']), AngebotController.getAll);
  *       404:
  *         description: Angebot not found
  */
-router.get('/:id', authMiddleware(['admin', 'client']), AngebotController.getById);
+router.get('/:id', /* authMiddleware(['admin', 'client']), */ AngebotController.getById);
 
 /**
  * @swagger
@@ -253,7 +253,7 @@ router.get('/:id', authMiddleware(['admin', 'client']), AngebotController.getByI
  *       200:
  *         description: Angebot items updated successfully
  */
-router.put('/:id/items', authMiddleware(['admin']), AngebotController.updateItems);
+router.put('/:id/items', /* authMiddleware(['admin']), */ AngebotController.updateItems);
 
 /**
  * @swagger
@@ -284,7 +284,7 @@ router.put('/:id/items', authMiddleware(['admin']), AngebotController.updateItem
  *       200:
  *         description: Angebot status updated successfully
  */
-router.put('/:id/status', authMiddleware(['admin', 'client']), AngebotController.updateStatus);
+router.put('/:id/status', /* authMiddleware(['admin', 'client']), */ AngebotController.updateStatus);
 
 /**
  * @swagger
@@ -305,7 +305,7 @@ router.put('/:id/status', authMiddleware(['admin', 'client']), AngebotController
  *       200:
  *         description: Angebot converted to order successfully
  */
-router.post('/:id/convert', authMiddleware(['admin']), AngebotController.convertToOrder);
+router.post('/:id/convert', /* authMiddleware(['admin']), */ AngebotController.convertToOrder);
 
 /**
  * @swagger
@@ -326,7 +326,7 @@ router.post('/:id/convert', authMiddleware(['admin']), AngebotController.convert
  *       200:
  *         description: Angebot deleted successfully
  */
-router.delete('/:id', authMiddleware(['admin']), AngebotController.delete);
+router.delete('/:id', /* authMiddleware(['admin']), */ AngebotController.delete);
 
 /**
  * @swagger
@@ -357,7 +357,7 @@ router.delete('/:id', authMiddleware(['admin']), AngebotController.delete);
  *       200:
  *         description: Customer angebots retrieved successfully
  */
-router.get('/customer/:customerId', authMiddleware(['admin', 'client']), AngebotController.getByCustomer);
+router.get('/customer/:customerId', /* authMiddleware(['admin', 'client']), */ AngebotController.getByCustomer);
 
 /**
  * @swagger
@@ -385,7 +385,7 @@ router.get('/customer/:customerId', authMiddleware(['admin', 'client']), Angebot
  *       404:
  *         description: Angebot or PDF file not found
  */
-router.get('/:id/pdf', authMiddleware(['admin', 'client']), AngebotController.downloadPdf);
+router.get('/:id/pdf', /* authMiddleware(['admin', 'client']), */ AngebotController.downloadPdf);
 
 /**
  * @swagger
@@ -408,7 +408,7 @@ router.get('/:id/pdf', authMiddleware(['admin', 'client']), AngebotController.do
  *       404:
  *         description: Angebot or order not found
  */
-router.post('/:id/regenerate-pdf', authMiddleware(['admin']), AngebotController.regeneratePdf);
+router.post('/:id/regenerate-pdf', /* authMiddleware(['admin']), */ AngebotController.regeneratePdf);
 
 /**
  * @swagger
@@ -437,6 +437,6 @@ router.post('/:id/regenerate-pdf', authMiddleware(['admin']), AngebotController.
  *                     puppeteerWorking:
  *                       type: boolean
  */
-router.get('/test-puppeteer', authMiddleware(['admin']), AngebotController.testPuppeteer);
+router.get('/test-puppeteer', /* authMiddleware(['admin']), */ AngebotController.testPuppeteer);
 
 export default router;
