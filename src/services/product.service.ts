@@ -17,13 +17,7 @@ export class ProductService {
     // Add German business terminology fields and validate data consistency
     const productsWithGermanFields = result.rows.map(product => {
       const productData = product.toJSON();
-      const { product: validatedProduct, errors } = validateAndFixProductData(productData);
-      
-      // Log validation errors if any
-      if (errors.length > 0) {
-        console.warn(`Product ${productData.id} has data consistency issues:`, errors);
-      }
-      
+      const { product: validatedProduct } = validateAndFixProductData(productData);
       return addGermanFieldsToProduct(validatedProduct);
     });
 
@@ -41,13 +35,7 @@ export class ProductService {
     
     // Add German business terminology fields and validate data consistency
     const productData = product.toJSON();
-    const { product: validatedProduct, errors } = validateAndFixProductData(productData);
-    
-    // Log validation errors if any
-    if (errors.length > 0) {
-      console.warn(`Product ${productData.id} has data consistency issues:`, errors);
-    }
-    
+    const { product: validatedProduct } = validateAndFixProductData(productData);
     return addGermanFieldsToProduct(validatedProduct);
   }
 
@@ -60,13 +48,7 @@ export class ProductService {
     // Add German business terminology fields and validate data consistency
     return products.map(product => {
       const productData = product.toJSON();
-      const { product: validatedProduct, errors } = validateAndFixProductData(productData);
-      
-      // Log validation errors if any
-      if (errors.length > 0) {
-        console.warn(`Product ${productData.id} has data consistency issues:`, errors);
-      }
-      
+      const { product: validatedProduct } = validateAndFixProductData(productData);
       return addGermanFieldsToProduct(validatedProduct);
     });
   }
