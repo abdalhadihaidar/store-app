@@ -476,7 +476,7 @@
         <div class="rechnung-border">
           <div class="row rechnung-row">
             <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
-              <p><strong>Bestellung vom:</strong><br/><%= invoiceDate %></p>
+              <p><strong>Bestellung vom:</strong><br/><%= typeof orderDate !== 'undefined' ? orderDate : invoiceDate %></p>
             </div>
             <div class="col-3 mt-4 mb-3" style="font-weight: bold;">
               <p><strong>Rechnungsnr:</strong><br/><%= invoiceNumber %></p>

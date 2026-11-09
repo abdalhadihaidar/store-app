@@ -7,6 +7,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import sequelize from './config/database';
 import './models'; // Import all models and associations
 import path from 'path';
+import { DataTypes } from 'sequelize';
 
 dotenv.config();
 
@@ -47,6 +48,9 @@ const testDatabaseConnection = async () => {
     console.log('✅ Database connection established successfully.');
     
     await sequelize.sync();
+    await require('../migrations/20261109000000-add-invoice-order-date').up(
+      sequelize.getQueryInterface(), DataTypes,
+    );
     console.log('✅ Database schema updated!');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
@@ -54,5 +58,5 @@ const testDatabaseConnection = async () => {
   }
 };
 
-testDatabaseConnection();
+export const databaseReady = testDatabaseConnection();
 

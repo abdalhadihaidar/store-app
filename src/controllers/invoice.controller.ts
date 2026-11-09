@@ -20,11 +20,12 @@ export class InvoiceController {
       const createdBy = req.user?.id ?? null;
       
       // Extract data from request body (from print modal)
-      const { invoiceNumber, invoiceDate, userName, kundenNr } = req.body;
+      const { invoiceNumber, invoiceDate, orderDate, userName, kundenNr } = req.body;
       
       const printData = {
         invoiceNumber: invoiceNumber as string,
         invoiceDate: invoiceDate as string,
+        orderDate: orderDate as string,
         userName: userName as string,
         kundenNr: kundenNr as string
       };
@@ -69,6 +70,11 @@ export class InvoiceController {
         }
       }
 
+      if (req.query.format === 'json') {
+        res.status(201).json({ id: invoice.id, number: invoice.number });
+        return;
+      }
+
       // load related data for response headers (optional)
       await invoice.reload({
         include: [
@@ -109,7 +115,7 @@ export class InvoiceController {
     } catch (error: any) {
       console.error('Error creating invoice:', error);
       if (!res.headersSent) {
-        res.status(500).json({
+        res.status(error?.statusCode === 400 ? 400 : 500).json({
           success: false,
           message: error?.message || 'Failed to create invoice'
         });

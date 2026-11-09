@@ -10,6 +10,7 @@ import { addGermanFieldsToOrderItem } from '../utils/germanBusiness.util';
 interface PrintData {
   invoiceNumber?: string;
   invoiceDate?: string;
+  orderDate?: string;
   userName?: string;
   kundenNr?: string;
 }
@@ -97,7 +98,8 @@ export class InvoiceService {
         storePostalCode: order.store?.postalCode,
         invoiceNumber: invoice.number,
         orderId: order.id,
-        invoiceDate: invoice.date.toLocaleDateString('de-DE'),
+        invoiceDate: invoice.date.toISOString().slice(0, 10),
+        orderDate: invoice.orderDate || new Date(order.createdAt).toISOString().slice(0, 10),
         kundenNr: invoice.kundenNr || order.userId?.toString(),
         items: processedItems,
         totalNet: invoice.totalNet,
@@ -142,6 +144,14 @@ export class InvoiceService {
   }
 
   static async create(orderId: number, createdBy: number | null = null, printData: PrintData = {}) {
+    for (const field of ['invoiceDate', 'orderDate'] as const) {
+      const value = printData[field];
+      if (value === undefined || value === '') continue;
+      if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+          !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) {
+        throw Object.assign(new Error(`${field} must be a valid YYYY-MM-DD date`), { statusCode: 400 });
+      }
+    }
     // Fetch order with associations
     const order = await OrderService.getOrderDetails(orderId);
 
@@ -195,7 +205,8 @@ export class InvoiceService {
       storePostalCode: order.store?.postalCode,
       invoiceNumber: printData?.invoiceNumber || `INV-${Date.now()}`,
       orderId: order.id,
-      invoiceDate: printData?.invoiceDate || new Date().toLocaleDateString('de-DE'),
+      invoiceDate: printData?.invoiceDate || new Date().toISOString().slice(0, 10),
+      orderDate: printData?.orderDate || new Date(order.createdAt).toISOString().slice(0, 10),
       kundenNr: printData?.kundenNr || order.userId,
       items: processedItems,
       totalNet: order.totalPrice,
@@ -219,7 +230,8 @@ export class InvoiceService {
       orderId: order.id,
       number: printData?.invoiceNumber || `INV-${Date.now()}`,
       kundenNr: printData?.kundenNr || order.userId?.toString(),
-      date: new Date(),
+      date: new Date(templateData.invoiceDate),
+      orderDate: templateData.orderDate,
       totalNet: order.totalPrice,
       totalVat: order.totalTax,
       totalGross: order.totalPrice + order.totalTax,
