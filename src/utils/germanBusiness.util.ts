@@ -226,13 +226,6 @@ export function validateAndFixProductData(product: ProductData): { product: Prod
     fixedProduct.price = Math.max(0, fixedProduct.price);
   }
 
-  // Fix quantity consistency (packet-based)
-  const expectedQuantity = fixedProduct.package * fixedProduct.numberperpackage;
-  if (Math.abs(fixedProduct.quantity - expectedQuantity) > 0.01) {
-    errors.push(`Quantity (${fixedProduct.quantity}) should equal Package (${fixedProduct.package}) × VPE (${fixedProduct.numberperpackage}) = ${expectedQuantity}. Auto-correcting.`);
-    fixedProduct.quantity = expectedQuantity;
-  }
-
   return { product: fixedProduct, errors };
 }
 
