@@ -25,7 +25,7 @@ async function main() {
   const html = await ejs.renderFile(path.join(__dirname, 'templates/invoice.ejs'), {
     ...rendered, isLastPage: true, currentPage: 1, totalPages: 1
   });
-  assert.match(html, /Bestellung vom:<\/strong><br\/>2026-07-12/);
+  assert.match(html, /Lieferdatum vom:<\/strong><br\/>2026-07-12/);
   assert.match(html, /Rechnungsdatum:<\/strong><br\/>2026-07-17/);
   Invoice.findByPk = async () => ({ ...invoice, order, save: async () => {} });
   await InvoiceService.regeneratePdf(1);
